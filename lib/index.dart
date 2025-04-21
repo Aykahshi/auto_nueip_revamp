@@ -13,29 +13,25 @@ class App extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeJoker = Circus.spotlight<AppThemeMode>(tag: 'themeMode');
 
-    return JokerPortal<AuthSession>(
-      joker: Circus.summon<AuthSession>(
-        const AuthSession(),
-        tag: 'auth',
-        keepAlive: true,
-      ),
-      // Wrap with JokerStage to listen for theme changes
-      child: JokerStage<AppThemeMode>(
-        // Pass the Joker<AppThemeMode> instance itself
-        joker: themeJoker,
-        builder: (context, currentThemeMode) {
-          return MaterialApp(
-            title: 'Auto NUEIP',
-            theme: AppTheme.lightTheme, // Light theme data
-            darkTheme: AppTheme.darkTheme, // Dark theme data
-            themeMode: _getThemeMode(
-              currentThemeMode,
-            ), // Set mode from Joker state
-            home: const KeyboardVisibilityProvider(child: LoginScreen()),
-            debugShowCheckedModeBanner: false, // Optional: remove debug banner
-          );
-        },
-      ),
+    // Register AuthSession Joker
+    Circus.recruit<AuthSession>(
+      const AuthSession(),
+      tag: 'auth',
+      keepAlive: true,
+    );
+
+    return JokerStage<AppThemeMode>(
+      joker: themeJoker,
+      builder: (context, currentThemeMode) {
+        return MaterialApp(
+          title: 'Auto NUEIP',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: _getThemeMode(currentThemeMode),
+          home: const KeyboardVisibilityProvider(child: LoginScreen()),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 

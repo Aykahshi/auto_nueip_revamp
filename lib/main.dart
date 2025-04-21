@@ -20,11 +20,12 @@ Future<void> main() async {
 }
 
 Future<void> _init() async {
-  Circus.hire<ApiClient>(ApiClient());
-  Circus.hire<NueipHelper>(NueipHelper());
-  Circus.contract<NueipService>(() => NueipService());
-  Circus.hireLazily<NueipRepositoryImpl>(() => NueipRepositoryImpl());
-  Circus.bindDependency<NueipRepositoryImpl, NueipService>();
+  Circus
+    ..hire<ApiClient>(ApiClient())
+    ..hire<NueipHelper>(NueipHelper())
+    ..contract<NueipService>(() => NueipService())
+    ..hireLazily<NueipRepositoryImpl>(() => NueipRepositoryImpl())
+    ..bindDependency<NueipRepositoryImpl, NueipService>();
 
   // Add theme mode Joker registration
   Circus.summon<AppThemeMode>(
