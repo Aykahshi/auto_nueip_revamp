@@ -94,7 +94,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8.0),
         borderSide: const BorderSide(color: _errorLight, width: 2.0),
       ),
-      labelStyle: TextStyle(color: _textOnLight.withOpacity(0.7)),
+      labelStyle: TextStyle(color: _textOnLight.withAlpha(77)),
       floatingLabelStyle: const TextStyle(color: _secondaryLight),
     ),
     textSelectionTheme: TextSelectionThemeData(
@@ -171,7 +171,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8.0),
         borderSide: const BorderSide(color: _errorDark, width: 2.0),
       ),
-      labelStyle: TextStyle(color: _textOnDark.withOpacity(0.7)),
+      labelStyle: TextStyle(color: _textOnDark.withAlpha(77)),
       floatingLabelStyle: const TextStyle(color: _secondaryDark),
     ),
     textSelectionTheme: TextSelectionThemeData(
