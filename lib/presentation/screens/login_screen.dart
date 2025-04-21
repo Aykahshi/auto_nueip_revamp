@@ -1,3 +1,4 @@
+import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:gap/gap.dart';
@@ -7,44 +8,7 @@ import '../../data/repositories/nueip_repository_impl.dart'; // Import Repositor
 import '../../domain/repositories/nueip_repository.dart'; // Import Repository Interface
 import '../presenters/login_presenter.dart'; // Import the Presenter
 
-// Reusable Form Field Widget (Moved outside LoginScreen for clarity)
-class _LoginFormField extends StatelessWidget {
-  final TextEditingController controller;
-  final String labelText;
-  final FormFieldValidator<String>? validator;
-  final TextInputType? keyboardType;
-  final bool obscureText;
-  final Widget? suffixIcon;
-  final AutovalidateMode autovalidateMode;
-
-  const _LoginFormField({
-    required this.controller,
-    required this.labelText,
-    this.validator,
-    this.keyboardType,
-    this.obscureText = false,
-    this.suffixIcon,
-    this.autovalidateMode = AutovalidateMode.disabled,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      obscureText: obscureText,
-      autovalidateMode: autovalidateMode,
-      validator: validator,
-      onTapOutside: (e) => FocusScope.of(context).unfocus(),
-      decoration: InputDecoration(
-        labelText: labelText,
-        border: const OutlineInputBorder(),
-        suffixIcon: suffixIcon,
-      ),
-    );
-  }
-}
-
+@RoutePage()
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
@@ -254,6 +218,44 @@ class LoginScreen extends StatelessWidget {
             },
           ),
         ),
+      ),
+    );
+  }
+}
+
+// Reusable Form Field Widget (Moved outside LoginScreen for clarity)
+class _LoginFormField extends StatelessWidget {
+  final TextEditingController controller;
+  final String labelText;
+  final FormFieldValidator<String>? validator;
+  final TextInputType? keyboardType;
+  final bool obscureText;
+  final Widget? suffixIcon;
+  final AutovalidateMode autovalidateMode;
+
+  const _LoginFormField({
+    required this.controller,
+    required this.labelText,
+    this.validator,
+    this.keyboardType,
+    this.obscureText = false,
+    this.suffixIcon,
+    this.autovalidateMode = AutovalidateMode.disabled,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      obscureText: obscureText,
+      autovalidateMode: autovalidateMode,
+      validator: validator,
+      onTapOutside: (e) => FocusScope.of(context).unfocus(),
+      decoration: InputDecoration(
+        labelText: labelText,
+        border: const OutlineInputBorder(),
+        suffixIcon: suffixIcon,
       ),
     );
   }

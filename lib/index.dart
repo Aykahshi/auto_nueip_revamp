@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:joker_state/joker_state.dart';
 
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'data/models/auth_session.dart';
-import 'presentation/screens/login_screen.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -20,16 +20,20 @@ class App extends StatelessWidget {
       keepAlive: true,
     );
 
+    final router = AppRouter();
+
     return JokerStage<AppThemeMode>(
       joker: themeJoker,
       builder: (context, currentThemeMode) {
-        return MaterialApp(
-          title: 'Auto NUEIP',
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: _getThemeMode(currentThemeMode),
-          home: const KeyboardVisibilityProvider(child: LoginScreen()),
-          debugShowCheckedModeBanner: false,
+        return KeyboardVisibilityProvider(
+          child: MaterialApp.router(
+            title: 'Auto NUEIP',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: _getThemeMode(currentThemeMode),
+            debugShowCheckedModeBanner: false,
+            routerConfig: router.config(),
+          ),
         );
       },
     );
