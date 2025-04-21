@@ -28,7 +28,7 @@ class NueipService {
     );
   }
 
-  TaskEither<Failure, Response> clockAction({
+  TaskEither<Failure, Response> punchAction({
     required String method,
     required String cookie,
     required String csrfToken,
@@ -64,7 +64,7 @@ class NueipService {
     );
   }
 
-  TaskEither<Failure, Response> getClockTime({
+  TaskEither<Failure, Response> getPunchTime({
     required String accessToken,
     required String cookie,
   }) {
