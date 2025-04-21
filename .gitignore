@@ -49,3 +49,7 @@ app.*.map.json
 
 # Cursor
 /.cursor/
+
+# Ignore all generated files
+*.g.dart
+*.freezed.dart

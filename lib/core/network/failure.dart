@@ -1,24 +1,20 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+
+part 'failure.freezed.dart';
 
 /// Failure class for representing API errors and other failures.
 /// Use this class to throw and handle API-related exceptions.
-class Failure extends Equatable implements Exception {
-  /// Error message describing the failure.
-  final String message;
-
-  /// Optional error code, such as HTTP status code.
-  final int? code;
-
-  /// Optional details for debugging or logging.
-  final dynamic details;
-
+@freezed
+sealed class Failure with _$Failure implements Exception {
   /// Constructor for Failure.
-  const Failure({required this.message, this.code, this.details});
+  const factory Failure({
+    /// Error message describing the failure.
+    required String message,
 
-  @override
-  String toString() =>
-      'Failure(message: $message, code: $code, details: $details)';
+    /// Optional error code, such as HTTP status code.
+    int? code,
 
-  @override
-  List<Object?> get props => [message, code, details];
+    /// Optional details for debugging or logging.
+    dynamic details,
+  }) = _Failure;
 }

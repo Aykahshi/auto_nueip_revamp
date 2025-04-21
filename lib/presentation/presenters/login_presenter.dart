@@ -47,8 +47,8 @@ class LoginPresenter {
         if (_helper.redirectUrl == '') return;
 
         if (_helper.redirectUrl.contains('/home')) {
-          final String cookie = await _helper.getCookie();
-          final String csrfToken = await _helper.getCrsfToken();
+          await _helper.getCookie();
+          await _helper.getCrsfToken();
           await _helper.getOauthToken();
         }
       },
