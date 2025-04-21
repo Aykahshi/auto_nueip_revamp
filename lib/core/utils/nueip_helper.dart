@@ -73,7 +73,8 @@ final class NueipHelper {
         );
         final authJoker = Circus.spotlight<AuthSession>(tag: 'auth');
 
-        authJoker.trick(session);
+        // No need to notify, just store AuthSession
+        authJoker.whisper(session);
         debugPrint('getOauthToken: ${authJoker.state}');
       },
     );
