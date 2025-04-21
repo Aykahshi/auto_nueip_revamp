@@ -4,6 +4,7 @@ import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:gap/gap.dart';
 import 'package:joker_state/joker_state.dart';
 
+import '../../data/models/login_status_enum.dart';
 import '../../data/repositories/nueip_repository_impl.dart'; // Import Repository
 import '../../domain/repositories/nueip_repository.dart'; // Import Repository Interface
 import '../presenters/login_presenter.dart'; // Import the Presenter
@@ -24,8 +25,8 @@ class LoginScreen extends StatelessWidget {
 
     // Joker for password visibility state
     final passwordVisibleJoker = Joker<bool>(false);
-    // Joker for loading state
-    final isLoadingJoker = Joker<bool>(false);
+    // Joker for login status
+    final loginStatusJoker = Circus.spotlight<LoginStatus>(tag: 'loginStatus');
 
     // List of controllers to be managed by trapeze
     final controllers = [
@@ -43,7 +44,9 @@ class LoginScreen extends StatelessWidget {
     final presenter = LoginPresenter(repository: nueipRepository);
 
     // Function to show snackbar messages
+    // ! TOFIX: in stateless widget, it will throw error sometimes, need to find a better way to handle this
     void showMessage(String message, {bool isError = false}) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).hideCurrentSnackBar();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -55,6 +58,14 @@ class LoginScreen extends StatelessWidget {
         ),
       );
     }
+
+    loginStatusJoker.listen((previous, current) {
+      if (current.isSuccess) {
+        showMessage('登入成功');
+      } else if (current.isError) {
+        showMessage('登入失敗', isError: true);
+      }
+    });
 
     return Scaffold(
       body: SafeArea(
@@ -69,11 +80,10 @@ class LoginScreen extends StatelessWidget {
                   top: 16.0,
                   bottom: isKeyboardVisible ? 16.0 : 16.0,
                 ),
-                // Use local isLoadingJoker
-                child: isLoadingJoker.perform(
-                  builder: (context, isLoading) {
+                child: loginStatusJoker.perform(
+                  builder: (context, status) {
                     return IgnorePointer(
-                      ignoring: isLoading,
+                      ignoring: status.isLoading,
                       child: Form(
                         key: formKey,
                         child: SingleChildScrollView(
@@ -149,7 +159,7 @@ class LoginScreen extends StatelessWidget {
                                   minimumSize: const Size(double.infinity, 48),
                                 ),
                                 onPressed:
-                                    isLoading
+                                    status.isLoading
                                         ? null
                                         : () async {
                                           FocusScope.of(context).unfocus();
@@ -173,7 +183,6 @@ class LoginScreen extends StatelessWidget {
                                                 companyCode: companyCode,
                                                 employeeId: employeeId,
                                                 password: password,
-                                                loadingJoker: isLoadingJoker,
                                               );
                                             });
                                           } else {
@@ -184,7 +193,7 @@ class LoginScreen extends StatelessWidget {
                                           }
                                         },
                                 child:
-                                    isLoading
+                                    status.isLoading
                                         ? const SizedBox(
                                           width: 24,
                                           height: 24,

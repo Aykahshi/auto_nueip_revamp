@@ -4,26 +4,28 @@ import 'package:joker_state/joker_state.dart';
 import '../../core/config/storage_keys.dart';
 import '../../core/utils/local_storage.dart';
 import '../../core/utils/nueip_helper.dart';
+import '../../data/models/login_status_enum.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
 import '../../domain/repositories/nueip_repository.dart';
 
 class LoginPresenter {
   final NueipRepository _repository;
   final NueipHelper _helper;
+  final Joker<LoginStatus> _joker;
 
   LoginPresenter({required NueipRepository? repository})
     : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
-      _helper = Circus.find<NueipHelper>();
+      _helper = Circus.find<NueipHelper>(),
+      _joker = Circus.spotlight<LoginStatus>(tag: 'loginStatus');
 
   /// Performs the login operation.
   Future<void> login({
     required String companyCode,
     required String employeeId,
     required String password,
-    required Joker<bool> loadingJoker,
   }) async {
     // Update loading state via the passed Joker
-    loadingJoker.trick(true);
+    _joker.trick(LoginStatus.loading);
 
     final result =
         await _repository
@@ -34,6 +36,7 @@ class LoginPresenter {
     result.match(
       (failure) {
         debugPrint('Login Failed in Presenter: ${failure.message}');
+        _joker.trick(LoginStatus.error);
       },
       (response) async {
         debugPrint('Login Successful in Presenter! Saving credentials...');
@@ -51,11 +54,10 @@ class LoginPresenter {
           await _helper.getCrsfToken();
           await _helper.getOauthToken();
         }
+
+        _joker.trick(LoginStatus.success);
       },
     );
-
-    // Turn off loading state via the passed Joker *after* processing
-    loadingJoker.trick(false);
   }
 
   // --- Helper for Saving Credentials (remains internal to Presenter) ---

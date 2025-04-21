@@ -5,6 +5,7 @@ import 'core/network/api_client.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/local_storage.dart';
 import 'core/utils/nueip_helper.dart';
+import 'data/models/login_status_enum.dart';
 import 'data/repositories/nueip_repository_impl.dart';
 import 'data/services/nueip_services.dart';
 import 'index.dart';
@@ -33,4 +34,6 @@ Future<void> _init() async {
     tag: 'themeMode',
     keepAlive: true,
   );
+  // Add Login Joker registration
+  Circus.summon<LoginStatus>(LoginStatus.initial, tag: 'loginStatus');
 }
