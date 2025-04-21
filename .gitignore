@@ -52,4 +52,5 @@ app.*.map.json
 
 # Ignore all generated files
 *.g.dart
+*.gr.dart
 *.freezed.dart
