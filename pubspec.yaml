@@ -1,0 +1,67 @@
+name: auto_nueip
+description: "A new Flutter project."
+
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  html: ^0.15.5+1
+  joker_state: ^2.1.1
+  dio: ^5.8.0+1
+  pretty_dio_logger: ^1.4.0
+  dio_cookie_manager: ^3.2.0
+  cookie_jar: ^4.0.8
+  equatable: ^2.0.7
+  flutter_keyboard_visibility: ^6.0.0
+  timezone: ^0.10.0
+  fpdart: ^1.1.1
+  intl: ^0.20.2
+  shared_preferences: ^2.5.3
+  calendar_view: ^1.4.0
+  gap: ^3.0.1
+  google_fonts: ^6.2.1
+  permission_handler: ^12.0.0+1
+  
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+  flutter_launcher_icons: ^0.14.3
+  flutter_native_splash: ^2.4.6
+
+flutter_native_splash:
+  color: '#FFFFFF'
+  image: assets/images/splash_screen.png
+  color_dark: '#333333'
+  image_dark: assets/images/splash_screen_dark.png
+  android_12:
+    image: assets/images/android12_splash.png
+    color: '#FFFFFF'
+    icon_background_color: '#FFFFFF'
+    image_dark: assets/images/android12_splash_dark.png
+    color_dark: '#333333'
+    icon_background_color_dark: '#333333'
+
+flutter_launcher_icons:
+  android: 'launcher_icon'
+  ios: true
+  image_path: 'assets/icons/icon_android.png'
+  image_path_android: 'assets/icons/icon_android.png'
+  image_path_ios: 'assets/icons/icon_ios.png'
+  min_sdk_android: 34
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/icons/
+    - assets/images/
