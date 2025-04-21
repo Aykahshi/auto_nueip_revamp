@@ -116,7 +116,7 @@ class LoginScreen extends StatelessWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Image.asset('assets/icons/icon_ios.png'),
+                              Image.asset('assets/images/logo.png'),
                               // Use local companyCodeController
                               _LoginFormField(
                                 controller: companyCodeController,
