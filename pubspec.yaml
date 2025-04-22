@@ -14,8 +14,9 @@ dependencies:
   auto_route: ^10.0.1
   freezed_annotation: ^3.0.0
   json_annotation: ^4.9.0
+  flutter_local_notifications: ^19.1.0
   html: ^0.15.5+1
-  joker_state: ^2.1.1
+  joker_state: ^3.1.0
   dio: ^5.8.0+1
   pretty_dio_logger: ^1.4.0
   dio_cookie_manager: ^3.2.0
@@ -63,7 +64,7 @@ flutter_launcher_icons:
   image_path: 'assets/icons/icon_android.png'
   image_path_android: 'assets/icons/icon_android.png'
   image_path_ios: 'assets/icons/icon_ios.png'
-  min_sdk_android: 34
+  min_sdk_android: 27
 
 flutter:
   uses-material-design: true

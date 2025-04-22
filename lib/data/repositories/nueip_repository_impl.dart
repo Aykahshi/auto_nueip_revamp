@@ -13,7 +13,7 @@ class NueipRepositoryImpl implements NueipRepository {
     : _service = service ?? Circus.find<NueipService>();
 
   @override
-  TaskEither<Failure, Response> login({
+  TaskEither<LoginFailure, Response> login({
     required String company,
     required String id,
     required String password,

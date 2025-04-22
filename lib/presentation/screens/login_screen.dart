@@ -6,7 +6,6 @@ import 'package:joker_state/joker_state.dart';
 
 import '../../data/models/login_status_enum.dart';
 import '../../data/repositories/nueip_repository_impl.dart'; // Import Repository
-import '../../domain/repositories/nueip_repository.dart'; // Import Repository Interface
 import '../presenters/login_presenter.dart'; // Import the Presenter
 
 @RoutePage()
@@ -25,8 +24,6 @@ class LoginScreen extends StatelessWidget {
 
     // Joker for password visibility state
     final passwordVisibleJoker = Joker<bool>(false);
-    // Joker for login status
-    final loginStatusJoker = Circus.spotlight<LoginStatus>(tag: 'loginStatus');
 
     // List of controllers to be managed by trapeze
     final controllers = [
@@ -39,9 +36,11 @@ class LoginScreen extends StatelessWidget {
     final iconColor = Theme.of(context).colorScheme.primary;
 
     // Instantiate repository (replace with DI in real app)
-    final NueipRepository nueipRepository = NueipRepositoryImpl();
+    final repository = Circus.find<NueipRepositoryImpl>();
     // Instantiate Presenter, passing repository
-    final presenter = LoginPresenter(repository: nueipRepository);
+    // Use Circus.summon to manage presenter lifecycle if needed globally or across routes,
+    // but direct instantiation is fine for a single screen context like this.
+    final presenter = LoginPresenter(repository: repository);
 
     // Function to show snackbar messages
     // ! TOFIX: in stateless widget, it will throw error sometimes, need to find a better way to handle this
@@ -59,18 +58,22 @@ class LoginScreen extends StatelessWidget {
       );
     }
 
-    loginStatusJoker.listen((previous, current) {
-      if (current.isSuccess) {
+    // Listen to presenter state changes
+    presenter.listen((previous, current) {
+      // Check current state status
+      if (current.status.isSuccess) {
         showMessage('登入成功');
-      } else if (current.isError) {
-        showMessage('登入失敗', isError: true);
+        // Consider navigation or other actions upon successful login
+      } else if (current.status.isError) {
+        // Use error message from LoginState if available
+        final errorMessage = current.errors?.message ?? '登入失敗，請稍後再試';
+        showMessage(errorMessage, isError: true);
       }
     });
 
     return Scaffold(
       body: SafeArea(
         child: controllers.trapeze(
-          // Use trapeze with locally defined controllers
           KeyboardVisibilityBuilder(
             builder: (context, isKeyboardVisible) {
               return Padding(
@@ -80,10 +83,13 @@ class LoginScreen extends StatelessWidget {
                   top: 16.0,
                   bottom: isKeyboardVisible ? 16.0 : 16.0,
                 ),
-                child: loginStatusJoker.perform(
-                  builder: (context, status) {
+                // Perform UI updates based on presenter's state
+                child: presenter.perform(
+                  builder: (context, loginState) {
+                    // Builder receives LoginState
                     return IgnorePointer(
-                      ignoring: status.isLoading,
+                      // Use status from LoginState
+                      ignoring: loginState.status.isLoading,
                       child: Form(
                         key: formKey,
                         child: SingleChildScrollView(
@@ -91,7 +97,6 @@ class LoginScreen extends StatelessWidget {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Image.asset('assets/images/logo.png'),
-                              // Use local companyCodeController
                               _LoginFormField(
                                 controller: companyCodeController,
                                 labelText: '公司代碼',
@@ -109,7 +114,6 @@ class LoginScreen extends StatelessWidget {
                                 },
                               ),
                               const Gap(16.0),
-                              // Use local employeeIdController
                               _LoginFormField(
                                 controller: employeeIdController,
                                 labelText: '員工編號',
@@ -121,7 +125,6 @@ class LoginScreen extends StatelessWidget {
                                 },
                               ),
                               const Gap(16.0),
-                              // Use local passwordVisibleJoker and passwordController
                               passwordVisibleJoker.perform(
                                 builder: (context, isPasswordVisible) {
                                   return _LoginFormField(
@@ -142,7 +145,6 @@ class LoginScreen extends StatelessWidget {
                                             : Icons.visibility,
                                         color: iconColor,
                                       ),
-                                      // Update local passwordVisibleJoker
                                       onPressed: () {
                                         passwordVisibleJoker.trickWith(
                                           (state) => !state,
@@ -153,62 +155,54 @@ class LoginScreen extends StatelessWidget {
                                 },
                               ),
                               const Gap(24.0),
-                              // Login Button delegates to Presenter
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   minimumSize: const Size(double.infinity, 48),
                                 ),
-                                onPressed:
-                                    status.isLoading
-                                        ? null
-                                        : () async {
-                                          FocusScope.of(context).unfocus();
-                                          if (formKey.currentState
-                                                  ?.validate() ??
-                                              false) {
-                                            final companyCode =
-                                                companyCodeController.text;
-                                            final employeeId =
-                                                employeeIdController.text;
-                                            final password =
-                                                passwordController.text;
+                                // Use status from LoginState for onPressed
+                                onPressed: () async {
+                                  if (loginState.status.isLoading) return;
 
-                                            // Call Presenter's login method, passing the UI's loading Joker
-                                            CueGate.debounce(
-                                              delay: const Duration(
-                                                microseconds: 200,
-                                              ),
-                                            ).trigger(() async {
-                                              await presenter.login(
-                                                companyCode: companyCode,
-                                                employeeId: employeeId,
-                                                password: password,
-                                              );
-                                            });
-                                          } else {
-                                            showMessage(
-                                              '請檢查輸入欄位',
-                                              isError: true,
-                                            );
-                                          }
-                                        },
-                                child:
-                                    status.isLoading
-                                        ? const SizedBox(
-                                          width: 24,
-                                          height: 24,
-                                          child: CircularProgressIndicator(
-                                            color: Colors.white,
-                                            strokeWidth: 3,
-                                          ),
-                                        )
-                                        : const Text(
-                                          '登入',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
+                                  FocusScope.of(context).unfocus();
+                                  if (formKey.currentState?.validate() ??
+                                      false) {
+                                    final companyCode =
+                                        companyCodeController.text;
+                                    final employeeId =
+                                        employeeIdController.text;
+                                    final password = passwordController.text;
+
+                                    CueGate.debounce(
+                                      delay: const Duration(microseconds: 200),
+                                    ).trigger(() async {
+                                      await presenter.login(
+                                        companyCode: companyCode,
+                                        employeeId: employeeId,
+                                        password: password,
+                                      );
+                                    });
+                                  } else {
+                                    showMessage('請檢查輸入欄位', isError: true);
+                                  }
+                                },
+                                // Use status from LoginState for button child
+                                child: loginState.status.isLoading.reveal(
+                                  whenTrue: const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 3,
+                                    ),
+                                  ),
+                                  whenFalse: const Text(
+                                    '登入',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
                               ),
                               if (isKeyboardVisible)
                                 Gap(

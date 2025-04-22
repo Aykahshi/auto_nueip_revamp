@@ -3,6 +3,7 @@ include: package:flutter_lints/flutter.yaml
 analyze:
   exclude:
     - "**/*.g.dart"
+    - "**/*.gr.dart"
     - "**/*.freezed.dart"
 
 linter:

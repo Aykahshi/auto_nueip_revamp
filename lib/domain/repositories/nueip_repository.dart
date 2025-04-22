@@ -4,7 +4,7 @@ import 'package:fpdart/fpdart.dart';
 import '../../core/network/failure.dart';
 
 abstract class NueipRepository {
-  TaskEither<Failure, Response> login({
+  TaskEither<LoginFailure, Response> login({
     required String company,
     required String id,
     required String password,

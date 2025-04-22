@@ -6,6 +6,7 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import '../config/api_config.dart';
 import 'content_type_transformer.dart';
+import 'login_interceptor.dart';
 
 /// ApiClient is a wrapper for Dio that manages cookies automatically.
 class ApiClient {
@@ -24,6 +25,7 @@ class ApiClient {
       ),
       _cookieJar = CookieJar() {
     _dio.interceptors.add(CookieManager(_cookieJar));
+    _dio.interceptors.add(LoginInterceptor());
     _dio.transformer = ContentTypeTransformer();
 
     if (kDebugMode) {
