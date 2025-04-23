@@ -9,9 +9,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter  
 
   cupertino_icons: ^1.0.8
   flutter_animate: ^4.5.2
+  salomon_bottom_bar: ^3.3.2
+  animated_flip_counter: ^0.3.4
   auto_route: ^10.0.1
   freezed_annotation: ^3.0.0
   json_annotation: ^4.9.0
@@ -33,6 +37,8 @@ dependencies:
   permission_handler: ^12.0.0+1
   flutter_form_builder: ^10.0.1
   form_builder_validators: ^11.1.2
+  syncfusion_flutter_datepicker: ^29.1.39
+  syncfusion_flutter_calendar: ^29.1.39
   
 
 dev_dependencies:

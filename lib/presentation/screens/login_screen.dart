@@ -1,4 +1,4 @@
-import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -7,6 +7,8 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:gap/gap.dart';
 import 'package:joker_state/joker_state.dart';
 
+import '../../core/router/app_router.dart';
+import '../../core/theme/app_theme.dart';
 import '../../data/models/login_status_enum.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
 import '../presenters/login_presenter.dart';
@@ -39,12 +41,10 @@ class _LoginScreenState extends State<LoginScreen> {
     _cancel = _presenter.listen((previous, current) {
       // Check current state status
       if (current.isSuccess) {
-        showMessage('登入成功');
-        // Consider navigation or other actions upon successful login
+        context.router.push(const HomeRoute());
       } else if (current.isError) {
         // Use error message from LoginState if available
-        final errorMessage = '登入失敗，請稍後再試';
-        showMessage(errorMessage, isError: true);
+        showErrorMessage('登入失敗，請稍後再試');
       }
     });
     super.initState();
@@ -57,16 +57,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // Function to show snackbar messages
-  void showMessage(String message, {bool isError = false}) {
+  void showErrorMessage(String message) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor:
-            isError
-                ? Theme.of(context).colorScheme.error
-                : Theme.of(context).colorScheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.error,
       ),
     );
   }
@@ -97,21 +94,31 @@ class _LoginScreenState extends State<LoginScreen> {
                     ignoring: loginState.isLoading,
                     child: FormBuilder(
                       key: _formKey,
-                      // Autovalidate on user interaction after first submission attempt
-                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      autovalidateMode: AutovalidateMode.disabled,
                       child: SingleChildScrollView(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Image.asset('assets/images/logo.png')
-                                .animate()
-                                .scaleXY(
-                                  begin: 0,
-                                  end: 1,
-                                  duration: 500.ms,
-                                  curve: Curves.easeOutBack,
-                                )
-                                .fadeIn(),
+                            JokerCast<AppThemeMode>(
+                              builder: (context, themeMode) {
+                                final isDarkMode =
+                                    themeMode == AppThemeMode.dark;
+
+                                return Image.asset(
+                                      isDarkMode
+                                          ? 'assets/images/logo_dark.png'
+                                          : 'assets/images/logo.png',
+                                    )
+                                    .animate()
+                                    .scaleXY(
+                                      begin: 0,
+                                      end: 1,
+                                      duration: 500.ms,
+                                      curve: Curves.easeOutBack,
+                                    )
+                                    .fadeIn();
+                              },
+                            ),
                             const Gap(16.0),
                             FormBuilderTextField(
                                   name: 'companyCode',
@@ -252,7 +259,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         });
                                       }
                                     } else {
-                                      showMessage('請檢查輸入欄位', isError: true);
+                                      showErrorMessage('請檢查輸入欄位');
                                     }
                                   },
                                   child: loginState.isLoading.reveal(

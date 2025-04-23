@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../core/config/storage_keys.dart';
-import '../../core/utils/local_storage.dart';
+import '../../core/utils/auth_utils.dart';
 import '../../core/utils/nueip_helper.dart';
 import '../../data/models/login_status_enum.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
@@ -53,10 +52,8 @@ class LoginPresenter extends Presenter<LoginStatus> {
 
         if (_helper.redirectUrl.contains('/home')) {
           try {
-            await _helper.getCookie();
-            await _helper.getCrsfToken();
-            await _helper.getOauthToken();
-            _saveCredentials(companyCode, employeeId, password);
+            await _helper.getCookieAndToken();
+            await AuthUtils.saveCredentials(companyCode, employeeId, password);
             trick(LoginStatus.success);
           } catch (e) {
             debugPrint('Helper setup failed: $e');
@@ -71,26 +68,5 @@ class LoginPresenter extends Presenter<LoginStatus> {
         }
       },
     );
-  }
-
-  Future<void> _saveCredentials(
-    String companyCode,
-    String employeeId,
-    String password,
-  ) async {
-    debugPrint('Login Successful in Presenter! Saving credentials...');
-
-    try {
-      await LocalStorage.set(StorageKeys.companyCode, companyCode);
-      await LocalStorage.set(StorageKeys.employeeId, employeeId);
-      await LocalStorage.set(StorageKeys.password, password);
-      debugPrint(
-        'Credentials saved successfully by ${runtimeType.toString()}.',
-      );
-    } catch (e) {
-      debugPrint(
-        'Failed to save credentials in  ${runtimeType.toString()}: $e',
-      );
-    }
   }
 }

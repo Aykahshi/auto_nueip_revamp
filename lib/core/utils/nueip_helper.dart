@@ -19,47 +19,57 @@ final class NueipHelper {
 
   String get redirectUrl => _redirectUrl ?? '';
 
-  Future<String> getCrsfToken() async {
-    final client = Circus.find<ApiClient>();
-
-    final res = await client.get(
-      _redirectUrl!,
-      options: Options(headers: {'Cookie': _cookie}),
-    );
-
-    final html = res.data as String;
-
-    final token = html.extractToken();
-
-    _crsfToken = token;
-
-    debugPrint('getCrsfToken: $_crsfToken');
-
-    return token;
+  Future<void> getCookieAndToken() async {
+    await _getCookie();
+    await _getCrsfToken();
+    await _getOauthToken();
   }
 
-  Future<String> getCookie() async {
-    final cookieJar = Circus.find<ApiClient>().cookieJar;
-    final List<Cookie> cookies = await cookieJar.loadForRequest(
-      Uri.parse(ApiConfig.LOGIN_URL),
-    );
-    final String cookie = cookies.parse();
+  Future<void> _getCrsfToken() async {
+    try {
+      final client = Circus.find<ApiClient>();
 
-    _cookie = cookie;
+      final res = await client.get(
+        _redirectUrl!,
+        options: Options(headers: {'Cookie': _cookie}),
+      );
 
-    debugPrint('getCookie: $_cookie');
+      final html = res.data as String;
 
-    return cookie;
+      final token = html.extractToken();
+
+      _crsfToken = token;
+
+      debugPrint('NueipHelper getCrsfToken: $_crsfToken');
+    } catch (e) {
+      debugPrint('NueipHelper getCrsfToken failed: $e');
+    }
   }
 
-  Future<void> getOauthToken() async {
+  Future<void> _getCookie() async {
+    try {
+      final cookieJar = Circus.find<ApiClient>().cookieJar;
+      final List<Cookie> cookies = await cookieJar.loadForRequest(
+        Uri.parse(ApiConfig.LOGIN_URL),
+      );
+      final String cookie = cookies.parse();
+
+      _cookie = cookie;
+
+      debugPrint('NueipHelper getCookie: $_cookie');
+    } catch (e) {
+      debugPrint('NueipHelper getCookie failed: $e');
+    }
+  }
+
+  Future<void> _getOauthToken() async {
     final repository = Circus.find<NueipRepositoryImpl>();
 
     final result = await repository.getOauthToken(cookie: _cookie ?? '').run();
 
     result.fold(
       (faulure) {
-        debugPrint('getOauthToken failed: ${faulure.message}');
+        debugPrint('NueipHelper getOauthToken failed: ${faulure.message}');
       },
       (res) {
         final String accessToken = res.data['token_access_token'];
@@ -75,7 +85,7 @@ final class NueipHelper {
 
         // No need to notify, just store AuthSession
         authJoker.whisper(session);
-        debugPrint('getOauthToken: ${authJoker.state}');
+        debugPrint('NueipHelper getOauthToken: ${authJoker.state}');
       },
     );
   }

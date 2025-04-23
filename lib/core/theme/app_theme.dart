@@ -14,16 +14,19 @@ const Color _textOnLight = Color(0xFF212121); // Dark Grey
 const Color _textOnPrimaryLight = Colors.white;
 
 // --- Dark Theme Color Palette ---
-const Color _primaryDark = Color(0xFF4DB6AC); // Lighter Teal for Dark
-const Color _secondaryDark = Color(0xFF64B5F6); // Lighter Blue for Dark
-const Color _accentDark = Color(0xFFFFD54F); // Slightly Lighter Yellow
-const Color _backgroundDark = Color(0xFF121212); // Very Dark Grey
-const Color _surfaceDark = Color(0xFF1E1E1E); // Slightly lighter dark grey
-const Color _textOnDark = Color(0xFFE0E0E0); // Light Grey
-const Color _textOnPrimaryDark = Color(
-  0xFF000000,
-); // Black text on Lighter Teal
+const Color _primaryDark = Color(0xFF3A5F84); // Muted Blue
+const Color _secondaryDark = Color(0xFFD8A964); // Muted Orange
+const Color _tertiaryDark = Color(0xFF4A7C82); // Dark Teal/Green
+const Color _backgroundDark = Color(0xFF1A1D21); // Very Dark Grey/Blue
+const Color _surfaceDark = Color(0xFF252A30); // Slightly Lighter Dark Grey/Blue
+const Color _textOnDark = Color(0xFFE0E0E0); // Light Grey / Off-white
+const Color _textOnPrimaryDark = Color(0xFFE0E0E0); // Light text on Muted Blue
+const Color _textOnSecondaryDark = Color(
+  0xFF1A1D21,
+); // Dark text on Muted Orange (Ensure contrast)
+const Color _textOnTertiaryDark = Color(0xFFE0E0E0); // Light text on Dark Teal
 const Color _errorDark = Color(0xFFCF6679); // Material Dark Error
+const Color _onErrorDark = Color(0xFF150B0D); // Dark text on Error Red
 const Color _errorLight = Colors.redAccent;
 
 // --- App Theme Definition ---
@@ -69,7 +72,7 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: _surfaceLight.withAlpha(204),
+      fillColor: _surfaceLight.withValues(alpha: 0.8),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 16.0,
         vertical: 12.0,
@@ -80,7 +83,10 @@ class AppTheme {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8.0),
-        borderSide: BorderSide(color: _primaryLight.withAlpha(153), width: 1.0),
+        borderSide: BorderSide(
+          color: _primaryLight.withValues(alpha: 0.6),
+          width: 1.0,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8.0),
@@ -94,12 +100,12 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8.0),
         borderSide: const BorderSide(color: _errorLight, width: 2.0),
       ),
-      labelStyle: TextStyle(color: _textOnLight.withAlpha(77)),
+      labelStyle: TextStyle(color: _textOnLight.withValues(alpha: 0.3)),
       floatingLabelStyle: const TextStyle(color: _secondaryLight),
     ),
     textSelectionTheme: TextSelectionThemeData(
       cursorColor: _secondaryLight,
-      selectionColor: _secondaryLight.withAlpha(77),
+      selectionColor: _secondaryLight.withValues(alpha: 0.3),
       selectionHandleColor: _secondaryLight,
     ),
     visualDensity: VisualDensity.adaptivePlatformDensity,
@@ -110,28 +116,28 @@ class AppTheme {
   static final ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     primaryColor: _primaryDark,
-    colorScheme: const ColorScheme.dark(
+    colorScheme: ColorScheme.dark(
       primary: _primaryDark,
-      onPrimary: _textOnPrimaryDark, // Black text on Lighter Teal
+      onPrimary: _textOnPrimaryDark,
       secondary: _secondaryDark,
-      onSecondary: _textOnPrimaryDark, // Black text on Lighter Blue
-      tertiary: _accentDark,
-      onTertiary: _textOnLight, // Dark Grey text on Lighter Yellow
+      onSecondary: _textOnSecondaryDark,
+      tertiary: _tertiaryDark,
+      onTertiary: _textOnTertiaryDark,
       error: _errorDark,
-      onError: _textOnPrimaryDark, // Black text on Dark Error Red
+      onError: _onErrorDark,
       surface: _surfaceDark,
       onSurface: _textOnDark,
-      outline: _primaryDark,
+      outline: _primaryDark.withValues(alpha: 0.7),
     ),
     scaffoldBackgroundColor: _backgroundDark,
     appBarTheme: const AppBarTheme(
-      color: _surfaceDark, // Use surface color for dark AppBar
+      color: _surfaceDark,
       foregroundColor: _textOnDark,
       elevation: 1.0,
       titleTextStyle: TextStyle(
         fontSize: 20.0,
         fontWeight: FontWeight.w500,
-        color: _textOnDark, // Explicitly set color
+        color: _textOnDark,
       ),
       iconTheme: IconThemeData(color: _textOnDark),
     ),
@@ -146,18 +152,24 @@ class AppTheme {
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: _surfaceDark.withAlpha(150), // Darker fill
+      fillColor: _surfaceDark.withValues(alpha: 0.8),
       contentPadding: const EdgeInsets.symmetric(
         horizontal: 16.0,
         vertical: 12.0,
       ),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8.0),
-        borderSide: const BorderSide(color: _primaryDark, width: 1.0),
+        borderSide: BorderSide(
+          color: _primaryDark.withValues(alpha: 0.7),
+          width: 1.0,
+        ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8.0),
-        borderSide: BorderSide(color: _primaryDark.withAlpha(153), width: 1.0),
+        borderSide: BorderSide(
+          color: _primaryDark.withValues(alpha: 0.5),
+          width: 1.0,
+        ),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8.0),
@@ -171,7 +183,7 @@ class AppTheme {
         borderRadius: BorderRadius.circular(8.0),
         borderSide: const BorderSide(color: _errorDark, width: 2.0),
       ),
-      labelStyle: TextStyle(color: _textOnDark.withAlpha(77)),
+      labelStyle: TextStyle(color: _textOnDark.withValues(alpha: 0.6)),
       floatingLabelStyle: const TextStyle(color: _secondaryDark),
     ),
     textSelectionTheme: TextSelectionThemeData(

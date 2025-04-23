@@ -9,6 +9,9 @@ sealed class StorageKeys {
   /// Key for storing the user's password (UNSECURE, use with caution!).
   static const String password = 'password';
 
+  /// Key for storing the fetched holiday list.
+  static const String holidays = 'holidays';
+
   // Add other keys here as needed, for example:
   // static const String sessionCookie = 'session_cookie';
   // static const String accessToken = 'access_token';

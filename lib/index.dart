@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:joker_state/joker_state.dart';
 
 import 'core/router/app_router.dart';
@@ -20,22 +21,31 @@ class App extends StatelessWidget {
       keepAlive: true,
     );
 
-    final router = AppRouter();
+    final router = Circus.find<AppRouter>();
 
-    return JokerStage<AppThemeMode>(
+    return JokerPortal<AppThemeMode>(
       joker: themeJoker,
-      builder: (context, currentThemeMode) {
-        return KeyboardVisibilityProvider(
-          child: MaterialApp.router(
-            title: 'Auto NUEIP',
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: _getThemeMode(currentThemeMode),
-            debugShowCheckedModeBanner: false,
-            routerConfig: router.config(),
-          ),
-        );
-      },
+      child: JokerCast<AppThemeMode>(
+        builder: (context, currentThemeMode) {
+          return KeyboardVisibilityProvider(
+            child: MaterialApp.router(
+              title: 'Auto NUEIP',
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: _getThemeMode(currentThemeMode),
+              locale: const Locale('zh', 'TW'),
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('zh', 'TW')],
+              debugShowCheckedModeBanner: false,
+              routerConfig: router.config(),
+            ),
+          );
+        },
+      ),
     );
   }
 
