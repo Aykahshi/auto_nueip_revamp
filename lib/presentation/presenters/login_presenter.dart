@@ -2,22 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../core/config/storage_keys.dart';
-import '../../core/network/failure.dart';
 import '../../core/utils/local_storage.dart';
 import '../../core/utils/nueip_helper.dart';
 import '../../data/models/login_status_enum.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
-import '../../domain/entities/login_state.dart';
 import '../../domain/repositories/nueip_repository.dart';
 
-class LoginPresenter extends Presenter<LoginState> {
+class LoginPresenter extends Presenter<LoginStatus> {
   final NueipRepository _repository;
   final NueipHelper _helper;
 
   LoginPresenter({NueipRepository? repository})
     : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
       _helper = Circus.find<NueipHelper>(),
-      super(const LoginState(status: LoginStatus.initial));
+      super(LoginStatus.initial);
 
   /// Performs the login operation.
   Future<void> login({
@@ -26,7 +24,7 @@ class LoginPresenter extends Presenter<LoginState> {
     required String password,
   }) async {
     // Update state using the presenter's built-in trick method
-    trick(const LoginState(status: LoginStatus.loading));
+    trick(LoginStatus.loading);
 
     final result =
         await _repository
@@ -36,60 +34,12 @@ class LoginPresenter extends Presenter<LoginState> {
     // Process the result after awaiting the repository call
     result.match(
       (loginFailure) {
-        switch (loginFailure) {
-          case CompanyInvalid(:final errData):
-            debugPrint('Login Failed (Invalid Company): $errData');
-            trick(
-              LoginState(
-                status: LoginStatus.error,
-                errors: LoginErrors(
-                  message: errData?.message ?? '',
-                  company: errData?.company,
-                ),
-              ),
-            );
-          case UserInvalid(:final errData):
-            debugPrint('Login Failed (User Not Found): $errData');
-            trick(
-              LoginState(
-                status: LoginStatus.error,
-                errors: LoginErrors(
-                  message: errData?.message ?? '',
-                  user: errData?.user,
-                ),
-              ),
-            );
-          case PasswordInvalid(:final errData):
-            debugPrint('Login Failed (Wrong Password): $errData');
-            trick(
-              LoginState(
-                status: LoginStatus.error,
-                errors: LoginErrors(
-                  message: errData?.message ?? '',
-                  pwd: errData?.pwd,
-                ),
-              ),
-            );
-          case UnknownLoginFailure(:final errData):
-            debugPrint('Login Failed (Unknown): $errData');
-            trick(
-              LoginState(
-                status: LoginStatus.error,
-                errors: LoginErrors(message: errData?.message ?? ''),
-              ),
-            );
-        }
-
-        trick(const LoginState(status: LoginStatus.error));
+        trick(LoginStatus.error);
       },
       (response) async {
-        debugPrint('Login Successful in Presenter! Saving credentials...');
-        // Trigger save operation (fire and forget or await if needed)
-        _saveCredentials(companyCode, employeeId, password);
-
         if (response.statusCode != 303) {
           // Consider specific error for non-redirect
-          trick(const LoginState(status: LoginStatus.error));
+          trick(LoginStatus.error);
           return;
         }
 
@@ -97,7 +47,7 @@ class LoginPresenter extends Presenter<LoginState> {
 
         if (_helper.redirectUrl == '') {
           // Consider specific error for missing location
-          trick(const LoginState(status: LoginStatus.error));
+          trick(LoginStatus.error);
           return;
         }
 
@@ -106,19 +56,18 @@ class LoginPresenter extends Presenter<LoginState> {
             await _helper.getCookie();
             await _helper.getCrsfToken();
             await _helper.getOauthToken();
-            trick(const LoginState(status: LoginStatus.success));
+            _saveCredentials(companyCode, employeeId, password);
+            trick(LoginStatus.success);
           } catch (e) {
             debugPrint('Helper setup failed: $e');
-            trick(
-              const LoginState(status: LoginStatus.error),
-            ); // Indicate error during setup
+            trick(LoginStatus.error); // Indicate error during setup
           }
         } else {
           // Handle cases where redirect URL is not '/home'
           debugPrint(
             'Redirect URL does not contain /home: ${_helper.redirectUrl}',
           );
-          trick(const LoginState(status: LoginStatus.error));
+          trick(LoginStatus.error);
         }
       },
     );
@@ -129,6 +78,8 @@ class LoginPresenter extends Presenter<LoginState> {
     String employeeId,
     String password,
   ) async {
+    debugPrint('Login Successful in Presenter! Saving credentials...');
+
     try {
       await LocalStorage.set(StorageKeys.companyCode, companyCode);
       await LocalStorage.set(StorageKeys.employeeId, employeeId);

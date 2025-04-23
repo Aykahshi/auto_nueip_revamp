@@ -1,5 +1,4 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:joker_state/joker_state.dart';
 
@@ -13,7 +12,7 @@ class NueipService {
   NueipService({ApiClient? client})
     : _client = client ?? Circus.find<ApiClient>();
 
-  TaskEither<LoginFailure, Response> login({
+  TaskEither<Failure, Response> login({
     required String company,
     required String id,
     required String password,
@@ -25,43 +24,7 @@ class NueipService {
     };
     return TaskEither.tryCatch(
       () async => await _client.post(ApiConfig.LOGIN_URL, data: body),
-      (e, _) {
-        // Handle DioException specifically for LoginFailure
-        if (e is DioException && e.error is Map<String, dynamic>) {
-          final errorDetails = e.error as Map<String, dynamic>;
-          LoginErrors? loginErrors;
-
-          try {
-            // Assuming the API directly returns the LoginErrors structure
-            // within the `errors` field provided to DioException.error
-            loginErrors = LoginErrors.fromJson(errorDetails);
-          } catch (parseError) {
-            // If parsing LoginErrors fails, keep it null
-            debugPrint(
-              'Failed to parse LoginErrors: $parseError, Details: $errorDetails',
-            );
-            loginErrors = null;
-          }
-
-          if (errorDetails.containsKey('company')) {
-            return LoginFailure.invalidCompany(errData: loginErrors);
-          } else if (errorDetails.containsKey('user')) {
-            return LoginFailure.userNotFound(errData: loginErrors);
-          } else if (errorDetails.containsKey('pwd')) {
-            return LoginFailure.wrongPassword(errData: loginErrors);
-          } else {
-            // Unknown structure within "status: fail"
-            return LoginFailure.unknown(
-              errData: errorDetails, // Pass raw details if parsing failed
-            );
-          }
-        } else if (e is DioException) {
-          // Other DioExceptions during login process
-          return LoginFailure.unknown(errData: e);
-        }
-        // Non-Dio exceptions during login process
-        return LoginFailure.unknown(errData: e);
-      },
+      (e, _) => Failure(message: e.toString(), status: 'error'),
     );
   }
 

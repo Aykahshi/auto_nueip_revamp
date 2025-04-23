@@ -17,11 +17,7 @@ class ApiClient {
 
   ApiClient()
     : _dio = Dio(
-        BaseOptions(
-          headers: ApiConfig.headers,
-          followRedirects: false,
-          validateStatus: (statusCode) => statusCode! < 400,
-        ),
+        BaseOptions(headers: ApiConfig.headers, followRedirects: false),
       ),
       _cookieJar = CookieJar() {
     _dio.interceptors.add(CookieManager(_cookieJar));
@@ -33,8 +29,8 @@ class ApiClient {
         PrettyDioLogger(
           requestHeader: true,
           requestBody: true,
-          responseBody: true,
-          responseHeader: false,
+          responseBody: false,
+          responseHeader: true,
         ),
       );
     }
