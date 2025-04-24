@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 // Import the freezed entity
-import '../../domain/entities/punch_in_data.dart';
-import './punch_in_list_tile.dart';
+import '../../domain/entities/clock_in_data.dart';
 import './shimmer_list_tile.dart';
+import 'clock_in_list_tile.dart';
 
 class QueryResultList extends StatelessWidget {
   final bool isLoading;
-  final List<PunchInData> results;
+  final List<ClockInData> results;
 
   const QueryResultList({
     super.key,
@@ -44,8 +44,8 @@ class QueryResultList extends StatelessWidget {
     return ListView.builder(
       itemCount: results.length,
       itemBuilder: (context, index) {
-        final PunchInData item = results[index];
-        return PunchInListTile(item: item)
+        final ClockInData item = results[index];
+        return ClockInListTile(item: item)
             .animate()
             .fadeIn(delay: (index * 30).ms)
             .moveX(begin: -15); // Adjusted animation

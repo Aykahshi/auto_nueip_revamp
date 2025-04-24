@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/utils/calendar_utils.dart'; // Import utils
-import '../../domain/entities/punch_in_data.dart';
+import '../../domain/entities/clock_in_data.dart';
 import 'detail_info_row.dart'; // Import the new row widget
 
-/// Displays the details for the selected day, showing punch-in info or holiday status.
+/// Displays the details for the selected day, showing clock-in info or holiday status.
 class SelectedDayDetailsCard extends StatelessWidget {
   final DateTime selectedDate;
-  final PunchInData? punchInData;
+  final ClockInData? clockInData;
   final String? holidayDescription; // Explicit holiday description
   final bool isLoading;
   final bool isKnownHoliday; // Indicate if the date is a known holiday
 
   const SelectedDayDetailsCard({
     required this.selectedDate,
-    required this.punchInData,
+    required this.clockInData,
     required this.holidayDescription,
     required this.isLoading,
     required this.isKnownHoliday,
@@ -42,7 +42,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
     if (isKnownHoliday) {
       titleSuffix = holidayDescription ?? '休假';
       titleColor = CalendarUtils.getStatusColor('holiday', colorScheme);
-    } else if (punchInData != null && punchInData!.status != 'error') {
+    } else if (clockInData != null && clockInData!.status != 'error') {
       titleSuffix = '打卡記錄';
     }
 
@@ -100,10 +100,10 @@ class SelectedDayDetailsCard extends StatelessWidget {
 
     // Handle known holiday status
     if (isKnownHoliday) {
-      // If punchInData is null (shouldn't happen if isKnownHoliday is true, but as fallback)
+      // If clockInData is null (shouldn't happen if isKnownHoliday is true, but as fallback)
       // create a dummy holiday object.
       final holidayData =
-          punchInData ?? PunchInData(date: selectedDate, status: 'holiday');
+          clockInData ?? ClockInData(date: selectedDate, status: 'holiday');
       return _buildHolidayOrAbsentContent(
         context,
         holidayData,
@@ -112,7 +112,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
     }
 
     // Handle error or no data for non-holidays
-    if (punchInData == null || punchInData!.status == 'error') {
+    if (clockInData == null || clockInData!.status == 'error') {
       return Center(
         key: const ValueKey('error_details'),
         child: Text(
@@ -122,18 +122,18 @@ class SelectedDayDetailsCard extends StatelessWidget {
       );
     }
 
-    // Display punch-in details (Normal, Late, Absent)
-    if (punchInData!.status == 'absent') {
-      return _buildHolidayOrAbsentContent(context, punchInData!, null);
+    // Display clock-in details (Normal, Late, Absent)
+    if (clockInData!.status == 'absent') {
+      return _buildHolidayOrAbsentContent(context, clockInData!, null);
     } else {
-      return _buildPunchInDetailsList(context, punchInData!);
+      return _buildPunchInDetailsList(context, clockInData!);
     }
   }
 
   /// Builds the centered display for holidays or absences.
   Widget _buildHolidayOrAbsentContent(
     BuildContext context,
-    PunchInData data,
+    ClockInData data,
     String? holidayDesc,
   ) {
     final theme = Theme.of(context);
@@ -144,12 +144,12 @@ class SelectedDayDetailsCard extends StatelessWidget {
     final displayStatus =
         data.status == 'holiday'
             ? (holidayDesc ??
-                CalendarUtils.getPunchInDisplayString('status', data.status))
-            : CalendarUtils.getPunchInDisplayString('status', data.status);
+                CalendarUtils.getClockInDisplayString('status', data.status))
+            : CalendarUtils.getClockInDisplayString('status', data.status);
     // Use reason from data if status is absent
     final displayReason =
         data.status == 'absent' && data.reason != null
-            ? CalendarUtils.getPunchInDisplayString('reason', data.reason!)
+            ? CalendarUtils.getClockInDisplayString('reason', data.reason!)
             : null;
 
     return Center(
@@ -157,7 +157,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(statusIcon, size: 48, color: statusColor.withOpacity(0.8)),
+          Icon(statusIcon, size: 48, color: statusColor.withValues(alpha: 0.8)),
           const SizedBox(height: 12), // Increased spacing
           Text(
             displayStatus,
@@ -179,13 +179,13 @@ class SelectedDayDetailsCard extends StatelessWidget {
     ).animate().fadeIn(duration: 200.ms);
   }
 
-  /// Builds the list view for normal/late punch-in details.
-  Widget _buildPunchInDetailsList(BuildContext context, PunchInData data) {
+  /// Builds the list view for normal/late clock-in details.
+  Widget _buildPunchInDetailsList(BuildContext context, ClockInData data) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final statusColor = CalendarUtils.getStatusColor(data.status, colorScheme);
     final statusIcon = CalendarUtils.getStatusIcon(data.status);
-    final statusDisplay = CalendarUtils.getPunchInDisplayString(
+    final statusDisplay = CalendarUtils.getClockInDisplayString(
       'status',
       data.status,
     );
@@ -197,12 +197,12 @@ class SelectedDayDetailsCard extends StatelessWidget {
         DetailInfoRow(
           icon: Icons.access_time_outlined,
           label: '上班打卡',
-          value: data.punchIn ?? '--',
+          value: data.clockIn ?? '--',
         ),
         DetailInfoRow(
           icon: Icons.access_time_filled_outlined,
           label: '下班打卡',
-          value: data.punchOut ?? '--',
+          value: data.clockOut ?? '--',
         ),
         DetailInfoRow(
           icon: statusIcon,
@@ -214,7 +214,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
           DetailInfoRow(
             icon: Icons.notes_outlined,
             label: '事由',
-            value: CalendarUtils.getPunchInDisplayString(
+            value: CalendarUtils.getClockInDisplayString(
               'reason',
               data.reason!,
             ),

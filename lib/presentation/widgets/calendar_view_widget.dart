@@ -82,7 +82,7 @@ class CalendarViewWidget extends StatelessWidget {
 
             Color textColor =
                 isOutsideMonth
-                    ? colorScheme.onSurface.withOpacity(0.38)
+                    ? colorScheme.onSurface.withValues(alpha: 0.38)
                     : colorScheme.onSurface;
             FontWeight fontWeight = FontWeight.normal;
             BoxDecoration? decoration;
@@ -97,7 +97,7 @@ class CalendarViewWidget extends StatelessWidget {
               fontWeight = FontWeight.bold;
             } else if (isToday) {
               decoration = BoxDecoration(
-                color: colorScheme.primaryContainer.withOpacity(0.3),
+                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               );
               textColor = isHoliday ? colorScheme.error : colorScheme.primary;

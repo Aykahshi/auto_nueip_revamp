@@ -17,7 +17,7 @@ class ApiClient {
 
   ApiClient()
     : _dio = Dio(
-        BaseOptions(headers: ApiConfig.headers, followRedirects: false),
+        BaseOptions(headers: ApiConfig.HEADERS, followRedirects: false),
       ),
       _cookieJar = CookieJar() {
     _dio.interceptors.add(CookieManager(_cookieJar));

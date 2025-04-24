@@ -40,7 +40,7 @@ class FilterArea extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       textStyle: theme.textTheme.labelMedium,
       foregroundColor: colorScheme.error,
-      side: BorderSide(color: colorScheme.error.withOpacity(0.5)),
+      side: BorderSide(color: colorScheme.error.withValues(alpha: 0.5)),
       shape: commonShape, // Apply common shape
     );
 
@@ -97,7 +97,7 @@ class FilterArea extends StatelessWidget {
                   ),
                   Icon(
                     Icons.arrow_drop_down,
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                   ),
                 ],
               ),

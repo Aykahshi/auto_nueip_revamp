@@ -14,16 +14,21 @@ class TimeCard extends StatelessWidget {
   /// The color of the icon.
   final Color iconColor;
 
-  /// The Joker holding the DateTime state to display. Null indicates no time recorded yet.
-  final Joker<DateTime?> timeJoker;
+  /// The time to display. Used when timeJoker is not provided.
+  final DateTime? time;
+
+  /// Whether the card is in loading state.
+  final bool isLoading;
 
   /// Creates a TimeCard widget.
+  /// Either [timeJoker] or [time] must be provided, or [isLoading] must be true.
   const TimeCard({
     super.key,
     required this.title,
     required this.icon,
     required this.iconColor,
-    required this.timeJoker,
+    this.time,
+    this.isLoading = false,
   });
 
   @override
@@ -37,7 +42,7 @@ class TimeCard extends StatelessWidget {
       fontWeight: FontWeight.bold,
       color: Theme.of(context).colorScheme.primary,
     );
-    // Use outline color with reduced alpha for placeholder
+    // For placeholder text
     final placeholderStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
       fontWeight: FontWeight.bold,
       color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
@@ -69,33 +74,55 @@ class TimeCard extends StatelessWidget {
               ],
             ),
             const Gap(8),
-            // Observe the timeJoker to update the displayed time
-            timeJoker.perform(
-              builder: (context, time) {
-                // Use AnimatedSwitcher for smooth transition when time changes
-                return AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 400),
-                  transitionBuilder: (child, animation) {
-                    // Fade and scale transition
-                    return FadeTransition(
-                      opacity: animation,
-                      child: ScaleTransition(scale: animation, child: child),
-                    );
-                  },
-                  child: Text(
-                    // Use ValueKey to ensure AnimatedSwitcher recognizes the change
-                    key: ValueKey<DateTime?>(time),
-                    // Format time or display placeholder
-                    time == null
-                        ? '-- : -- : --'
-                        : DateFormat('HH : mm : ss').format(time),
-                    style: time == null ? placeholderStyle : timeStyle,
+            isLoading.reveal(
+              whenTrue: SizedBox(
+                height: 40,
+                child: Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
                   ),
-                );
-              },
+                ),
+              ),
+              whenFalse: _buildTimeDisplay(
+                context,
+                time,
+                timeStyle,
+                placeholderStyle,
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // Helper method to build time display widget
+  Widget _buildTimeDisplay(
+    BuildContext context,
+    DateTime? time,
+    TextStyle? timeStyle,
+    TextStyle? placeholderStyle,
+  ) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 400),
+      transitionBuilder: (child, animation) {
+        // Fade and scale transition
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(scale: animation, child: child),
+        );
+      },
+      child: Text(
+        // Use ValueKey to ensure AnimatedSwitcher recognizes the change
+        key: ValueKey<DateTime?>(time),
+        // Format time or display placeholder
+        time == null ? '-- : -- : --' : DateFormat('HH : mm : ss').format(time),
+        style: time == null ? placeholderStyle : timeStyle,
       ),
     );
   }

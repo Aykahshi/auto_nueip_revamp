@@ -73,13 +73,10 @@ final class NueipHelper {
       },
       (res) {
         final String accessToken = res.data['token_access_token'];
-        final int expiresIn = res.data['token_expires_in'] as int;
-        final DateTime expiryTime = DateTime.now().add(
-          Duration(seconds: expiresIn),
-        );
         final AuthSession session = AuthSession(
           accessToken: accessToken,
-          expiryTime: expiryTime,
+          cookie: _cookie,
+          csrfToken: _crsfToken,
         );
         final authJoker = Circus.spotlight<AuthSession>(tag: 'auth');
 

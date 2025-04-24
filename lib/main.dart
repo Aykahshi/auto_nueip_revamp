@@ -12,20 +12,21 @@ import 'data/repositories/nueip_repository_impl.dart';
 import 'data/services/holiday_service.dart';
 import 'data/services/nueip_services.dart';
 import 'index.dart';
+import 'presentation/presenters/login_presenter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await _init();
-
   await LocalStorage.init();
+
+  await _initDependencies();
 
   await NotificationUtils.init();
 
   runApp(const App());
 }
 
-Future<void> _init() async {
+Future<void> _initDependencies() async {
   // Add router registration
   Circus.hire<AppRouter>(AppRouter());
 
@@ -42,6 +43,9 @@ Future<void> _init() async {
     ..contract<HolidayService>(() => HolidayService())
     ..hireLazily<HolidayRepositoryImpl>(() => HolidayRepositoryImpl())
     ..bindDependency<HolidayRepositoryImpl, HolidayService>();
+
+  // Add login presenter registration
+  Circus.hire<LoginPresenter>(LoginPresenter());
 
   // Add theme mode Joker registration
   Circus.summon<AppThemeMode>(

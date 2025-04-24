@@ -10,7 +10,7 @@ abstract class NueipRepository {
     required String password,
   });
 
-  TaskEither<Failure, Response> punchAction({
+  TaskEither<Failure, Response> clockAction({
     required String method,
     required String cookie,
     required String csrfToken,
@@ -20,13 +20,19 @@ abstract class NueipRepository {
 
   TaskEither<Failure, Response> getOauthToken({required String cookie});
 
-  TaskEither<Failure, Response> getPunchTime({
+  TaskEither<Failure, Response> getClockTime({
     required String accessToken,
     required String cookie,
   });
 
-  TaskEither<Failure, Response> getDailyLogs({
+  TaskEither<Failure, Response> getDailyAttendanceRecord({
     required String date,
+    required String cookie,
+  });
+
+  TaskEither<Failure, Response> getAttendanceRecords({
+    required String startDate,
+    required String endDate,
     required String cookie,
   });
 }

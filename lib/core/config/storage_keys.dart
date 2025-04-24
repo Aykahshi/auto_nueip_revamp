@@ -12,7 +12,15 @@ sealed class StorageKeys {
   /// Key for storing the fetched holiday list.
   static const String holidays = 'holidays';
 
-  // Add other keys here as needed, for example:
-  // static const String sessionCookie = 'session_cookie';
-  // static const String accessToken = 'access_token';
+  /// Key for storing the username.
+  static const String username = 'username';
+
+  /// Key for storing the user number.
+  static const String userNo = 'user_no';
+
+  /// Key for storing the notifications enabled.
+  static const String notificationsEnabled = 'notifications_enabled';
+
+  /// Key for storing the dark mode enabled.
+  static const String darkModeEnabled = 'dark_mode_enabled';
 }

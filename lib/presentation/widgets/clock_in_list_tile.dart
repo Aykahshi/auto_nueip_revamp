@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/entities/punch_in_data.dart';
+import '../../domain/entities/clock_in_data.dart';
 
-class PunchInListTile extends StatelessWidget {
-  final PunchInData item;
+class ClockInListTile extends StatelessWidget {
+  final ClockInData item;
 
-  const PunchInListTile({super.key, required this.item});
+  const ClockInListTile({super.key, required this.item});
 
   static IconData getStatusIcon(String status) {
     switch (status) {
@@ -41,11 +41,11 @@ class PunchInListTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final statusColor = PunchInListTile.getStatusColor(
+    final statusColor = ClockInListTile.getStatusColor(
       item.status,
       colorScheme,
     );
-    final statusIcon = PunchInListTile.getStatusIcon(item.status);
+    final statusIcon = ClockInListTile.getStatusIcon(item.status);
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
@@ -55,7 +55,7 @@ class PunchInListTile extends StatelessWidget {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: statusColor.withOpacity(0.15),
+          backgroundColor: statusColor.withValues(alpha: 0.15),
           foregroundColor: statusColor,
           radius: 20,
           child: Icon(statusIcon, size: 20),

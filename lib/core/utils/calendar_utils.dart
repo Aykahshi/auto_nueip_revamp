@@ -25,8 +25,8 @@ sealed class CalendarUtils {
     }
   }
 
-  /// Returns localized display string for punch-in status or reason.
-  static String getPunchInDisplayString(String key, String value) {
+  /// Returns localized display string for clock-in status or reason.
+  static String getClockInDisplayString(String key, String value) {
     const statusMap = {
       'status': '狀態',
       'punchIn': '上班打卡',

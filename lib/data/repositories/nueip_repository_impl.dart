@@ -22,14 +22,14 @@ class NueipRepositoryImpl implements NueipRepository {
   }
 
   @override
-  TaskEither<Failure, Response> punchAction({
+  TaskEither<Failure, Response> clockAction({
     required String method,
     required String cookie,
     required String csrfToken,
     required double latitude,
     required double longitude,
   }) {
-    return _service.punchAction(
+    return _service.clockAction(
       method: method,
       cookie: cookie,
       csrfToken: csrfToken,
@@ -44,18 +44,31 @@ class NueipRepositoryImpl implements NueipRepository {
   }
 
   @override
-  TaskEither<Failure, Response> getPunchTime({
+  TaskEither<Failure, Response> getClockTime({
     required String accessToken,
     required String cookie,
   }) {
-    return _service.getPunchTime(accessToken: accessToken, cookie: cookie);
+    return _service.getClockTime(accessToken: accessToken, cookie: cookie);
   }
 
   @override
-  TaskEither<Failure, Response> getDailyLogs({
+  TaskEither<Failure, Response> getDailyAttendanceRecord({
     required String date,
     required String cookie,
   }) {
-    return _service.getDailyLogs(date: date, cookie: cookie);
+    return _service.getDailyAttendanceRecord(date: date, cookie: cookie);
+  }
+
+  @override
+  TaskEither<Failure, Response> getAttendanceRecords({
+    required String startDate,
+    required String endDate,
+    required String cookie,
+  }) {
+    return _service.getAttendanceRecords(
+      startDate: startDate,
+      endDate: endDate,
+      cookie: cookie,
+    );
   }
 }

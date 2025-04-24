@@ -153,20 +153,6 @@ Future<void> showSimpleNotification(
 
 // --- Callbacks (Keep as top-level functions for background isolate compatibility) ---
 
-// Callback for iOS when a notification is received while the app is in the foreground (older iOS versions)
-// Not typically needed if foreground presentation options are handled in AppDelegate.swift
-Future<void> _onDidReceiveLocalNotification(
-  int id,
-  String? title,
-  String? body,
-  String? payload,
-) async {
-  debugPrint(
-    '_onDidReceiveLocalNotification: id=$id, title=$title, body=$body, payload=$payload',
-  );
-  // Optional: Add custom foreground handling logic here if needed
-}
-
 // Callback when a notification response is received (app was terminated or in background)
 void _onDidReceiveNotificationResponse(
   NotificationResponse notificationResponse,
@@ -300,7 +286,7 @@ sealed class NotificationUtils {
           channelDescription: 'Auto Nueip notifications',
           importance: Importance.max, // High importance for visibility
           priority: Priority.max, // High priority
-          ticker: 'ticker', // Ticker text (briefly shown in status bar)
+          ticker: 'NUEIP', // Ticker text (briefly shown in status bar)
         );
 
     // Define iOS notification details

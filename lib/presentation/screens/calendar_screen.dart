@@ -4,6 +4,7 @@ import 'dart:convert'; // For jsonDecode
 import 'package:auto_route/annotations.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull, whereNotNull
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:joker_state/joker_state.dart'; // Import JokerState
 import 'package:syncfusion_flutter_calendar/calendar.dart'; // Import SfCalendar controller
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
@@ -11,35 +12,36 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import '../../core/config/storage_keys.dart'; // Import StorageKeys
 // Corrected import path for the extension
 import '../../core/extensions/list_holiday_extensions.dart';
+import '../../core/theme/app_theme.dart';
 import '../../core/utils/local_storage.dart'; // Import LocalStorage
 import '../../data/models/holiday.dart'; // Import Holiday model
+import '../../domain/entities/clock_in_data.dart';
 import '../../domain/entities/holiday_state.dart'; // Import HolidayState
-import '../../domain/entities/punch_in_data.dart';
 import '../presenters/holiday_presenter.dart'; // Import HolidayPresenter
 import '../widgets/calendar_view_widget.dart'; // Import new widget
 import '../widgets/filter_area.dart';
 import '../widgets/query_result_list.dart';
 import '../widgets/selected_day_details_card.dart'; // Import new widget
 
-Future<List<PunchInData>> fetchPunchInDataForRange(
+Future<List<ClockInData>> fetchPunchInDataForRange(
   DateTime start,
   DateTime end,
 ) async {
   final startDate = DateTime(start.year, start.month, start.day);
   final endDate = DateTime(end.year, end.month, end.day);
-  List<PunchInData> results = [];
+  List<ClockInData> results = [];
   await Future.delayed(const Duration(milliseconds: 500));
   for (var day = 0; day <= endDate.difference(startDate).inDays; day++) {
     final currentDate = startDate.add(Duration(days: day));
     // Fetch mock data as map first
-    final mockDataMap = await _fetchPunchInDataMap(currentDate);
+    final mockDataMap = await _fetchClockInDataMap(currentDate);
     // Create freezed object
     results.add(
-      PunchInData(
+      ClockInData(
         date: currentDate,
         status: mockDataMap['status']!,
-        punchIn: mockDataMap['punchIn'],
-        punchOut: mockDataMap['punchOut'],
+        clockIn: mockDataMap['clockIn'],
+        clockOut: mockDataMap['clockOut'],
         reason: mockDataMap['reason'],
       ),
     );
@@ -49,7 +51,7 @@ Future<List<PunchInData>> fetchPunchInDataForRange(
 }
 
 // Renamed helper to avoid conflict and return Map
-Future<Map<String, String>> _fetchPunchInDataMap(DateTime date) async {
+Future<Map<String, String>> _fetchClockInDataMap(DateTime date) async {
   await Future.delayed(const Duration(milliseconds: 5));
   final normalizedDate = DateTime(date.year, date.month, date.day);
   if (date.weekday == DateTime.saturday || date.weekday == DateTime.sunday) {
@@ -59,12 +61,12 @@ Future<Map<String, String>> _fetchPunchInDataMap(DateTime date) async {
     return {'status': 'absent', 'reason': 'personal_leave'};
   }
   if (date.day % 4 == 0) {
-    return {'status': 'late', 'punchIn': '09:15', 'punchOut': '18:01'};
+    return {'status': 'late', 'clockIn': '09:15', 'clockOut': '18:01'};
   }
   if (date.day % 11 == 0) {
-    return {'status': 'normal', 'punchIn': '08:55'};
+    return {'status': 'normal', 'clockIn': '08:55'};
   }
-  return {'status': 'normal', 'punchIn': '09:03', 'punchOut': '18:05'};
+  return {'status': 'normal', 'clockIn': '09:03', 'clockOut': '18:05'};
 }
 
 @RoutePage()
@@ -81,16 +83,14 @@ class _CalendarScreenState extends State<CalendarScreen>
   late final HolidayPresenter _holidayPresenter = Circus.hire<HolidayPresenter>(
     HolidayPresenter(),
   );
-  // Removed: List<Holiday> _holidays = [];
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _loadInitialHolidays(); // Keep initial loading logic
+    _loadInitialHolidays();
   }
 
-  // Keep _loadInitialHolidays logic, but remove setState
   Future<void> _loadInitialHolidays() async {
     try {
       final cachedHolidayStrings = LocalStorage.get<List<String>>(
@@ -137,7 +137,6 @@ class _CalendarScreenState extends State<CalendarScreen>
   @override
   void dispose() {
     _tabController.dispose();
-    // Circus.dismiss(_holidayPresenter); // Let Circus manage presenter lifecycle if hired globally
     super.dispose();
   }
 
@@ -205,6 +204,9 @@ class _CalendarScreenState extends State<CalendarScreen>
                   .toSet();
         }
 
+        final themeMode = context.joker<AppThemeMode>();
+        final isDarkMode = themeMode.state == AppThemeMode.dark;
+
         // --- Scaffold and TabBarView structure ---
         return Scaffold(
           appBar: AppBar(
@@ -213,7 +215,10 @@ class _CalendarScreenState extends State<CalendarScreen>
             bottom: TabBar(
               controller: _tabController,
               // Updated colors for better visibility
-              labelColor: colorScheme.surface,
+              labelColor:
+                  !isDarkMode
+                      ? colorScheme.surface
+                      : colorScheme.onSurfaceVariant,
               unselectedLabelColor: colorScheme.onSurfaceVariant,
               indicatorColor: colorScheme.primary,
               indicatorWeight: 3.0,
@@ -266,10 +271,11 @@ class _SingleDayViewTab extends StatefulWidget {
   State<_SingleDayViewTab> createState() => _SingleDayViewTabState();
 }
 
-class _SingleDayViewTabState extends State<_SingleDayViewTab> {
+class _SingleDayViewTabState extends State<_SingleDayViewTab>
+    with SingleTickerProviderStateMixin {
   // Jokers for state management
   late final Joker<DateTime> _selectedDateJoker;
-  late final Joker<PunchInData?> _selectedPunchInDataJoker;
+  late final Joker<ClockInData?> _selectedClockInDataJoker;
   late final Joker<bool> _isLoadingDetailsJoker;
 
   final CalendarController _calendarController = CalendarController();
@@ -280,30 +286,53 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab> {
   void initState() {
     super.initState();
     final initialDate = DateUtils.dateOnly(DateTime.now());
-    _selectedDateJoker = Joker(initialDate);
-    _selectedPunchInDataJoker = Joker(null);
-    _isLoadingDetailsJoker = Joker(false);
+    _selectedDateJoker = Joker<DateTime>(initialDate);
+    _selectedClockInDataJoker = Joker<ClockInData?>(null);
+    _isLoadingDetailsJoker = Joker<bool>(false);
 
     // Define the listener function
     _dateListener = () {
       final newDate = _selectedDateJoker.state;
       _fetchSingleDayDetails(newDate);
-      // Update SfCalendar's displayed/selected date when Joker changes
+      // Update calendar controller if needed
       if (_calendarController.selectedDate != newDate) {
         _calendarController.selectedDate = newDate;
-        // Optionally update displayDate if the view needs to jump
-        // _calendarController.displayDate = newDate;
       }
     };
 
     // Add the listener
     _selectedDateJoker.addListener(_dateListener);
 
-    // Fetch details for the initial date if holidays are ready
+    // Initial detail loading
     if (!widget.isLoadingHolidays && !widget.hasHolidayError) {
       _fetchSingleDayDetails(initialDate);
-    } else if (widget.isLoadingHolidays) {
+    } else {
       _isLoadingDetailsJoker.trick(true);
+
+      // Schedule details loading after build completes
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _checkHolidayDataAndLoadDetails(initialDate);
+      });
+    }
+  }
+
+  // Check holiday data status and load details if ready
+  void _checkHolidayDataAndLoadDetails(DateTime date) {
+    if (!widget.isLoadingHolidays && !widget.hasHolidayError) {
+      _fetchSingleDayDetails(date);
+    }
+  }
+
+  @override
+  void didUpdateWidget(_SingleDayViewTab oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Auto-load details when holiday data finishes loading
+    if (oldWidget.isLoadingHolidays &&
+        !widget.isLoadingHolidays &&
+        !widget.hasHolidayError &&
+        _isLoadingDetailsJoker.state) {
+      _fetchSingleDayDetails(_selectedDateJoker.state);
     }
   }
 
@@ -350,35 +379,35 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab> {
     }
     if (!mounted) return;
     _isLoadingDetailsJoker.trick(true);
-    _selectedPunchInDataJoker.trick(null);
+    _selectedClockInDataJoker.trick(null);
     final normalizedDay = DateUtils.dateOnly(day);
     final isHoliday = widget.holidayDateTimes.contains(normalizedDay);
     try {
-      PunchInData details;
+      ClockInData details;
       if (isHoliday) {
         final holidayDesc = _getHolidayDescription(normalizedDay);
-        details = PunchInData(
+        details = ClockInData(
           date: normalizedDay,
           status: 'holiday',
           reason: holidayDesc ?? '國定假日',
         );
       } else {
-        final dataMap = await _fetchPunchInDataMap(normalizedDay);
-        details = PunchInData(
+        final dataMap = await _fetchClockInDataMap(normalizedDay);
+        details = ClockInData(
           date: normalizedDay,
           status: dataMap['status']!,
-          punchIn: dataMap['punchIn'],
-          punchOut: dataMap['punchOut'],
+          clockIn: dataMap['clockIn'],
+          clockOut: dataMap['clockOut'],
           reason: dataMap['reason'],
         );
       }
       if (mounted) {
-        _selectedPunchInDataJoker.trick(details);
+        _selectedClockInDataJoker.trick(details);
       }
     } catch (e) {
       debugPrint("Error fetching single day details for $normalizedDay: $e");
       if (mounted) {
-        _selectedPunchInDataJoker.trick(null);
+        _selectedClockInDataJoker.trick(null);
       }
     } finally {
       if (mounted) {
@@ -448,33 +477,35 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab> {
           onSelectionChanged: _onCalendarDateSelected, // Only updates Joker
           controller: _calendarController,
         ),
-        const SizedBox(height: 8.0),
+        const Gap(8.0),
         // Details Card - Correctly use variables from Joker performers
         Expanded(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
-            child: _selectedDateJoker.perform(
-              builder:
-                  (context, selectedDate) => _selectedPunchInDataJoker.perform(
-                    builder:
-                        (context, punchInData) =>
-                            _isLoadingDetailsJoker.perform(
-                              builder:
-                                  (context, isLoading) =>
-                                      SelectedDayDetailsCard(
-                                        key: ValueKey(selectedDate),
-                                        selectedDate: selectedDate, // Correct
-                                        punchInData: punchInData, // Correct
-                                        holidayDescription:
-                                            _getHolidayDescription(
-                                              selectedDate,
-                                            ), // Correct
-                                        isLoading: isLoading, // Correct
-                                        isKnownHoliday: widget.holidayDateTimes
-                                            .contains(selectedDate), // Correct
-                                      ),
-                            ),
+            child: [
+              _selectedDateJoker,
+              _selectedClockInDataJoker,
+              _isLoadingDetailsJoker,
+            ].assemble<(DateTime, ClockInData?, bool)>(
+              converter:
+                  (values) => (
+                    values[0] as DateTime,
+                    values[1] as ClockInData?,
+                    values[2] as bool,
                   ),
+              builder: (context, data) {
+                final (selectedDate, clockInData, isLoading) = data;
+                return SelectedDayDetailsCard(
+                  key: ValueKey(selectedDate),
+                  selectedDate: selectedDate,
+                  clockInData: clockInData,
+                  holidayDescription: _getHolidayDescription(selectedDate),
+                  isLoading: isLoading,
+                  isKnownHoliday: widget.holidayDateTimes.contains(
+                    selectedDate,
+                  ),
+                );
+              },
             ),
           ),
         ),
@@ -493,17 +524,17 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
   // Replace state variables with Jokers
   late final Joker<DateTime?> _startDateJoker;
   late final Joker<DateTime?> _endDateJoker;
-  late final Joker<List<PunchInData>> _resultsJoker;
+  late final Joker<List<ClockInData>> _resultsJoker;
   late final Joker<bool> _loadingJoker;
 
   @override
   void initState() {
     super.initState();
     // Initialize Jokers
-    _startDateJoker = Joker(null);
-    _endDateJoker = Joker(null);
-    _resultsJoker = Joker([]);
-    _loadingJoker = Joker(false);
+    _startDateJoker = Joker<DateTime?>(null);
+    _endDateJoker = Joker<DateTime?>(null);
+    _resultsJoker = Joker<List<ClockInData>>([]);
+    _loadingJoker = Joker<bool>(false);
   }
 
   // Methods updated to use Jokers instead of setState
@@ -540,7 +571,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       spreadRadius: 1,
                     ),
@@ -599,7 +630,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                         ),
                         rangeSelectionColor: Theme.of(
                           sheetContext,
-                        ).colorScheme.primaryContainer.withOpacity(0.4),
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.4),
                         startRangeSelectionColor:
                             Theme.of(sheetContext).colorScheme.primaryContainer,
                         endRangeSelectionColor:
@@ -753,76 +784,41 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
 
   @override
   Widget build(BuildContext context) {
-    // Use Joker.perform or JokerTroupe to rebuild UI based on Joker states
-    // Example using nested performers:
-    return _startDateJoker.perform(
-      builder:
-          (context, startDate) => _endDateJoker.perform(
-            builder:
-                (context, endDate) => _loadingJoker.perform(
-                  builder:
-                      (context, isLoading) => _resultsJoker.perform(
-                        builder: (context, results) {
-                          // Now use the state variables from the builders
-                          return Column(
-                            children: [
-                              FilterArea(
-                                selectedStartDate:
-                                    startDate, // Use state from builder
-                                selectedEndDate:
-                                    endDate, // Use state from builder
-                                onSelectRange: _showDateRangePickerInSheet,
-                                onSetYesterday: _setRangeToYesterday,
-                                onSetToday: _setRangeToToday,
-                                onSetThisWeek: _setRangeToThisWeek,
-                                onSetThisMonth: _setRangeToThisMonth,
-                                onClear: _clearQuery,
-                                onQuery: _performQuery,
-                              ),
-                              const Divider(height: 1, thickness: 1),
-                              Expanded(
-                                child: QueryResultList(
-                                  isLoading:
-                                      isLoading, // Use state from builder
-                                  results: results, // Use state from builder
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                ),
+    return [
+      _startDateJoker,
+      _endDateJoker,
+      _loadingJoker,
+      _resultsJoker,
+    ].assemble<(DateTime?, DateTime?, bool, List<ClockInData>)>(
+      converter:
+          (values) => (
+            values[0] as DateTime?,
+            values[1] as DateTime?,
+            values[2] as bool,
+            values[3] as List<ClockInData>,
           ),
+      builder: (context, queryState) {
+        final (startDate, endDate, isLoading, results) = queryState;
+        return Column(
+          children: [
+            FilterArea(
+              selectedStartDate: startDate,
+              selectedEndDate: endDate,
+              onSelectRange: _showDateRangePickerInSheet,
+              onSetYesterday: _setRangeToYesterday,
+              onSetToday: _setRangeToToday,
+              onSetThisWeek: _setRangeToThisWeek,
+              onSetThisMonth: _setRangeToThisMonth,
+              onClear: _clearQuery,
+              onQuery: _performQuery,
+            ),
+            const Divider(height: 1, thickness: 1),
+            Expanded(
+              child: QueryResultList(isLoading: isLoading, results: results),
+            ),
+          ],
+        );
+      },
     );
-
-    /* Alternative using JokerTroupe (requires defining a Record type) */
-    // typedef QueryStateRecord = (DateTime? start, DateTime? end, bool loading, List<PunchInData> results);
-    //
-    // return [_startDateJoker, _endDateJoker, _loadingJoker, _resultsJoker].assemble<QueryStateRecord>(
-    //   converter: (values) => (
-    //     values[0] as DateTime?,
-    //     values[1] as DateTime?,
-    //     values[2] as bool,
-    //     values[3] as List<PunchInData>,
-    //   ),
-    //   builder: (context, queryState) {
-    //     final (startDate, endDate, isLoading, results) = queryState;
-    //     return Column(
-    //        children: [
-    //          FilterArea(
-    //            selectedStartDate: startDate,
-    //            selectedEndDate: endDate,
-    //            // ... other FilterArea params ...
-    //            onClear: _clearQuery,
-    //            onQuery: _performQuery,
-    //          ),
-    //          const Divider(height: 1, thickness: 1),
-    //          Expanded(
-    //            child: QueryResultList(isLoading: isLoading, results: results),
-    //          ),
-    //        ],
-    //      );
-    //   },
-    // );
   }
 }

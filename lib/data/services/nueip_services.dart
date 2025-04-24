@@ -24,11 +24,11 @@ class NueipService {
     };
     return TaskEither.tryCatch(
       () async => await _client.post(ApiConfig.LOGIN_URL, data: body),
-      (e, _) => Failure(message: e.toString(), status: 'error'),
+      (e, _) => Failure(message: e.toString(), status: 'login_failed'),
     );
   }
 
-  TaskEither<Failure, Response> punchAction({
+  TaskEither<Failure, Response> clockAction({
     required String method,
     required String cookie,
     required String csrfToken,
@@ -52,7 +52,7 @@ class NueipService {
       ),
       (e, _) => Failure(
         message: e.toString(),
-        status: 'error',
+        status: 'clock_failed',
       ), // Provide default status
     );
   }
@@ -65,12 +65,12 @@ class NueipService {
       ),
       (e, _) => Failure(
         message: e.toString(),
-        status: 'error',
+        status: 'token_failed',
       ), // Provide default status
     );
   }
 
-  TaskEither<Failure, Response> getPunchTime({
+  TaskEither<Failure, Response> getClockTime({
     required String accessToken,
     required String cookie,
   }) {
@@ -84,12 +84,12 @@ class NueipService {
       ),
       (e, _) => Failure(
         message: e.toString(),
-        status: 'error',
+        status: 'record_failed',
       ), // Provide default status
     );
   }
 
-  TaskEither<Failure, Response> getDailyLogs({
+  TaskEither<Failure, Response> getDailyAttendanceRecord({
     required String date,
     required String cookie,
   }) {
@@ -102,7 +102,7 @@ class NueipService {
     };
     return TaskEither.tryCatch(
       () async => await _client.post(
-        ApiConfig.DAILY_LOG_URL,
+        ApiConfig.ATTENDANCE_URL,
         data: formData,
         options: Options(
           headers: {
@@ -113,7 +113,37 @@ class NueipService {
       ),
       (e, _) => Failure(
         message: e.toString(),
-        status: 'error',
+        status: 'daily_attendance_failed',
+      ), // Provide default status
+    );
+  }
+
+  TaskEither<Failure, Response> getAttendanceRecords({
+    required String startDate,
+    required String endDate,
+    required String cookie,
+  }) {
+    final formData = {
+      'action': 'attendance',
+      'loadInBatch': '1',
+      'loadBatchGroupNum': '1000',
+      'loadBatchNumber': '1',
+      'work_status': '1,4',
+    };
+    return TaskEither.tryCatch(
+      () async => await _client.post(
+        ApiConfig.ATTENDANCE_URL,
+        data: formData,
+        options: Options(
+          headers: {
+            'Cookie':
+                'Search_42_date_start=$startDate; Search_42_date_end=$endDate; $cookie',
+          },
+        ),
+      ),
+      (e, _) => Failure(
+        message: e.toString(),
+        status: 'attendance_failed',
       ), // Provide default status
     );
   }

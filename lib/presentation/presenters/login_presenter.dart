@@ -16,6 +16,26 @@ class LoginPresenter extends Presenter<LoginStatus> {
       _helper = Circus.find<NueipHelper>(),
       super(LoginStatus.initial);
 
+  @override
+  void onInit() {
+    super.onInit();
+    _init();
+  }
+
+  Future<void> _init() async {
+    final (companyCode, employeeId, password) = AuthUtils.getCredentials();
+
+    if (companyCode.isEmpty || employeeId.isEmpty || password.isEmpty) {
+      return;
+    }
+
+    await login(
+      companyCode: companyCode,
+      employeeId: employeeId,
+      password: password,
+    );
+  }
+
   /// Performs the login operation.
   Future<void> login({
     required String companyCode,

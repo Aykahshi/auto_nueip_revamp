@@ -1,4 +1,6 @@
 // Adjust the import path to where your Holiday model is defined
+import 'package:flutter/foundation.dart';
+
 import '../../data/models/holiday.dart';
 
 extension HolidayListValidation on List<Holiday> {
@@ -27,13 +29,13 @@ extension HolidayListValidation on List<Holiday> {
           }
         } catch (e) {
           // Handle potential parsing errors if date format is unexpected
-          print(
+          debugPrint(
             'Error parsing holiday date in extension: ${holiday.date}, error: $e',
           );
           continue; // Skip this holiday
         }
       } else {
-        print(
+        debugPrint(
           'Skipping invalid holiday date format in extension: ${holiday.date}',
         );
       }
