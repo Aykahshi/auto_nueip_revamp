@@ -120,7 +120,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('打卡鐘'), elevation: 1),
+      appBar: AppBar(title: const Text('打卡鐘'), elevation: 1, centerTitle: true),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0),

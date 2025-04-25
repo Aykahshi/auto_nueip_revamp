@@ -173,6 +173,7 @@ class _CalendarScreenState extends State<CalendarScreen>
           appBar: AppBar(
             title: const Text('出勤日曆'),
             elevation: 1,
+            centerTitle: true,
             bottom: TabBar(
               controller: _tabController,
               labelColor:
