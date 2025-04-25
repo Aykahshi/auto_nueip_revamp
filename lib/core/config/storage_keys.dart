@@ -23,4 +23,7 @@ sealed class StorageKeys {
 
   /// Key for storing the dark mode enabled.
   static const String darkModeEnabled = 'dark_mode_enabled';
+
+  /// Key for storing the auth session.
+  static const String authSession = 'auth_session';
 }

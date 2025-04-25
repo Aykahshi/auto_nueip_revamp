@@ -5,24 +5,31 @@ import '../../core/utils/auth_utils.dart';
 import '../../core/utils/nueip_helper.dart';
 import '../../data/models/login_status_enum.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
+import '../../domain/cues/login_successful_cue.dart';
 import '../../domain/repositories/nueip_repository.dart';
 
 class LoginPresenter extends Presenter<LoginStatus> {
   final NueipRepository _repository;
   final NueipHelper _helper;
 
-  LoginPresenter({NueipRepository? repository})
-    : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
+  LoginPresenter()
+    : _repository = Circus.find<NueipRepositoryImpl>(),
       _helper = Circus.find<NueipHelper>(),
       super(LoginStatus.initial);
 
   @override
   void onInit() {
     super.onInit();
-    _init();
+    init();
   }
 
-  Future<void> _init() async {
+  Future<void> init() async {
+    if (AuthUtils.isAuthSessionValid()) {
+      trick(LoginStatus.success);
+      Circus.cue<LoginSuccessful>(LoginSuccessful());
+      return;
+    }
+
     final (companyCode, employeeId, password) = AuthUtils.getCredentials();
 
     if (companyCode.isEmpty || employeeId.isEmpty || password.isEmpty) {
@@ -34,6 +41,7 @@ class LoginPresenter extends Presenter<LoginStatus> {
       employeeId: employeeId,
       password: password,
     );
+    Circus.cue<LoginSuccessful>(LoginSuccessful());
   }
 
   /// Performs the login operation.

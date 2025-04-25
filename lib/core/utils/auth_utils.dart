@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../data/models/auth_session.dart';
+import '../../presentation/presenters/login_presenter.dart';
 import '../config/storage_keys.dart';
 import 'local_storage.dart';
 
@@ -9,11 +10,11 @@ sealed class AuthUtils {
   const AuthUtils._();
 
   static bool isLoggedIn() {
-    return [
-      _getEmployeeId().isNotEmpty,
-      _getCompanyCode().isNotEmpty,
-      _getPassword().isNotEmpty,
-    ].contains(true);
+    final (companyCode, employeeId, password) = getCredentials();
+
+    return companyCode.isNotEmpty &&
+        employeeId.isNotEmpty &&
+        password.isNotEmpty;
   }
 
   /// Save auth data to storage
@@ -43,6 +44,30 @@ sealed class AuthUtils {
     }
   }
 
+  static Future<void> checkAuthSession() async {
+    final loginPresenter = Circus.find<LoginPresenter>();
+
+    await loginPresenter.init();
+  }
+
+  static bool isAuthSessionValid() {
+    final sessionStr = LocalStorage.get<List<String>>(
+      defaultValue: [],
+      StorageKeys.authSession,
+    );
+
+    if (sessionStr.isEmpty) return false;
+
+    final session = AuthSession(
+      accessToken: sessionStr[0],
+      cookie: sessionStr[1],
+      csrfToken: sessionStr[2],
+      expiryTime: DateTime.parse(sessionStr[3]),
+    );
+
+    return session.isTokenExpired();
+  }
+
   static AuthSession getAuthSession() {
     final session = Circus.spotlight<AuthSession>(tag: 'auth').state;
 
@@ -60,21 +85,6 @@ sealed class AuthUtils {
       LocalStorage.get<String>(defaultValue: '', StorageKeys.employeeId),
       LocalStorage.get<String>(defaultValue: '', StorageKeys.password),
     );
-  }
-
-  /// Get the current EmployeeId from storage
-  static String _getEmployeeId() {
-    return LocalStorage.get<String>(defaultValue: '', StorageKeys.employeeId);
-  }
-
-  /// Get the current companyCode from storage
-  static String _getCompanyCode() {
-    return LocalStorage.get<String>(defaultValue: '', StorageKeys.companyCode);
-  }
-
-  /// Get the current password from storage
-  static String _getPassword() {
-    return LocalStorage.get<String>(defaultValue: '', StorageKeys.password);
   }
 
   /// Clear all auth data from storage

@@ -10,7 +10,6 @@ import 'package:joker_state/joker_state.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/login_status_enum.dart';
-import '../../data/repositories/nueip_repository_impl.dart';
 import '../presenters/login_presenter.dart';
 
 @RoutePage()
@@ -33,9 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     _formKey = GlobalKey<FormBuilderState>();
 
-    _presenter = Circus.hire<LoginPresenter>(
-      LoginPresenter(repository: Circus.find<NueipRepositoryImpl>()),
-    );
+    _presenter = Circus.hire<LoginPresenter>(LoginPresenter());
 
     // Listen to presenter state changes
     _cancel = _presenter.listen((previous, current) {

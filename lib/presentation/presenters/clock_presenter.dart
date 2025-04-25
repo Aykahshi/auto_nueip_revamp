@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:joker_state/joker_state.dart';
 
@@ -7,35 +9,30 @@ import '../../core/utils/auth_utils.dart';
 import '../../core/utils/local_storage.dart';
 import '../../data/models/clock_action_enum.dart';
 import '../../data/models/daily_clock_detail.dart';
-import '../../data/models/login_status_enum.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
+import '../../domain/cues/login_successful_cue.dart';
 import '../../domain/entities/clock_state.dart';
 import '../../domain/repositories/nueip_repository.dart';
-import 'login_presenter.dart';
 
 class ClockPresenter extends Presenter<ClockState> {
   final NueipRepository _repository;
-  final LoginPresenter _loginPresenter;
-  late final VoidCallback _cancel;
+  late final StreamSubscription _subscription;
 
   ClockPresenter({NueipRepository? repository})
     : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
-      _loginPresenter = Circus.find<LoginPresenter>(),
       super(const ClockState.initial());
 
   @override
   void onReady() {
     super.onReady();
-    _cancel = _loginPresenter.listen((_, current) {
-      if (current == LoginStatus.success) {
-        _init();
-      }
+    _subscription = Circus.onCue<LoginSuccessful>((_) {
+      _init();
     });
   }
 
   @override
   void onDone() {
-    _cancel();
+    _subscription.cancel();
     super.onDone();
   }
 

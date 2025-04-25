@@ -6,9 +6,11 @@ import 'package:joker_state/joker_state.dart';
 import '../../data/models/auth_session.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
 import '../config/api_config.dart';
+import '../config/storage_keys.dart';
 import '../extensions/cookie_parser.dart';
 import '../extensions/extract_token_from_html.dart';
 import '../network/api_client.dart';
+import 'local_storage.dart';
 
 final class NueipHelper {
   String? _redirectUrl;
@@ -73,15 +75,28 @@ final class NueipHelper {
       },
       (res) {
         final String accessToken = res.data['token_access_token'];
+        final int expiresIn = res.data['token_expires_in'] as int;
+        final DateTime expiryTime = DateTime.now().add(
+          Duration(seconds: expiresIn),
+        );
         final AuthSession session = AuthSession(
           accessToken: accessToken,
           cookie: _cookie,
           csrfToken: _crsfToken,
+          expiryTime: expiryTime,
         );
         final authJoker = Circus.spotlight<AuthSession>(tag: 'auth');
 
         // No need to notify, just store AuthSession
         authJoker.whisper(session);
+
+        LocalStorage.set<List<String>>(StorageKeys.authSession, [
+          session.accessToken ?? '',
+          session.cookie ?? '',
+          session.csrfToken ?? '',
+          session.expiryTime.toString(),
+        ]);
+
         debugPrint('NueipHelper getOauthToken: ${authJoker.state}');
       },
     );
