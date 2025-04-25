@@ -1,21 +1,24 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:gap/gap.dart';
+import 'package:intl/intl.dart';
 
-import '../../core/utils/calendar_utils.dart'; // Import utils
-import '../../domain/entities/clock_in_data.dart';
-import 'detail_info_row.dart'; // Import the new row widget
+import '../../core/utils/calendar_utils.dart';
+import '../../data/models/attendance_details.dart';
+import 'detail_info_row.dart';
 
-/// Displays the details for the selected day, showing clock-in info or holiday status.
+/// Displays the details for the selected day, showing attendance info or holiday status.
 class SelectedDayDetailsCard extends StatelessWidget {
   final DateTime selectedDate;
-  final ClockInData? clockInData;
-  final String? holidayDescription; // Explicit holiday description
+  final AttendanceRecord? attendanceRecord;
+  final String? holidayDescription;
   final bool isLoading;
-  final bool isKnownHoliday; // Indicate if the date is a known holiday
+  final bool isKnownHoliday;
 
   const SelectedDayDetailsCard({
     required this.selectedDate,
-    required this.clockInData,
+    required this.attendanceRecord,
     required this.holidayDescription,
     required this.isLoading,
     required this.isKnownHoliday,
@@ -26,58 +29,103 @@ class SelectedDayDetailsCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
 
-    // Determine the title
-    final String titleDate =
-        DateUtils.isSameDay(selectedDate, DateTime.now())
-            ? '今天'
-            : '${selectedDate.month}/${selectedDate.day}';
+    final String titleDate = DateFormat('yyyy / M / d').format(selectedDate);
     final String titleWeekday = CalendarUtils.getWeekdayName(
       selectedDate.weekday,
-      context,
     );
-    String titleSuffix = '';
-    Color titleColor = colorScheme.primary; // Default title color
+    final String titleText = '$titleDate ($titleWeekday)';
 
-    if (isKnownHoliday) {
-      titleSuffix = holidayDescription ?? '休假';
-      titleColor = CalendarUtils.getStatusColor('holiday', colorScheme);
-    } else if (clockInData != null && clockInData!.status != 'error') {
-      titleSuffix = '打卡記錄';
+    late String statusTag;
+    late Color statusColor;
+    late IconData statusIcon;
+
+    if (isKnownHoliday && attendanceRecord == null) {
+      statusTag = '假日';
+      statusColor = CalendarUtils.getStatusTagColor(statusTag, colorScheme);
+      statusIcon = CalendarUtils.getStatusTagIcon(statusTag);
+    } else {
+      statusTag = CalendarUtils.getAttendanceStatusTag(
+        attendanceRecord?.attendance,
+        attendanceRecord?.timeoff,
+        attendanceRecord?.overtime,
+        isKnownHoliday,
+      );
+      statusColor = CalendarUtils.getStatusTagColor(statusTag, colorScheme);
+      statusIcon = CalendarUtils.getStatusTagIcon(statusTag);
     }
 
-    final String titleText = '$titleDate ($titleWeekday) $titleSuffix'.trim();
-
     return Card(
-      key: ValueKey(selectedDate), // Key based on the selected date
-      margin: EdgeInsets.zero, // Remove default card margin
+      key: ValueKey(selectedDate),
+      margin: EdgeInsets.zero,
       elevation: 1,
+      clipBehavior: Clip.antiAlias,
       color: colorScheme.surfaceContainerLowest,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            // --- Title ---
-            Text(
-              titleText,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: titleColor,
-              ),
-              textAlign: TextAlign.center,
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                  child: Text(
+                    titleText,
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (!isLoading)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10.0,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: statusColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12.0),
+                        border: Border.all(
+                          color: statusColor.withValues(alpha: 0.3),
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(statusIcon, size: 14, color: statusColor),
+                          const SizedBox(width: 4),
+                          Text(
+                            statusTag,
+                            style: textTheme.labelSmall?.copyWith(
+                              color: statusColor,
+                              height: 1.1,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const Divider(height: 20, thickness: 0.5),
-            // --- Content Area (Loading/Error/Details) ---
-            Expanded(
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 300),
-                transitionBuilder: (child, animation) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
-                child: _buildContent(context),
-              ),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+              child: _buildContent(context, statusTag, statusColor),
             ),
           ],
         ),
@@ -85,12 +133,14 @@ class SelectedDayDetailsCard extends StatelessWidget {
     );
   }
 
-  /// Builds the main content based on loading state, errors, or data.
-  Widget _buildContent(BuildContext context) {
+  Widget _buildContent(
+    BuildContext context,
+    String statusTag,
+    Color statusColor,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    // Loading indicator
     if (isLoading) {
       return const Center(
         key: ValueKey('loading_details'),
@@ -98,128 +148,250 @@ class SelectedDayDetailsCard extends StatelessWidget {
       );
     }
 
-    // Handle known holiday status
+    if (statusTag == '請假' && attendanceRecord?.timeoff?.isNotEmpty == true) {
+      return _buildLeaveDetailsContent(context, attendanceRecord!.timeoff!);
+    }
+
     if (isKnownHoliday) {
-      // If clockInData is null (shouldn't happen if isKnownHoliday is true, but as fallback)
-      // create a dummy holiday object.
-      final holidayData =
-          clockInData ?? ClockInData(date: selectedDate, status: 'holiday');
-      return _buildHolidayOrAbsentContent(
-        context,
-        holidayData,
-        holidayDescription,
-      );
+      final bool hasMeaningfulRecord =
+          attendanceRecord != null &&
+          ((attendanceRecord!.overtime?.isNotEmpty ?? false) ||
+              (attendanceRecord!.attendance != null &&
+                  (attendanceRecord!.attendance!.duringHour) > 0));
+
+      if (!hasMeaningfulRecord) {
+        return _buildHolidayContent(context, holidayDescription, statusTag);
+      }
     }
 
-    // Handle error or no data for non-holidays
-    if (clockInData == null || clockInData!.status == 'error') {
-      return Center(
-        key: const ValueKey('error_details'),
-        child: Text(
-          '無法載入打卡資料',
-          style: theme.textTheme.bodyLarge?.copyWith(color: colorScheme.error),
+    if (attendanceRecord != null) {
+      if (statusTag != '請假') {
+        return _buildAttendanceDetailsList(
+          context,
+          attendanceRecord!,
+          statusTag,
+        );
+      }
+    }
+
+    return Center(
+      key: const ValueKey('no_data_details'),
+      child: Text(
+        '本日無出勤資料',
+        style: theme.textTheme.bodyLarge?.copyWith(
+          color: colorScheme.onSurfaceVariant,
         ),
-      );
-    }
-
-    // Display clock-in details (Normal, Late, Absent)
-    if (clockInData!.status == 'absent') {
-      return _buildHolidayOrAbsentContent(context, clockInData!, null);
-    } else {
-      return _buildPunchInDetailsList(context, clockInData!);
-    }
+      ),
+    );
   }
 
-  /// Builds the centered display for holidays or absences.
-  Widget _buildHolidayOrAbsentContent(
+  Widget _buildHolidayContent(
     BuildContext context,
-    ClockInData data,
     String? holidayDesc,
+    String statusTag,
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final statusColor = CalendarUtils.getStatusColor(data.status, colorScheme);
-    final statusIcon = CalendarUtils.getStatusIcon(data.status);
-    // Use explicit holiday description if available and status is holiday
+    final statusColor = CalendarUtils.getStatusTagColor(statusTag, colorScheme);
+    final statusIcon = Icons.auto_awesome;
     final displayStatus =
-        data.status == 'holiday'
-            ? (holidayDesc ??
-                CalendarUtils.getClockInDisplayString('status', data.status))
-            : CalendarUtils.getClockInDisplayString('status', data.status);
-    // Use reason from data if status is absent
-    final displayReason =
-        data.status == 'absent' && data.reason != null
-            ? CalendarUtils.getClockInDisplayString('reason', data.reason!)
-            : null;
+        holidayDesc == null || holidayDesc.isEmpty ? '假日' : holidayDesc;
 
-    return Center(
-      key: ValueKey('${data.status}_${data.date}'), // Unique key
+    return Container(
+      key: ValueKey('holiday_${selectedDate.toIso8601String()}'),
+      height: 150,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            statusColor.withValues(alpha: 0.05),
+            statusColor.withValues(alpha: 0.1),
+            statusColor.withValues(alpha: 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(statusIcon, size: 48, color: statusColor.withValues(alpha: 0.8)),
-          const SizedBox(height: 12), // Increased spacing
+          Icon(statusIcon, size: 52, color: statusColor.withValues(alpha: 0.9))
+              .animate(onPlay: (controller) => controller.repeat(reverse: true))
+              .scaleXY(end: 1.15, duration: 800.ms, curve: Curves.easeInOut)
+              .fadeIn(),
+          const Gap(12),
           Text(
             displayStatus,
-            style: theme.textTheme.titleMedium?.copyWith(color: statusColor),
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: statusColor,
+              fontWeight: FontWeight.w600,
+            ),
             textAlign: TextAlign.center,
           ),
-          if (displayReason != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 6.0),
-              child: Text(
-                "($displayReason)", // Show reason in parentheses
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
         ],
       ),
     ).animate().fadeIn(duration: 200.ms);
   }
 
-  /// Builds the list view for normal/late clock-in details.
-  Widget _buildPunchInDetailsList(BuildContext context, ClockInData data) {
+  Widget _buildLeaveDetailsContent(
+    BuildContext context,
+    List<TimeOffRecord> timeoffRecords,
+  ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final statusColor = CalendarUtils.getStatusColor(data.status, colorScheme);
-    final statusIcon = CalendarUtils.getStatusIcon(data.status);
-    final statusDisplay = CalendarUtils.getClockInDisplayString(
-      'status',
-      data.status,
+    final leaveColor = colorScheme.secondary;
+
+    return Container(
+      key: const ValueKey('leave_details'),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0)),
+      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children:
+            timeoffRecords.mapIndexed((index, leave) {
+              return Padding(
+                padding: EdgeInsets.only(top: index > 0 ? 12.0 : 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    DetailInfoRow(
+                      icon: Icons.category_outlined,
+                      label: '請假類別',
+                      value: leave.ruleName ?? 'N/A',
+                      valueColor: leaveColor,
+                      valueStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: leaveColor,
+                      ),
+                    ),
+                    DetailInfoRow(
+                      icon: Icons.access_time_outlined,
+                      label: '請假時間',
+                      value: leave.time ?? '--',
+                      valueColor: leaveColor,
+                      valueStyle: theme.textTheme.bodyMedium?.copyWith(
+                        color: leaveColor,
+                      ),
+                    ),
+                    if (leave.remark != null && leave.remark!.isNotEmpty)
+                      DetailInfoRow(
+                        icon: Icons.notes_outlined,
+                        label: '請假原因',
+                        value: leave.remark!,
+                        valueColor: leaveColor,
+                        valueStyle: theme.textTheme.bodyMedium?.copyWith(
+                          color: leaveColor,
+                        ),
+                      ),
+                    if (index < timeoffRecords.length - 1)
+                      const Divider(
+                        height: 16,
+                        thickness: 0.5,
+                        indent: 16,
+                        endIndent: 16,
+                      ),
+                  ],
+                ),
+              );
+            }).toList(),
+      ),
+    ).animate().fadeIn(duration: 200.ms);
+  }
+
+  Widget _buildAttendanceDetailsList(
+    BuildContext context,
+    AttendanceRecord record,
+    String statusTag,
+  ) {
+    final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final valueStyle = textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.bold,
+      color: colorScheme.primary,
+    );
+    final labelStyle = textTheme.bodyMedium?.copyWith(
+      color: colorScheme.onSurfaceVariant,
+    );
+    final placeholderStyle = textTheme.titleMedium?.copyWith(
+      fontWeight: FontWeight.bold,
+      color: colorScheme.outline.withValues(alpha: 0.6),
     );
 
-    return ListView(
-      key: ValueKey('details_${data.date}'), // Unique key
-      padding: EdgeInsets.zero,
-      children: [
-        DetailInfoRow(
-          icon: Icons.access_time_outlined,
-          label: '上班打卡',
-          value: data.clockIn ?? '--',
-        ),
-        DetailInfoRow(
-          icon: Icons.access_time_filled_outlined,
-          label: '下班打卡',
-          value: data.clockOut ?? '--',
-        ),
-        DetailInfoRow(
-          icon: statusIcon,
-          label: '狀態',
-          value: statusDisplay,
-          valueColor: statusColor,
-        ),
-        if (data.reason != null)
-          DetailInfoRow(
-            icon: Icons.notes_outlined,
-            label: '事由',
-            value: CalendarUtils.getClockInDisplayString(
-              'reason',
-              data.reason!,
+    String getPunchTime(List<PunchRecord>? punches) {
+      return punches?.firstOrNull?.time ?? '-- : --';
+    }
+
+    final bool hasPunches =
+        (record.punch?.onPunch.isNotEmpty ?? false) &&
+        (record.punch?.offPunch.isNotEmpty ?? false);
+    final num hours = record.attendance?.duringHour ?? 0;
+    final num mins = record.attendance?.duringMin ?? 0;
+    final showDuration = hasPunches && (hours > 0 || mins > 0);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      child: Column(
+        key: ValueKey('details_${record.dateInfo?.date}'),
+        children: [
+          if (record.workTime != null && record.workTime!.isNotEmpty)
+            DetailInfoRow(
+              icon: Icons.schedule_outlined,
+              label: '工作時間',
+              value: record.workTime!,
+              valueStyle: valueStyle,
+              labelStyle: labelStyle,
+              placeholderStyle: placeholderStyle,
             ),
+          DetailInfoRow(
+            icon: Icons.login_outlined,
+            label: '上班打卡',
+            value: getPunchTime(record.punch?.onPunch),
+            valueStyle: valueStyle,
+            labelStyle: labelStyle,
+            placeholderStyle: placeholderStyle,
           ),
-      ],
-    ).animate().fadeIn(duration: 200.ms);
+          DetailInfoRow(
+            icon: Icons.logout_outlined,
+            label: '下班打卡',
+            value: getPunchTime(record.punch?.offPunch),
+            valueStyle: valueStyle,
+            labelStyle: labelStyle,
+            placeholderStyle: placeholderStyle,
+          ),
+          if (showDuration)
+            DetailInfoRow(
+              icon: Icons.timer_outlined,
+              label: '實際工時',
+              value: CalendarUtils.formatDuration(hours, mins),
+              valueStyle: valueStyle,
+              labelStyle: labelStyle,
+              placeholderStyle: placeholderStyle,
+            ),
+          if (record.overtime != null && record.overtime!.isNotEmpty)
+            _buildOvertimeRow(context, record.overtime!.first, labelStyle),
+          const Gap(8),
+        ],
+      ).animate().fadeIn(duration: 200.ms),
+    );
+  }
+
+  Widget _buildOvertimeRow(
+    BuildContext context,
+    OvertimeRecord ot,
+    TextStyle? labelStyle,
+  ) {
+    final textTheme = Theme.of(context).textTheme;
+    final num? totalMinutes = num.tryParse(ot.totalTime ?? '');
+    return DetailInfoRow(
+      icon: Icons.more_time_outlined,
+      label: '加班記錄',
+      value:
+          '${ot.remark ?? 'N/A'} (${CalendarUtils.formatMinutes(totalMinutes)})',
+      valueColor: Colors.red.shade600,
+      valueStyle: textTheme.bodyMedium?.copyWith(color: Colors.red.shade600),
+      labelStyle: labelStyle,
+    );
   }
 }
