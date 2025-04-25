@@ -7,6 +7,7 @@ import 'core/theme/app_theme.dart';
 import 'core/utils/local_storage.dart';
 import 'core/utils/notification.dart';
 import 'core/utils/nueip_helper.dart';
+import 'data/models/auth_session.dart';
 import 'data/repositories/holiday_repository_impl.dart';
 import 'data/repositories/nueip_repository_impl.dart';
 import 'data/services/holiday_service.dart';
@@ -29,6 +30,13 @@ Future<void> main() async {
 Future<void> _initDependencies() async {
   // Add router registration
   Circus.hire<AppRouter>(AppRouter());
+
+  // Add AuthSession Joker registration
+  Circus.recruit<AuthSession>(
+    const AuthSession(),
+    tag: 'auth',
+    keepAlive: true,
+  );
 
   // Add API features registration
   Circus

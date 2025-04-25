@@ -11,6 +11,7 @@ import 'package:joker_state/joker_state.dart';
 import '../../core/utils/auth_utils.dart';
 import '../../core/utils/notification.dart';
 import '../../data/models/clock_action_enum.dart';
+import '../../data/models/daily_clock_detail.dart';
 import '../../domain/entities/clock_state.dart';
 import '../presenters/clock_presenter.dart';
 import '../widgets/time_card.dart';
@@ -37,7 +38,8 @@ const List<String> _zhWeekdays = [
 class _HomeScreenState extends State<HomeScreen> {
   late final Joker<DateTime> _timeJoker;
   late final ClockPresenter _clockPresenter;
-  late final VoidCallback _cancel;
+  // Listener specifically for clock action status (notifications/snackbars)
+  late final VoidCallback _actionStatusCancel;
 
   Timer? _timer;
 
@@ -47,16 +49,21 @@ class _HomeScreenState extends State<HomeScreen> {
     _timeJoker = Joker<DateTime>(DateTime.now());
     _clockPresenter = ClockPresenter();
 
-    _cancel = _clockPresenter.listen((previous, current) {
-      if (current is ClockSuccess) {
-        final time = DateFormat('yyyy/MM/dd kk:mm:ss').format(DateTime.now());
-        NotificationUtils.showSimpleNotification(87, '打卡成功！', '打卡時間：$time');
-      }
-
-      if (current is ClockFailure) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('打卡失敗，請重新嘗試')));
+    // Listen to all state changes, but only act on status change
+    _actionStatusCancel = _clockPresenter.listen((previous, current) {
+      // Only trigger notification/snackbar if action status has changed
+      if (previous?.status != current.status) {
+        if (current.status == ClockActionStatus.success) {
+          final time = DateFormat('yyyy/MM/dd kk:mm:ss').format(DateTime.now());
+          NotificationUtils.showSimpleNotification(87, '打卡成功！', '打卡時間：$time');
+        } else if (current.status == ClockActionStatus.failure) {
+          // Ensure context is available before showing SnackBar
+          if (mounted) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('打卡失敗，請重新嘗試')));
+          }
+        }
       }
     });
 
@@ -65,11 +72,14 @@ class _HomeScreenState extends State<HomeScreen> {
         _timeJoker.trick(DateTime.now());
       }
     });
+    // Initial fetch of clock times should be handled by the presenter
+    // e.g., in its onReady method or triggered by a cue.
   }
 
   Future<void> _performClockAction(ClockAction action) async {
     final session = AuthUtils.getAuthSession();
 
+    // Consider fetching location dynamically if needed
     double latitude = 22.6283906;
     double longitude = 120.2932479;
 
@@ -79,14 +89,18 @@ class _HomeScreenState extends State<HomeScreen> {
       csrfToken: session.csrfToken ?? '',
       latitude: latitude,
       longitude: longitude,
+      // Pass accessToken needed for fetching times after successful action
       accessToken: session.accessToken ?? '',
     );
   }
 
   @override
   void dispose() {
-    _cancel();
+    _actionStatusCancel(); // Cancel the listener
     _timer?.cancel();
+    // Assuming ClockPresenter is managed elsewhere (e.g., Circus)
+    // If created locally and not keepAlive, JokerState handles disposal.
+    // If keepAlive, ensure proper disposal mechanism is in place.
     super.dispose();
   }
 
@@ -199,28 +213,31 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const Gap(40),
 
-              _clockPresenter.perform(
-                builder: (context, clockState) {
-                  bool canClockIn = false;
-                  bool canClockOut = false;
+              // --- Clock Action Buttons ---
+              // Use focusOn extension for selective rebuild based on status and details
+              _clockPresenter.focusOn<(ClockActionStatus, DailyClockDetail?)>(
+                selector: (state) => (state.status, state.details),
+                builder: (context, data) {
+                  final status = data.$1;
+                  final details = data.$2;
 
-                  if (clockState is ClockSuccess) {
-                    final detail = clockState.details;
-                    canClockIn = detail.clockInTime == null;
-                    canClockOut = detail.clockOutTime == null;
-                  } else if (clockState is ClockInitial) {
-                    canClockIn = true;
-                    canClockOut = true;
-                  }
+                  // Determine button enable state based on details
+                  final bool canClockIn = details?.clockInTime == null;
+                  // Can clock out only if clocked in and not yet clocked out
+                  final bool canClockOut =
+                      details?.clockInTime != null &&
+                      details?.clockOutTime == null;
 
-                  final isLoading = clockState is ClockLoading;
+                  // Loading state ONLY depends on the action status
+                  final isActionLoading = status == ClockActionStatus.loading;
 
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
+                      // --- Clock In Button ---
                       ElevatedButton.icon(
                             icon:
-                                isLoading
+                                isActionLoading // Show loader only if action is loading
                                     ? const SizedBox(
                                       width: 20,
                                       height: 20,
@@ -245,7 +262,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             onPressed:
-                                canClockIn && !isLoading
+                                canClockIn &&
+                                        !isActionLoading // Disable if action loading OR cannot clock in
                                     ? () => _performClockAction(ClockAction.IN)
                                     : null,
                           )
@@ -256,9 +274,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             duration: 500.ms,
                             curve: Curves.easeOut,
                           ),
+                      // --- Clock Out Button ---
                       ElevatedButton.icon(
                             icon:
-                                isLoading
+                                isActionLoading // Show loader only if action is loading
                                     ? const SizedBox(
                                       width: 20,
                                       height: 20,
@@ -287,7 +306,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             onPressed:
-                                canClockOut && !isLoading
+                                canClockOut &&
+                                        !isActionLoading // Disable if action loading OR cannot clock out
                                     ? () => _performClockAction(ClockAction.OUT)
                                     : null,
                           )
@@ -305,22 +325,43 @@ class _HomeScreenState extends State<HomeScreen> {
 
               const Gap(30),
 
-              _clockPresenter.perform(
-                builder: (context, clockState) {
+              // --- Time Cards Display ---
+              // Use focusOn extension for selective rebuild based on timeStatus and details
+              _clockPresenter.focusOn<(ClockTimeStatus, DailyClockDetail?)>(
+                selector: (state) => (state.timeStatus, state.details),
+                builder: (context, data) {
+                  final timeStatus = data.$1;
+                  final details = data.$2;
+
                   DateTime? clockInTime;
                   DateTime? clockOutTime;
 
-                  if (clockState is ClockSuccess) {
-                    final detail = clockState.details;
-                    clockInTime =
-                        detail.clockInTime != null
-                            ? DateFormat('HH:mm:ss').parse(detail.clockInTime!)
-                            : null;
-                    clockOutTime =
-                        detail.clockOutTime != null
-                            ? DateFormat('HH:mm:ss').parse(detail.clockOutTime!)
-                            : null;
+                  // Safely parse times only if details are available
+                  if (details != null) {
+                    try {
+                      clockInTime =
+                          details.clockInTime != null
+                              ? DateFormat(
+                                'HH:mm:ss',
+                              ).parse(details.clockInTime!)
+                              : null;
+                      clockOutTime =
+                          details.clockOutTime != null
+                              ? DateFormat(
+                                'HH:mm:ss',
+                              ).parse(details.clockOutTime!)
+                              : null;
+                    } catch (e) {
+                      // Handle potential parsing errors if format is unexpected
+                      debugPrint("Error parsing time string: $e");
+                      // Optionally set times to null or show an error state in the card
+                      clockInTime = null;
+                      clockOutTime = null;
+                    }
                   }
+
+                  // Loading state ONLY depends on the time fetching status
+                  final isTimeLoading = timeStatus == ClockTimeStatus.loading;
 
                   return IntrinsicHeight(
                         child: Row(
@@ -332,7 +373,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 title: '上班時間',
                                 icon: Icons.login,
                                 iconColor: Colors.green,
-                                isLoading: clockState is ClockLoading,
+                                // Show loader only if time is loading
+                                isLoading: isTimeLoading,
                               ),
                             ),
                             const Gap(16),
@@ -342,7 +384,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 title: '下班時間',
                                 icon: Icons.logout,
                                 iconColor: Colors.redAccent,
-                                isLoading: clockState is ClockLoading,
+                                // Show loader only if time is loading
+                                isLoading: isTimeLoading,
                               ),
                             ),
                           ],

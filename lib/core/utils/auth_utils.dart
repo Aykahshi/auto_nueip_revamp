@@ -65,7 +65,13 @@ sealed class AuthUtils {
       expiryTime: DateTime.parse(sessionStr[3]),
     );
 
-    return session.isTokenExpired();
+    final bool isExpired = session.isTokenExpired();
+
+    if (!isExpired) {
+      Circus.spotlight<AuthSession>(tag: 'auth').whisper(session);
+    }
+
+    return !isExpired;
   }
 
   static AuthSession getAuthSession() {

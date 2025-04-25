@@ -7,7 +7,6 @@ import 'core/config/storage_keys.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/local_storage.dart';
-import 'data/models/auth_session.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -24,13 +23,6 @@ class App extends StatelessWidget {
     if (isDarkMode) {
       themeJoker.trick(AppThemeMode.dark);
     }
-
-    // Register AuthSession Joker
-    Circus.recruit<AuthSession>(
-      const AuthSession(),
-      tag: 'auth',
-      keepAlive: true,
-    );
 
     final router = Circus.find<AppRouter>();
 

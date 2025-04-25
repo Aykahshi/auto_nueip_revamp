@@ -28,7 +28,20 @@ sealed class LocalStorage {
   static T get<T>(String key, {required T defaultValue}) {
     if (_prefs == null) throw Exception("SharedPreferences is not initialized");
 
-    return (_prefs!.get(key) as T?) ?? defaultValue;
+    if (T == List<String>) {
+      final List<String>? value = _prefs!.getStringList(key);
+      return (value ?? defaultValue) as T;
+    } else {
+      final Object? value = _prefs!.get(key);
+      try {
+        return (value as T?) ?? defaultValue;
+      } catch (e) {
+        print(
+          "LocalStorage.get: Cast failed for key '$key' to type $T. Returning default. Error: $e",
+        );
+        return defaultValue;
+      }
+    }
   }
 
   static Future<bool> remove(String key) async {

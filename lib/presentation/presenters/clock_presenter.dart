@@ -10,33 +10,29 @@ import '../../core/utils/local_storage.dart';
 import '../../data/models/clock_action_enum.dart';
 import '../../data/models/daily_clock_detail.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
-import '../../domain/cues/login_successful_cue.dart';
 import '../../domain/entities/clock_state.dart';
 import '../../domain/repositories/nueip_repository.dart';
 
 class ClockPresenter extends Presenter<ClockState> {
   final NueipRepository _repository;
-  late final StreamSubscription _subscription;
 
   ClockPresenter({NueipRepository? repository})
     : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
-      super(const ClockState.initial());
+      super(
+        const ClockState(
+          status: ClockActionStatus.initial,
+          timeStatus: ClockTimeStatus.initial,
+        ),
+      );
 
   @override
-  void onReady() {
-    super.onReady();
-    _subscription = Circus.onCue<LoginSuccessful>((_) {
-      _init();
-    });
-  }
-
-  @override
-  void onDone() {
-    _subscription.cancel();
-    super.onDone();
+  void onInit() {
+    super.onInit();
+    _init();
   }
 
   Future<void> _init() async {
+    await AuthUtils.checkAuthSession();
     final session = AuthUtils.getAuthSession();
 
     await getClockTimes(
@@ -49,47 +45,63 @@ class ClockPresenter extends Presenter<ClockState> {
     required String accessToken,
     required String cookie,
   }) async {
-    trick(const ClockState.loading());
+    trickWith((state) => state.copyWith(timeStatus: ClockTimeStatus.loading));
 
     final result =
         await _repository
             .getClockTime(accessToken: accessToken, cookie: cookie)
             .run();
 
-    result.fold((failure) => trick(ClockState.failure(failure)), (
-      response,
-    ) async {
-      try {
-        final jsonData = response.data as Map<String, dynamic>;
-        final detailData = jsonData['data']['user'] as Map<String, dynamic>?;
+    result.fold(
+      (failure) {
+        trickWith(
+          (state) => state.copyWith(
+            timeStatus: ClockTimeStatus.failure,
+            failure: failure,
+          ),
+        );
+      },
+      (response) async {
+        try {
+          final jsonData = response.data as Map<String, dynamic>;
+          final detailData = jsonData['data']['user'] as Map<String, dynamic>?;
 
-        if (detailData != null) {
-          final dailyClockDetail = DailyClockDetail.fromJson(detailData);
-          await LocalStorage.set(StorageKeys.userNo, dailyClockDetail.userNo);
-          trick(ClockState.success(dailyClockDetail));
-        } else {
-          trick(
-            const ClockState.failure(
-              Failure(
-                message: "Invalid response format: 'user' data not found.",
+          if (detailData != null) {
+            final dailyClockDetail = DailyClockDetail.fromJson(detailData);
+            await LocalStorage.set(StorageKeys.userNo, dailyClockDetail.userNo);
+            trickWith(
+              (state) => state.copyWith(
+                timeStatus: ClockTimeStatus.success,
+                details: dailyClockDetail,
+              ),
+            );
+          } else {
+            trickWith(
+              (state) => state.copyWith(
+                timeStatus: ClockTimeStatus.failure,
+                failure: const Failure(
+                  message: "Invalid response format: 'user' data not found.",
+                  status: 'get clock times failed',
+                ),
+              ),
+            );
+          }
+        } catch (e, stackTrace) {
+          // Handle parsing errors
+          debugPrint("Error parsing clock time response: $e\n$stackTrace");
+
+          trickWith(
+            (state) => state.copyWith(
+              timeStatus: ClockTimeStatus.failure,
+              failure: Failure(
+                message: "Failed to parse clock time data: $e",
                 status: 'get clock times failed',
               ),
             ),
           );
         }
-      } catch (e, stackTrace) {
-        // Handle parsing errors
-        debugPrint("Error parsing clock time response: $e\n$stackTrace");
-        trick(
-          ClockState.failure(
-            Failure(
-              message: "Failed to parse clock time data: $e",
-              status: 'get clock times failed',
-            ),
-          ),
-        );
-      }
-    });
+      },
+    );
   }
 
   /// Performs a clock action (e.g., clock-in or clock-out).
@@ -104,7 +116,7 @@ class ClockPresenter extends Presenter<ClockState> {
     required String accessToken,
   }) async {
     // Set loading state
-    trick(const ClockState.loading());
+    trickWith((state) => state.copyWith(status: ClockActionStatus.loading));
 
     final result =
         await _repository
@@ -117,12 +129,22 @@ class ClockPresenter extends Presenter<ClockState> {
             )
             .run();
 
-    result.fold((failure) => trick(ClockState.failure(failure)), (_) async {
-      // Punch action itself was successful, now fetch updated times
-      debugPrint("Punch action successful. Fetching updated times...");
-      // Trigger fetchPunchTimes to get the latest state
-      // Pass the required tokens for the fetch call
-      await getClockTimes(accessToken: accessToken, cookie: cookie);
-    });
+    result.fold(
+      (failure) {
+        trickWith(
+          (state) => state.copyWith(
+            status: ClockActionStatus.failure,
+            failure: failure,
+          ),
+        );
+      },
+      (_) async {
+        // Punch action itself was successful, now fetch updated times
+        debugPrint("Punch action successful. Fetching updated times...");
+        // Trigger fetchPunchTimes to get the latest state
+        // Pass the required tokens for the fetch call
+        await getClockTimes(accessToken: accessToken, cookie: cookie);
+      },
+    );
   }
 }

@@ -12,7 +12,7 @@ class LoginPresenter extends Presenter<LoginStatus> {
   final NueipRepository _repository;
   final NueipHelper _helper;
 
-  LoginPresenter()
+  LoginPresenter({super.keepAlive = true})
     : _repository = Circus.find<NueipRepositoryImpl>(),
       _helper = Circus.find<NueipHelper>(),
       super(LoginStatus.initial);

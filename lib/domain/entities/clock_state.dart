@@ -7,10 +7,14 @@ part 'clock_state.freezed.dart';
 
 @freezed
 sealed class ClockState with _$ClockState {
-  const factory ClockState.initial() = ClockInitial;
-  const factory ClockState.loading() = ClockLoading;
-  // Success state holding the punch details
-  const factory ClockState.success(DailyClockDetail details) = ClockSuccess;
-  // Failure state holding the error information
-  const factory ClockState.failure(Failure failure) = ClockFailure;
+  const factory ClockState({
+    required ClockActionStatus status,
+    required ClockTimeStatus timeStatus,
+    DailyClockDetail? details,
+    Failure? failure,
+  }) = _ClockState;
 }
+
+enum ClockActionStatus { initial, loading, success, failure }
+
+enum ClockTimeStatus { initial, loading, success, failure }

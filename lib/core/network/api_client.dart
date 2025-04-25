@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import '../config/api_config.dart';
+import '../utils/auth_utils.dart';
 import 'content_type_transformer.dart';
 import 'login_interceptor.dart';
 
@@ -23,6 +24,12 @@ class ApiClient {
     _dio.interceptors.add(CookieManager(_cookieJar));
     _dio.interceptors.add(LoginInterceptor());
     _dio.transformer = ContentTypeTransformer();
+
+    if (AuthUtils.isAuthSessionValid()) {
+      final session = AuthUtils.getAuthSession();
+      _dio.options.headers['Cookie'] = session.cookie;
+      _dio.options.headers['Authorization'] = 'Bearer ${session.accessToken}';
+    }
 
     if (kDebugMode) {
       _dio.interceptors.add(
