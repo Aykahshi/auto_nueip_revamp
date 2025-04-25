@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:joker_state/joker_state.dart';
 
+import '../../core/network/api_client.dart';
 import '../../core/utils/auth_utils.dart';
 import '../../core/utils/nueip_helper.dart';
 import '../../data/models/login_status_enum.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
-import '../../domain/cues/login_successful_cue.dart';
 import '../../domain/repositories/nueip_repository.dart';
 
 class LoginPresenter extends Presenter<LoginStatus> {
@@ -24,9 +24,9 @@ class LoginPresenter extends Presenter<LoginStatus> {
   }
 
   Future<void> init() async {
+    final client = Circus.find<ApiClient>();
     if (AuthUtils.isAuthSessionValid()) {
-      trick(LoginStatus.success);
-      Circus.cue<LoginSuccessful>(LoginSuccessful());
+      client.updateAuthSession(AuthUtils.getAuthSession());
       return;
     }
 
@@ -41,7 +41,7 @@ class LoginPresenter extends Presenter<LoginStatus> {
       employeeId: employeeId,
       password: password,
     );
-    Circus.cue<LoginSuccessful>(LoginSuccessful());
+    client.updateAuthSession(AuthUtils.getAuthSession());
   }
 
   /// Performs the login operation.

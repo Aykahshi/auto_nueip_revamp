@@ -4,8 +4,8 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
+import '../../data/models/auth_session.dart';
 import '../config/api_config.dart';
-import '../utils/auth_utils.dart';
 import 'content_type_transformer.dart';
 import 'login_interceptor.dart';
 
@@ -25,12 +25,6 @@ class ApiClient {
     _dio.interceptors.add(LoginInterceptor());
     _dio.transformer = ContentTypeTransformer();
 
-    if (AuthUtils.isAuthSessionValid()) {
-      final session = AuthUtils.getAuthSession();
-      _dio.options.headers['Cookie'] = session.cookie;
-      _dio.options.headers['Authorization'] = 'Bearer ${session.accessToken}';
-    }
-
     if (kDebugMode) {
       _dio.interceptors.add(
         PrettyDioLogger(
@@ -41,6 +35,11 @@ class ApiClient {
         ),
       );
     }
+  }
+
+  void updateAuthSession(AuthSession session) {
+    _dio.options.headers['Cookie'] = session.cookie;
+    _dio.options.headers['Authorization'] = 'Bearer ${session.accessToken}';
   }
 
   Future<Response<T>> get<T>(
