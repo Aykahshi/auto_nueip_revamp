@@ -19,7 +19,7 @@ class ShimmerListTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final shimmerColor = colorScheme.onSurface.withOpacity(0.08);
+    final shimmerColor = colorScheme.onSurface.withValues(alpha: 0.08);
 
     return Card(
       elevation: 0.5,
@@ -82,7 +82,9 @@ class ShimmerListTile extends StatelessWidget {
                   vertical: 4.0,
                 ),
                 decoration: BoxDecoration(
-                  color: shimmerColor.withOpacity(0.5), // Lighter background
+                  color: shimmerColor.withValues(
+                    alpha: 0.5,
+                  ), // Lighter background
                   borderRadius: BorderRadius.circular(12.0),
                   border: Border.all(
                     color: shimmerColor, // Use shimmer color for border too

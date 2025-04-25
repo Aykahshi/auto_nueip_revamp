@@ -3,6 +3,8 @@ sealed class ApiConfig {
   const ApiConfig._();
 
   static const String BASE_URL = 'https://cloud.nueip.com';
+  static const String INFO_URL =
+      'https://portal-api.nueip.com/system/basic-info';
   static const String LOGIN_URL = '$BASE_URL/login/index/param';
   static const String CLOCK_URL = '$BASE_URL/time_clocks/ajax';
   static const String TOKEN_URL = '$BASE_URL/oauth2/token/api';

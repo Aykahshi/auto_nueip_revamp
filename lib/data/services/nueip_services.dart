@@ -147,4 +147,11 @@ class NueipService {
       ), // Provide default status
     );
   }
+
+  TaskEither<Failure, Response> getUserInfo() {
+    return TaskEither.tryCatch(
+      () async => await _client.get(ApiConfig.INFO_URL),
+      (e, _) => Failure(message: e.toString(), status: 'info_failed'),
+    );
+  }
 }

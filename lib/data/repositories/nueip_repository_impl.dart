@@ -71,4 +71,9 @@ class NueipRepositoryImpl implements NueipRepository {
       cookie: cookie,
     );
   }
+
+  @override
+  TaskEither<Failure, Response> getUserInfo() {
+    return _service.getUserInfo();
+  }
 }

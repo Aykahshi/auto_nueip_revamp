@@ -2,20 +2,27 @@ import 'package:joker_state/joker_state.dart';
 
 import '../../core/config/storage_keys.dart';
 import '../../core/utils/local_storage.dart';
+import '../../data/models/user_info.dart';
+import '../../data/repositories/nueip_repository_impl.dart';
 import '../../domain/entities/setting_state.dart';
+import '../../domain/repositories/nueip_repository.dart';
 
 class SettingPresenter extends Presenter<SettingState> {
-  SettingPresenter() : super(const SettingState());
+  final NueipRepository _repository;
+
+  SettingPresenter()
+    : _repository = Circus.find<NueipRepositoryImpl>(),
+      super(
+        SettingState(
+          userInfo: UserInfo(companyName: '', deptName: '', userName: ''),
+        ),
+      );
 
   @override
   void onInit() {
     super.onInit();
-    trick(
-      SettingState(
-        username: LocalStorage.get<String>(
-          StorageKeys.username,
-          defaultValue: '使用者',
-        ),
+    trickWith(
+      (state) => state.copyWith(
         notificationsEnabled: LocalStorage.get<bool>(
           StorageKeys.notificationsEnabled,
           defaultValue: false,
@@ -28,10 +35,17 @@ class SettingPresenter extends Presenter<SettingState> {
     );
   }
 
-  void updateUsername(String name) {
-    trickWith((state) => state.copyWith(username: name));
-    // Save to local storage
-    LocalStorage.set(StorageKeys.username, name);
+  Future<void> getUserInfo() async {
+    final result = await _repository.getUserInfo().run();
+
+    result.fold(
+      (failure) => trickWith((state) => state.copyWith(error: failure)),
+      (response) {
+        final jsonData = response.data as Map<String, dynamic>;
+        final userInfo = UserInfo.fromJson(jsonData['data']);
+        trickWith((state) => state.copyWith(userInfo: userInfo));
+      },
+    );
   }
 
   void toggleNotifications(bool value) {

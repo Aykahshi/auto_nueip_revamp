@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 
 import '../../presentation/screens/calendar_screen.dart';
+import '../../presentation/screens/developer_info_screen.dart';
 import '../../presentation/screens/home_screen.dart';
 import '../../presentation/screens/leave_screen.dart';
 import '../../presentation/screens/login_screen.dart';
@@ -29,5 +30,6 @@ class AppRouter extends RootStackRouter {
         AutoRoute(page: CalendarRoute.page),
       ],
     ),
+    AutoRoute(page: DeveloperInfoRoute.page),
   ];
 }

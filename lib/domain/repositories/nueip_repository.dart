@@ -35,4 +35,6 @@ abstract class NueipRepository {
     required String endDate,
     required String cookie,
   });
+
+  TaskEither<Failure, Response> getUserInfo();
 }

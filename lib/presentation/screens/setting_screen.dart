@@ -1,9 +1,10 @@
-import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:gap/gap.dart';
 import 'package:joker_state/joker_state.dart';
 
+import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/local_storage.dart';
 import '../../core/utils/notification.dart';
@@ -24,6 +25,7 @@ class _SettingScreenState extends State<SettingScreen> {
   void initState() {
     super.initState();
     _presenter = Circus.hire<SettingPresenter>(SettingPresenter());
+    _presenter.getUserInfo();
   }
 
   @override
@@ -130,7 +132,7 @@ class _SettingScreenState extends State<SettingScreen> {
                     title: '開發者資訊',
                     icon: Icons.info_outline,
                     onTap: () {
-                      _showDeveloperInfo(context);
+                      context.router.push(const DeveloperInfoRoute());
                     },
                   ),
                   _buildSettingTile(
@@ -190,126 +192,79 @@ Future<void> _requestNotificationPermissions(
 Widget _buildProfileSection(BuildContext context, SettingPresenter presenter) {
   return presenter.perform(
     builder: (context, state) {
-      // Create a joker for editing state
-      final editingJoker = Joker<bool>(false);
+      final theme = Theme.of(context);
+      final colorScheme = theme.colorScheme;
+      final textTheme = theme.textTheme;
+      final userInfo = state.userInfo; // Access the UserInfo object
 
-      // Create a text controller that updates when username changes
-      final TextEditingController usernameController = TextEditingController(
-        text: state.username,
-      );
+      // Fallback values for display
+      final String displayName = userInfo.userName ?? '使用者名稱';
+      final String displayDept = userInfo.deptName ?? '部門資訊';
+      final String displayCompany = userInfo.companyName ?? '公司資訊';
 
-      // Function to handle save action
-      void saveUsername() {
-        if (usernameController.text.isNotEmpty) {
-          presenter.updateUsername(usernameController.text);
-          editingJoker.trick(false);
-        }
-      }
-
-      return usernameController.trapeze(
-        Center(
-          child: SizedBox(
-            width: double.infinity,
-            child: Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    // Profile Image
-                    JokerCast<AppThemeMode>(
-                      builder: (context, themeMode) {
-                        final isDarkMode = themeMode == AppThemeMode.dark;
-
-                        return CircleAvatar(
-                              radius: 50,
-                              backgroundImage: AssetImage(
-                                isDarkMode
-                                    ? 'assets/images/logo_dark.png'
-                                    : 'assets/images/logo.png',
-                              ),
-                            )
-                            .animate()
-                            .scale(duration: 300.ms, curve: Curves.easeOut)
-                            .then()
-                            .shimmer(duration: 1200.ms);
-                      },
-                    ),
-                    const Gap(16),
-
-                    // Username section with editable text
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Editable Username
-                          editingJoker.perform(
-                            builder: (context, isEditing) {
-                              return Row(
-                                children: [
-                                  Expanded(
-                                    child:
-                                        isEditing
-                                            ? TextField(
-                                              controller: usernameController,
-                                              style:
-                                                  Theme.of(
-                                                    context,
-                                                  ).textTheme.titleLarge,
-                                              decoration: const InputDecoration(
-                                                border: OutlineInputBorder(),
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 8,
-                                                    ),
-                                              ),
-                                              autofocus: true,
-                                            )
-                                            : Text(
-                                              state.username,
-                                              style:
-                                                  Theme.of(
-                                                    context,
-                                                  ).textTheme.titleLarge,
-                                            ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  IconButton(
-                                    iconSize: 20,
-                                    visualDensity: VisualDensity.compact,
-                                    padding: EdgeInsets.zero,
-                                    icon: Icon(
-                                      isEditing ? Icons.save : Icons.edit,
-                                    ),
-                                    style: IconButton.styleFrom(
-                                      backgroundColor:
-                                          Theme.of(context).colorScheme.primary,
-                                      foregroundColor:
-                                          Theme.of(
-                                            context,
-                                          ).colorScheme.onPrimary,
-                                    ),
-                                    onPressed: () {
-                                      if (isEditing) {
-                                        saveUsername();
-                                      } else {
-                                        editingJoker.trick(true);
-                                      }
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
+      return Center(
+        child: SizedBox(
+          width: double.infinity,
+          child: Card(
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              child: Row(
+                children: [
+                  // Profile Image (using asset based on theme)
+                  JokerCast<AppThemeMode>(
+                    builder: (context, themeMode) {
+                      final isDarkMode = themeMode == AppThemeMode.dark;
+                      return CircleAvatar(
+                        radius: 45, // Slightly smaller radius
+                        backgroundColor: colorScheme.surfaceContainerHighest,
+                        backgroundImage: AssetImage(
+                          isDarkMode
+                              ? 'assets/images/logo_dark.png'
+                              : 'assets/images/logo.png',
+                        ),
+                      );
+                    },
+                  ),
+                  const Gap(16),
+                  // User Info Text Column
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          style: textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
                           ),
-                        ],
-                      ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const Gap(4),
+                        Text(
+                          displayDept,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const Gap(2),
+                        Text(
+                          displayCompany,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.outline,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -419,34 +374,6 @@ void _showClearDataDialog(BuildContext context) {
               }
             },
             child: const Text('清除'),
-          ),
-        ],
-      ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack);
-    },
-  );
-}
-
-void _showDeveloperInfo(BuildContext context) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('開發者資訊'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('開發者: Auto NuEIP 團隊'),
-            SizedBox(height: 8),
-            Text('電子郵件: support@example.com'),
-            SizedBox(height: 8),
-            Text('網站: https://example.com'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('關閉'),
           ),
         ],
       ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack);
