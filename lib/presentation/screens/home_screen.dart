@@ -214,21 +214,28 @@ class _HomeScreenState extends State<HomeScreen> {
               const Gap(40),
 
               // --- Clock Action Buttons ---
-              // Use focusOn extension for selective rebuild based on status and details
-              _clockPresenter.focusOn<(ClockActionStatus, DailyClockDetail?)>(
-                selector: (state) => (state.status, state.details),
+              _clockPresenter.focusOn<
+                (
+                  ClockActionStatus, // status
+                  DailyClockDetail?, // details
+                  ClockAction?, // activeAction
+                )
+              >(
+                selector:
+                    (state) => (
+                      state.status,
+                      state.details,
+                      state.activeAction,
+                    ),
                 builder: (context, data) {
                   final status = data.$1;
                   final details = data.$2;
+                  final activeAction = data.$3;
 
-                  // Determine button enable state based on details
                   final bool canClockIn = details?.clockInTime == null;
-                  // Can clock out only if clocked in and not yet clocked out
                   final bool canClockOut =
                       details?.clockInTime != null &&
                       details?.clockOutTime == null;
-
-                  // Loading state ONLY depends on the action status
                   final isActionLoading = status == ClockActionStatus.loading;
 
                   return Row(
@@ -237,7 +244,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       // --- Clock In Button ---
                       ElevatedButton.icon(
                             icon:
-                                isActionLoading // Show loader only if action is loading
+                                isActionLoading &&
+                                        activeAction == ClockAction.IN
                                     ? const SizedBox(
                                       width: 20,
                                       height: 20,
@@ -262,8 +270,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             onPressed:
-                                canClockIn &&
-                                        !isActionLoading // Disable if action loading OR cannot clock in
+                                canClockIn && !isActionLoading
                                     ? () => _performClockAction(ClockAction.IN)
                                     : null,
                           )
@@ -277,7 +284,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       // --- Clock Out Button ---
                       ElevatedButton.icon(
                             icon:
-                                isActionLoading // Show loader only if action is loading
+                                isActionLoading &&
+                                        activeAction == ClockAction.OUT
                                     ? const SizedBox(
                                       width: 20,
                                       height: 20,
@@ -306,8 +314,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             onPressed:
-                                canClockOut &&
-                                        !isActionLoading // Disable if action loading OR cannot clock out
+                                canClockOut && !isActionLoading
                                     ? () => _performClockAction(ClockAction.OUT)
                                     : null,
                           )
@@ -326,7 +333,6 @@ class _HomeScreenState extends State<HomeScreen> {
               const Gap(30),
 
               // --- Time Cards Display ---
-              // Use focusOn extension for selective rebuild based on timeStatus and details
               _clockPresenter.focusOn<(ClockTimeStatus, DailyClockDetail?)>(
                 selector: (state) => (state.timeStatus, state.details),
                 builder: (context, data) {
@@ -336,7 +342,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   DateTime? clockInTime;
                   DateTime? clockOutTime;
 
-                  // Safely parse times only if details are available
                   if (details != null) {
                     try {
                       clockInTime =
@@ -360,7 +365,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                   }
 
-                  // Loading state ONLY depends on the time fetching status
                   final isTimeLoading = timeStatus == ClockTimeStatus.loading;
 
                   return IntrinsicHeight(
@@ -373,7 +377,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 title: '上班時間',
                                 icon: Icons.login,
                                 iconColor: Colors.green,
-                                // Show loader only if time is loading
                                 isLoading: isTimeLoading,
                               ),
                             ),
@@ -384,7 +387,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                 title: '下班時間',
                                 icon: Icons.logout,
                                 iconColor: Colors.redAccent,
-                                // Show loader only if time is loading
                                 isLoading: isTimeLoading,
                               ),
                             ),

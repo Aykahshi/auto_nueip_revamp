@@ -20,8 +20,8 @@ class ClockPresenter extends Presenter<ClockState> {
     : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
       super(
         const ClockState(
-          status: ClockActionStatus.initial,
-          timeStatus: ClockTimeStatus.initial,
+          status: ClockActionStatus.idle,
+          timeStatus: ClockTimeStatus.idle,
         ),
       );
 
@@ -112,11 +112,15 @@ class ClockPresenter extends Presenter<ClockState> {
     required String csrfToken,
     required double latitude,
     required double longitude,
-    // Added required tokens for fetching after successful punch
     required String accessToken,
   }) async {
-    // Set loading state
-    trickWith((state) => state.copyWith(status: ClockActionStatus.loading));
+    // Set loading state and active action
+    trickWith(
+      (state) => state.copyWith(
+        status: ClockActionStatus.loading,
+        activeAction: action, // Indicate which action is loading
+      ),
+    );
 
     final result =
         await _repository
@@ -134,14 +138,26 @@ class ClockPresenter extends Presenter<ClockState> {
         trickWith(
           (state) => state.copyWith(
             status: ClockActionStatus.failure,
+            activeAction: null, // Clear active action on failure
             failure: failure,
           ),
         );
       },
       (_) async {
-        // Punch action itself was successful, now fetch updated times
-        debugPrint("Punch action successful. Fetching updated times...");
-        // Trigger fetchPunchTimes to get the latest state
+        // Punch action itself was successful
+        debugPrint(
+          "Punch action successful. Updating status and fetching updated times...",
+        );
+
+        // Update action status to success and clear active action
+        // before fetching times (time fetch will handle its own status)
+        trickWith(
+          (state) => state.copyWith(
+            status: ClockActionStatus.success,
+            activeAction: null,
+          ),
+        );
+
         // Pass the required tokens for the fetch call
         await getClockTimes(accessToken: accessToken, cookie: cookie);
       },
