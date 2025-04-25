@@ -239,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   final isActionLoading = status == ClockActionStatus.loading;
 
                   return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
                       // --- Clock In Button ---
                       ElevatedButton.icon(

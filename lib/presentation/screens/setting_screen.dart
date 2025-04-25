@@ -24,7 +24,7 @@ class _SettingScreenState extends State<SettingScreen> {
   @override
   void initState() {
     super.initState();
-    _presenter = Circus.hire<SettingPresenter>(SettingPresenter());
+    _presenter = SettingPresenter();
     _presenter.getUserInfo();
   }
 
@@ -366,11 +366,10 @@ void _showClearDataDialog(BuildContext context) {
               await LocalStorage.clear();
               if (context.mounted) {
                 Navigator.pop(context);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('帳號資料已清除')));
-                }
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('帳號資料已清除')));
+                context.router.replace(const LoginRoute());
               }
             },
             child: const Text('清除'),

@@ -39,18 +39,15 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  late final HolidayPresenter _holidayPresenter = Circus.hire<HolidayPresenter>(
-    HolidayPresenter(),
-  );
-  // Hire AttendancePresenter here as well, so both tabs can potentially use it
-  // Or consider providing it via Circus.summon if needed globally
-  late final AttendancePresenter _attendancePresenter =
-      Circus.hire<AttendancePresenter>(AttendancePresenter());
+  late final HolidayPresenter _holidayPresenter;
+  late final AttendancePresenter _attendancePresenter;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _attendancePresenter = AttendancePresenter();
+    _holidayPresenter = HolidayPresenter();
     _loadInitialHolidays();
   }
 

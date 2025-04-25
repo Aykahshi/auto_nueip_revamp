@@ -18,8 +18,8 @@ class LoginPresenter extends Presenter<LoginStatus> {
       super(LoginStatus.initial);
 
   @override
-  void onInit() {
-    super.onInit();
+  void onReady() {
+    super.onReady();
     init();
   }
 
