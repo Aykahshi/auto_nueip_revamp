@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../data/models/attendance_details.dart'; // Import needed model
+
 sealed class CalendarUtils {
   const CalendarUtils._(); // Private constructor to prevent instantiation
 
   /// Returns the localized name of the weekday.
-  static String getWeekdayName(int weekday, BuildContext context) {
+  static String getWeekdayName(int weekday) {
     switch (weekday) {
       case 1:
         return '週一';
@@ -25,64 +27,124 @@ sealed class CalendarUtils {
     }
   }
 
-  /// Returns localized display string for clock-in status or reason.
-  static String getClockInDisplayString(String key, String value) {
-    const statusMap = {
-      'status': '狀態',
-      'punchIn': '上班打卡',
-      'punchOut': '下班打卡',
-      'reason': '事由',
-    };
-    const valueMap = {
-      'normal': '正常',
-      'late': '遲到',
-      'absent': '缺勤',
-      'holiday': '假日/休息日', // This might be overridden by specific holiday name
-      'personal_leave': '事假',
-      // Add other reason mappings here
-    };
-
-    // For status and reason, look up the value. For times, use the value directly.
-    if (key == 'status') {
-      return valueMap[value] ??
-          value; // Return localized status or original value
-    } else if (key == 'reason') {
-      return valueMap[value] ??
-          value; // Return localized reason or original value
-    } else {
-      return value; // Return time string directly
+  /// Formats duration into "X 小時 Y 分鐘".
+  static String formatDuration(num hours, num mins) {
+    if (hours == 0 && mins == 0) return '--';
+    String result = '';
+    if (hours > 0) {
+      result += '$hours 小時';
     }
+    if (mins > 0) {
+      if (result.isNotEmpty) result += ' ';
+      result += '$mins 分鐘';
+    }
+    return result;
   }
 
-  /// Returns the appropriate icon for a given punch-in status.
-  static IconData getStatusIcon(String status) {
-    switch (status) {
-      case 'normal':
-        return Icons.check_circle_outline;
-      case 'late':
-        return Icons.watch_later_outlined;
-      case 'absent':
-        return Icons.person_off_outlined;
-      case 'holiday':
-        return Icons.celebration_outlined;
-      default:
-        return Icons.help_outline;
+  /// Formats total minutes into "X hours Y minutes".
+  static String formatMinutes(num? totalMinutes) {
+    if (totalMinutes == null || totalMinutes <= 0) return '--';
+
+    final hours = totalMinutes ~/ 60; // Integer division for hours
+    final minutes = totalMinutes % 60; // Remainder for minutes
+
+    String result = '';
+    if (hours > 0) {
+      result += '$hours 小時';
     }
+    if (minutes > 0) {
+      if (result.isNotEmpty) result += ' ';
+      result += '$minutes 分鐘';
+    }
+    // Handle case where totalMinutes is less than 1 minute but not 0?
+    // If totalMinutes can be fractional, adjust logic.
+    // Assuming integer minutes for now.
+    if (result.isEmpty) return '0 分鐘'; // Or handle as needed
+    return result;
   }
 
-  /// Returns the appropriate color for a given punch-in status.
-  static Color getStatusColor(String status, ColorScheme colorScheme) {
-    switch (status) {
-      case 'normal':
+  /// Determines the primary status tag based on attendance and time off data.
+  static String getAttendanceStatusTag(
+    Attendance? attendance,
+    List<TimeOffRecord>? timeoff,
+    List<OvertimeRecord>? overtime,
+    bool isHoliday,
+  ) {
+    // Priority 1: Overtime
+    if (overtime != null && overtime.isNotEmpty) {
+      return '加班';
+    }
+    // Priority 2: Time Off (Leave)
+    if (timeoff != null && timeoff.isNotEmpty) {
+      // If time off exists, the tag is simply "請假"
+      return '請假';
+    }
+
+    // --- Only check below if no Overtime and no Time Off ---
+
+    // Priority 3: Holiday (if no OT/Leave)
+    if (isHoliday) return '假日';
+
+    // Priority 4: Attendance Status (Workday, no OT/Leave)
+    if (attendance != null) {
+      if (attendance.isAbsent) return '曠職';
+      if (attendance.isMissPunch) return '缺卡';
+      if (attendance.isLate && attendance.isLeaveEarly) return '遲到/早退';
+      if (attendance.isLate) return '遲到';
+      if (attendance.isLeaveEarly) return '早退';
+      // If punch in/out exists but no other issues
+      return '正常';
+    }
+
+    // Priority 5: No data at all (Workday, no record)
+    return '無資料';
+  }
+
+  /// Returns the appropriate color for a given status tag.
+  static Color getStatusTagColor(String tag, ColorScheme colorScheme) {
+    switch (tag) {
+      case '正常':
         return Colors.green.shade600;
-      case 'late':
+      case '遲到':
+      case '早退':
+      case '遲到/早退':
+      case '缺卡':
         return Colors.orange.shade700;
-      case 'absent':
+      case '曠職':
         return colorScheme.error;
-      case 'holiday':
+      case '加班':
+        return Colors.red.shade600;
+      case '假日':
+      case '無資料':
         return Colors.blueGrey.shade500;
+      // Default assumes leave type - use the secondary theme color
       default:
-        return colorScheme.onSurfaceVariant;
+        return colorScheme.secondary;
+    }
+  }
+
+  /// Returns the appropriate icon for a given status tag.
+  static IconData getStatusTagIcon(String tag) {
+    switch (tag) {
+      case '正常':
+        return Icons.check_circle_outline;
+      case '遲到':
+      case '早退':
+      case '遲到/早退':
+        return Icons.watch_later_outlined;
+      case '缺卡':
+        return Icons.report_problem_outlined;
+      case '曠職':
+        return Icons.person_off_outlined;
+      case '加班':
+        return Icons.more_time_outlined;
+      case '假日':
+        return Icons.cake_outlined;
+      case '無資料':
+        return Icons.help_outline;
+      // Default assumes leave type
+      default:
+        return Icons.event_busy_outlined;
     }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 sealed class LocalStorage {
@@ -36,7 +37,7 @@ sealed class LocalStorage {
       try {
         return (value as T?) ?? defaultValue;
       } catch (e) {
-        print(
+        debugPrint(
           "LocalStorage.get: Cast failed for key '$key' to type $T. Returning default. Error: $e",
         );
         return defaultValue;

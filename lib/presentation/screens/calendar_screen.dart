@@ -5,6 +5,7 @@ import 'package:auto_route/annotations.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull, whereNotNull
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:intl/intl.dart'; // Import Intl
 import 'package:joker_state/joker_state.dart'; // Import JokerState
 import 'package:syncfusion_flutter_calendar/calendar.dart'; // Import SfCalendar controller
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
@@ -13,61 +14,20 @@ import '../../core/config/storage_keys.dart'; // Import StorageKeys
 // Corrected import path for the extension
 import '../../core/extensions/list_holiday_extensions.dart';
 import '../../core/theme/app_theme.dart';
+import '../../core/utils/calendar_utils.dart'; // Import CalendarUtils
 import '../../core/utils/local_storage.dart'; // Import LocalStorage
+// Import Attendance related models and state
+import '../../data/models/attendance_details.dart';
 import '../../data/models/holiday.dart'; // Import Holiday model
-import '../../domain/entities/clock_in_data.dart';
+import '../../domain/entities/attendance_state.dart';
 import '../../domain/entities/holiday_state.dart'; // Import HolidayState
+// Import AttendancePresenter
+import '../presenters/attendance_presenter.dart';
 import '../presenters/holiday_presenter.dart'; // Import HolidayPresenter
 import '../widgets/calendar_view_widget.dart'; // Import new widget
 import '../widgets/filter_area.dart';
 import '../widgets/query_result_list.dart';
 import '../widgets/selected_day_details_card.dart'; // Import new widget
-
-Future<List<ClockInData>> fetchPunchInDataForRange(
-  DateTime start,
-  DateTime end,
-) async {
-  final startDate = DateTime(start.year, start.month, start.day);
-  final endDate = DateTime(end.year, end.month, end.day);
-  List<ClockInData> results = [];
-  await Future.delayed(const Duration(milliseconds: 500));
-  for (var day = 0; day <= endDate.difference(startDate).inDays; day++) {
-    final currentDate = startDate.add(Duration(days: day));
-    // Fetch mock data as map first
-    final mockDataMap = await _fetchClockInDataMap(currentDate);
-    // Create freezed object
-    results.add(
-      ClockInData(
-        date: currentDate,
-        status: mockDataMap['status']!,
-        clockIn: mockDataMap['clockIn'],
-        clockOut: mockDataMap['clockOut'],
-        reason: mockDataMap['reason'],
-      ),
-    );
-  }
-  results.sort((a, b) => b.date.compareTo(a.date));
-  return results;
-}
-
-// Renamed helper to avoid conflict and return Map
-Future<Map<String, String>> _fetchClockInDataMap(DateTime date) async {
-  await Future.delayed(const Duration(milliseconds: 5));
-  final normalizedDate = DateTime(date.year, date.month, date.day);
-  if (date.weekday == DateTime.saturday || date.weekday == DateTime.sunday) {
-    return {'status': 'holiday'};
-  }
-  if (date.day % 7 == 0) {
-    return {'status': 'absent', 'reason': 'personal_leave'};
-  }
-  if (date.day % 4 == 0) {
-    return {'status': 'late', 'clockIn': '09:15', 'clockOut': '18:01'};
-  }
-  if (date.day % 11 == 0) {
-    return {'status': 'normal', 'clockIn': '08:55'};
-  }
-  return {'status': 'normal', 'clockIn': '09:03', 'clockOut': '18:05'};
-}
 
 @RoutePage()
 class CalendarScreen extends StatefulWidget {
@@ -79,10 +39,13 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  // Hire the presenter directly
   late final HolidayPresenter _holidayPresenter = Circus.hire<HolidayPresenter>(
     HolidayPresenter(),
   );
+  // Hire AttendancePresenter here as well, so both tabs can potentially use it
+  // Or consider providing it via Circus.summon if needed globally
+  late final AttendancePresenter _attendancePresenter =
+      Circus.hire<AttendancePresenter>(AttendancePresenter());
 
   @override
   void initState() {
@@ -137,6 +100,9 @@ class _CalendarScreenState extends State<CalendarScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    // Dispose presenters if hired locally (Circus.hire usually handles this if keepAlive: false)
+    // Circus.dispose<HolidayPresenter>(); // If keepAlive: true
+    // Circus.dispose<AttendancePresenter>(); // If keepAlive: true
     super.dispose();
   }
 
@@ -146,9 +112,7 @@ class _CalendarScreenState extends State<CalendarScreen>
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
 
-    // Use focusOn builder to react to holiday state changes
-    return _holidayPresenter.focusOn<HolidayState>(
-      selector: (state) => state, // Select the entire state object
+    return _holidayPresenter.perform(
       builder: (context, holidayState) {
         // Derive holiday data directly from the state within the builder
         List<Holiday> currentHolidays = [];
@@ -214,7 +178,6 @@ class _CalendarScreenState extends State<CalendarScreen>
             elevation: 1,
             bottom: TabBar(
               controller: _tabController,
-              // Updated colors for better visibility
               labelColor:
                   !isDarkMode
                       ? colorScheme.surface
@@ -232,17 +195,18 @@ class _CalendarScreenState extends State<CalendarScreen>
           body: TabBarView(
             controller: _tabController,
             children: [
-              // Pass derived data directly to the tab view
               _SingleDayViewTab(
-                // Pass the calculated holiday sets and state flags
                 holidayDateTimes: holidayDateTimes,
-                holidays: currentHolidays, // Pass the derived list
+                holidays: currentHolidays,
                 isLoadingHolidays: isLoadingHolidays,
                 hasHolidayError: hasHolidayError,
-                // Pass the presenter down for retry action
                 holidayPresenter: _holidayPresenter,
+                attendancePresenter: _attendancePresenter,
               ),
-              const _RangeQueryTabView(), // Range query tab remains the same for now
+              _RangeQueryTabView(
+                attendancePresenter: _attendancePresenter,
+                holidayDateTimes: holidayDateTimes,
+              ),
             ],
           ),
         );
@@ -258,6 +222,7 @@ class _SingleDayViewTab extends StatefulWidget {
   final bool isLoadingHolidays;
   final bool hasHolidayError;
   final HolidayPresenter holidayPresenter;
+  final AttendancePresenter attendancePresenter;
 
   const _SingleDayViewTab({
     required this.holidayDateTimes,
@@ -265,6 +230,7 @@ class _SingleDayViewTab extends StatefulWidget {
     required this.isLoadingHolidays,
     required this.hasHolidayError,
     required this.holidayPresenter,
+    required this.attendancePresenter,
   });
 
   @override
@@ -273,13 +239,10 @@ class _SingleDayViewTab extends StatefulWidget {
 
 class _SingleDayViewTabState extends State<_SingleDayViewTab>
     with SingleTickerProviderStateMixin {
-  // Jokers for state management
+  // Keep selected date Joker
   late final Joker<DateTime> _selectedDateJoker;
-  late final Joker<ClockInData?> _selectedClockInDataJoker;
-  late final Joker<bool> _isLoadingDetailsJoker;
 
   final CalendarController _calendarController = CalendarController();
-  // Listener function to be added/removed
   late VoidCallback _dateListener;
 
   @override
@@ -287,59 +250,44 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab>
     super.initState();
     final initialDate = DateUtils.dateOnly(DateTime.now());
     _selectedDateJoker = Joker<DateTime>(initialDate);
-    _selectedClockInDataJoker = Joker<ClockInData?>(null);
-    _isLoadingDetailsJoker = Joker<bool>(false);
 
-    // Define the listener function
     _dateListener = () {
       final newDate = _selectedDateJoker.state;
       _fetchSingleDayDetails(newDate);
-      // Update calendar controller if needed
-      if (_calendarController.selectedDate != newDate) {
-        _calendarController.selectedDate = newDate;
-      }
     };
-
-    // Add the listener
     _selectedDateJoker.addListener(_dateListener);
 
-    // Initial detail loading
-    if (!widget.isLoadingHolidays && !widget.hasHolidayError) {
-      _fetchSingleDayDetails(initialDate);
-    } else {
-      _isLoadingDetailsJoker.trick(true);
-
-      // Schedule details loading after build completes
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _checkHolidayDataAndLoadDetails(initialDate);
-      });
-    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkHolidayDataAndLoadDetails(initialDate);
+    });
   }
 
-  // Check holiday data status and load details if ready
   void _checkHolidayDataAndLoadDetails(DateTime date) {
+    // Fetch details immediately if holiday data is ready
     if (!widget.isLoadingHolidays && !widget.hasHolidayError) {
       _fetchSingleDayDetails(date);
-    }
+    } // Otherwise, didUpdateWidget will handle it when holiday data arrives
   }
 
   @override
   void didUpdateWidget(_SingleDayViewTab oldWidget) {
     super.didUpdateWidget(oldWidget);
-
-    // Auto-load details when holiday data finishes loading
+    // Reload details if holiday data becomes available
     if (oldWidget.isLoadingHolidays &&
         !widget.isLoadingHolidays &&
-        !widget.hasHolidayError &&
-        _isLoadingDetailsJoker.state) {
-      _fetchSingleDayDetails(_selectedDateJoker.state);
+        !widget.hasHolidayError) {
+      final currentState = widget.attendancePresenter.state;
+      if (currentState is AttendanceInitial ||
+          currentState is AttendanceError) {
+        _fetchSingleDayDetails(_selectedDateJoker.state);
+      }
     }
   }
 
   @override
   void dispose() {
-    // Remove the listener
-    _dateListener();
+    // Ensure correct usage of removeListener
+    _selectedDateJoker.removeListener(_dateListener);
     _calendarController.dispose();
     super.dispose();
   }
@@ -371,58 +319,30 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab>
     return holiday?.description;
   }
 
-  // _fetchSingleDayDetails remains the same
+  // Updated to use AttendancePresenter - Verify date format
   Future<void> _fetchSingleDayDetails(DateTime day) async {
     if (widget.isLoadingHolidays || widget.hasHolidayError) {
-      if (_isLoadingDetailsJoker.state) _isLoadingDetailsJoker.trick(false);
       return;
     }
     if (!mounted) return;
-    _isLoadingDetailsJoker.trick(true);
-    _selectedClockInDataJoker.trick(null);
+
     final normalizedDay = DateUtils.dateOnly(day);
-    final isHoliday = widget.holidayDateTimes.contains(normalizedDay);
     try {
-      ClockInData details;
-      if (isHoliday) {
-        final holidayDesc = _getHolidayDescription(normalizedDay);
-        details = ClockInData(
-          date: normalizedDay,
-          status: 'holiday',
-          reason: holidayDesc ?? '國定假日',
-        );
-      } else {
-        final dataMap = await _fetchClockInDataMap(normalizedDay);
-        details = ClockInData(
-          date: normalizedDay,
-          status: dataMap['status']!,
-          clockIn: dataMap['clockIn'],
-          clockOut: dataMap['clockOut'],
-          reason: dataMap['reason'],
-        );
-      }
-      if (mounted) {
-        _selectedClockInDataJoker.trick(details);
-      }
+      // Ensure date format is yyyy-MM-dd as requested by user
+      await widget.attendancePresenter.getDailyAttendanceRecord(
+        date: DateFormat('yyyy-MM-dd').format(normalizedDay),
+      );
     } catch (e) {
-      debugPrint("Error fetching single day details for $normalizedDay: $e");
-      if (mounted) {
-        _selectedClockInDataJoker.trick(null);
-      }
-    } finally {
-      if (mounted) {
-        _isLoadingDetailsJoker.trick(false);
-      }
+      debugPrint(
+        "Error calling getDailyAttendanceRecord for $normalizedDay: $e",
+      );
     }
   }
 
-  // Modify _onCalendarDateSelected to only update the Joker
-  // The listener will handle the rest.
   void _onCalendarDateSelected(DateTime date) {
     final newSelectedDate = DateUtils.dateOnly(date);
     if (_selectedDateJoker.state != newSelectedDate) {
       _selectedDateJoker.trick(newSelectedDate);
-      // No need to call fetch or update controller here anymore
     }
   }
 
@@ -466,41 +386,45 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab>
       );
     }
 
-    // Main Column layout
-    return Column(
-      children: [
-        // CalendarViewWidget setup remains the same
-        CalendarViewWidget(
-          key: const ValueKey('calendar_view'),
-          initialDate: _selectedDateJoker.state,
-          holidays: widget.holidayDateTimes,
-          onSelectionChanged: _onCalendarDateSelected, // Only updates Joker
-          controller: _calendarController,
-        ),
-        const Gap(8.0),
-        // Details Card - Correctly use variables from Joker performers
-        Expanded(
-          child: Padding(
+    // Wrap the main Column with SingleChildScrollView
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _selectedDateJoker.perform(
+            builder: (context, currentSelectedDate) {
+              return CalendarViewWidget(
+                key: const ValueKey('calendar_view'),
+                initialDate:
+                    currentSelectedDate, // Use state for initial date too?
+                holidays: widget.holidayDateTimes,
+                onSelectionChanged: _onCalendarDateSelected,
+                controller: _calendarController,
+                // Pass the current state down
+                selectedDate: currentSelectedDate,
+              );
+            },
+          ),
+          const Gap(8.0),
+          Padding(
             padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
-            child: [
-              _selectedDateJoker,
-              _selectedClockInDataJoker,
-              _isLoadingDetailsJoker,
-            ].assemble<(DateTime, ClockInData?, bool)>(
-              converter:
-                  (values) => (
-                    values[0] as DateTime,
-                    values[1] as ClockInData?,
-                    values[2] as bool,
-                  ),
-              builder: (context, data) {
-                final (selectedDate, clockInData, isLoading) = data;
+            // Combine selected date and attendance state
+            // No need to listen to _selectedDateJoker again here, already passed
+            child: widget.attendancePresenter.focusOn<AttendanceState>(
+              selector: (state) => state,
+              builder: (context, attendanceState) {
+                // Use the date from the Joker directly, as it's the source of truth
+                final selectedDate = _selectedDateJoker.state;
+                bool isLoadingDetails = attendanceState is AttendanceLoading;
+                AttendanceRecord? attendanceRecord;
+                if (attendanceState is AttendanceSuccess) {
+                  attendanceRecord = attendanceState.dailyAttendanceRecord;
+                }
                 return SelectedDayDetailsCard(
                   key: ValueKey(selectedDate),
                   selectedDate: selectedDate,
-                  clockInData: clockInData,
+                  attendanceRecord: attendanceRecord,
                   holidayDescription: _getHolidayDescription(selectedDate),
-                  isLoading: isLoading,
+                  isLoading: isLoadingDetails,
                   isKnownHoliday: widget.holidayDateTimes.contains(
                     selectedDate,
                   ),
@@ -508,39 +432,53 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab>
               },
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
 
+// Define a record type for data passed to the tile
+typedef AttendanceTileData =
+    ({
+      AttendanceRecord record,
+      String statusTag,
+      Color statusColor,
+      IconData statusIcon,
+      String formattedDate, // This will now hold M/d or yyyy/M/d
+      bool showYear, // Flag to indicate if year should be shown
+    });
+
+// --- _RangeQueryTabView definition ---
 class _RangeQueryTabView extends StatefulWidget {
-  const _RangeQueryTabView();
+  final AttendancePresenter attendancePresenter;
+  final Set<DateTime> holidayDateTimes;
+
+  const _RangeQueryTabView({
+    required this.attendancePresenter,
+    required this.holidayDateTimes,
+  });
+
   @override
   State<_RangeQueryTabView> createState() => _RangeQueryTabViewState();
 }
 
 class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
-  // Replace state variables with Jokers
   late final Joker<DateTime?> _startDateJoker;
   late final Joker<DateTime?> _endDateJoker;
-  late final Joker<List<ClockInData>> _resultsJoker;
-  late final Joker<bool> _loadingJoker;
+
+  // Store the date range used for the last successful query
+  DateTime? _lastQueryStartDate;
+  DateTime? _lastQueryEndDate;
 
   @override
   void initState() {
     super.initState();
-    // Initialize Jokers
     _startDateJoker = Joker<DateTime?>(null);
     _endDateJoker = Joker<DateTime?>(null);
-    _resultsJoker = Joker<List<ClockInData>>([]);
-    _loadingJoker = Joker<bool>(false);
   }
 
-  // Methods updated to use Jokers instead of setState
-
   void _showDateRangePickerInSheet() {
-    // Read initial range from Jokers
     PickerDateRange? initialRange;
     final currentStart = _startDateJoker.state;
     final currentEnd = _endDateJoker.state;
@@ -550,151 +488,172 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
       initialRange = PickerDateRange(currentStart, currentStart);
     }
 
+    // Store the selection made within the picker temporarily
+    PickerDateRange? currentSheetSelection = initialRange;
+
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext sheetContext) {
-        PickerDateRange? currentSheetSelection = initialRange;
+        final sheetTheme = Theme.of(sheetContext);
+        final sheetColorScheme = sheetTheme.colorScheme;
+        final safeAreaBottom = MediaQuery.viewInsetsOf(sheetContext).bottom;
 
-        return DraggableScrollableSheet(
-          initialChildSize: 0.6,
-          minChildSize: 0.4,
-          maxChildSize: 0.85,
-          expand: false,
-          builder:
-              (_, scrollController) => Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(sheetContext).colorScheme.surface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      spreadRadius: 1,
-                    ),
-                  ],
-                ),
-                child: Column(
-                  children: <Widget>[
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Container(
-                        width: 40,
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color: Colors.grey[300],
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Text(
-                        "選擇日期範圍",
-                        style: Theme.of(sheetContext).textTheme.titleLarge,
-                      ),
-                    ),
-                    const Divider(height: 10),
-                    Expanded(
-                      child: SfDateRangePicker(
-                        initialSelectedRange: currentSheetSelection,
-                        onSelectionChanged: (args) {
-                          if (args.value is PickerDateRange) {
-                            currentSheetSelection = args.value;
-                          }
-                        },
-                        selectionMode: DateRangePickerSelectionMode.range,
-                        view: DateRangePickerView.month,
-                        monthViewSettings:
-                            const DateRangePickerMonthViewSettings(
-                              firstDayOfWeek: 1,
-                            ),
-                        headerStyle: DateRangePickerHeaderStyle(
-                          textAlign: TextAlign.center,
-                          textStyle:
-                              Theme.of(sheetContext).textTheme.titleMedium,
-                        ),
-                        monthCellStyle: DateRangePickerMonthCellStyle(
-                          todayTextStyle: TextStyle(
-                            color: Theme.of(sheetContext).colorScheme.primary,
-                          ),
-                          todayCellDecoration: BoxDecoration(
-                            border: Border.all(
-                              color: Theme.of(sheetContext).colorScheme.primary,
-                            ),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        rangeSelectionColor: Theme.of(
-                          sheetContext,
-                        ).colorScheme.primaryContainer.withValues(alpha: 0.4),
-                        startRangeSelectionColor:
-                            Theme.of(sheetContext).colorScheme.primaryContainer,
-                        endRangeSelectionColor:
-                            Theme.of(sheetContext).colorScheme.primaryContainer,
-                        selectionTextStyle: TextStyle(
-                          color:
-                              Theme.of(
-                                sheetContext,
-                              ).colorScheme.onPrimaryContainer,
-                        ),
-                        rangeTextStyle: TextStyle(
-                          color: Theme.of(sheetContext).colorScheme.onSurface,
-                        ),
-                        minDate: DateTime(2020),
-                        maxDate: DateTime(2030),
-                        showNavigationArrow: true,
-                        showActionButtons: false,
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                        vertical: 8.0,
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            child: const Text('取消'),
-                            onPressed: () => Navigator.pop(sheetContext),
-                          ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            child: const Text('確定'),
-                            onPressed: () {
-                              if (currentSheetSelection?.startDate != null) {
-                                final newStartDate = DateUtils.dateOnly(
-                                  currentSheetSelection!.startDate!,
-                                );
-                                final newEndDate =
-                                    currentSheetSelection!.endDate != null
-                                        ? DateUtils.dateOnly(
-                                          currentSheetSelection!.endDate!,
-                                        )
-                                        : newStartDate;
-
-                                _startDateJoker.trick(newStartDate);
-                                _endDateJoker.trick(newEndDate);
-                              }
-                              Navigator.pop(sheetContext);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+        return Padding(
+          padding: EdgeInsets.only(bottom: safeAreaBottom),
+          child: Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.5,
+            ),
+            decoration: BoxDecoration(
+              color: sheetColorScheme.surfaceContainer,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
               ),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  child: Container(
+                    width: 40,
+                    height: 5,
+                    decoration: BoxDecoration(
+                      color: sheetColorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.4,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Text(
+                    "選擇日期範圍",
+                    style: sheetTheme.textTheme.titleLarge?.copyWith(
+                      color: sheetColorScheme.onSurface,
+                    ),
+                  ),
+                ),
+                const Divider(height: 16, thickness: 0.5),
+                Flexible(
+                  child: SfDateRangePicker(
+                    initialSelectedRange: currentSheetSelection,
+                    onSelectionChanged: (args) {
+                      if (args.value is PickerDateRange) {
+                        currentSheetSelection = args.value;
+                      }
+                    },
+                    selectionMode: DateRangePickerSelectionMode.range,
+                    view: DateRangePickerView.month,
+                    backgroundColor: Colors.transparent,
+                    monthViewSettings: DateRangePickerMonthViewSettings(
+                      firstDayOfWeek: 1,
+                      viewHeaderStyle: DateRangePickerViewHeaderStyle(
+                        textStyle: TextStyle(
+                          color: sheetColorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    headerStyle: DateRangePickerHeaderStyle(
+                      backgroundColor: Colors.transparent,
+                      textAlign: TextAlign.center,
+                      textStyle: sheetTheme.textTheme.titleMedium?.copyWith(
+                        color: sheetColorScheme.onSurface,
+                      ),
+                    ),
+                    monthCellStyle: DateRangePickerMonthCellStyle(
+                      textStyle: TextStyle(color: sheetColorScheme.onSurface),
+                      todayTextStyle: TextStyle(
+                        color: sheetColorScheme.primary,
+                      ),
+                      todayCellDecoration: BoxDecoration(
+                        border: Border.all(color: sheetColorScheme.primary),
+                        shape: BoxShape.circle,
+                      ),
+                      disabledDatesTextStyle: TextStyle(
+                        color: sheetColorScheme.outline.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    yearCellStyle: DateRangePickerYearCellStyle(
+                      textStyle: TextStyle(color: sheetColorScheme.onSurface),
+                      todayTextStyle: TextStyle(
+                        color: sheetColorScheme.primary,
+                      ),
+                      disabledDatesTextStyle: TextStyle(
+                        color: sheetColorScheme.outline.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    rangeSelectionColor: sheetColorScheme.primaryContainer
+                        .withValues(alpha: 0.3),
+                    startRangeSelectionColor: sheetColorScheme.primary,
+                    endRangeSelectionColor: sheetColorScheme.primary,
+                    selectionTextStyle: TextStyle(
+                      color: sheetColorScheme.onPrimary,
+                    ),
+                    rangeTextStyle: TextStyle(
+                      color: sheetColorScheme.onPrimaryContainer,
+                    ),
+                    minDate: DateTime(2010),
+                    maxDate: DateTime(2030),
+                    showNavigationArrow: true,
+                    showActionButtons: false,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 12.0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        child: Text(
+                          '取消',
+                          style: TextStyle(color: sheetColorScheme.secondary),
+                        ),
+                        onPressed: () => Navigator.pop(sheetContext),
+                      ),
+                      const Gap(8.0),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: sheetColorScheme.primary,
+                          foregroundColor: sheetColorScheme.onPrimary,
+                        ),
+                        child: const Text('確定'),
+                        onPressed: () {
+                          if (currentSheetSelection?.startDate != null) {
+                            final newStartDate = DateUtils.dateOnly(
+                              currentSheetSelection!.startDate!,
+                            );
+                            final newEndDate =
+                                currentSheetSelection!.endDate != null
+                                    ? DateUtils.dateOnly(
+                                      currentSheetSelection!.endDate!,
+                                    )
+                                    : newStartDate;
+
+                            _startDateJoker.trick(newStartDate);
+                            _endDateJoker.trick(newEndDate);
+                          }
+                          Navigator.pop(sheetContext);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const Gap(20.0),
+              ],
+            ),
+          ),
         );
       },
     );
   }
 
-  // Update range setting methods to use Jokers (remove batch)
   void _setRange(DateTime start, DateTime end) {
     final normStart = DateUtils.dateOnly(start);
     final normEnd = DateUtils.dateOnly(end);
@@ -732,91 +691,181 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
     _setRange(firstDay, lastDay);
   }
 
-  // Update query method (no batch needed here)
+  // Updated to use AttendancePresenter - Verify date format
   Future<void> _performQuery() async {
     final startDate = _startDateJoker.state;
     final endDate = _endDateJoker.state;
 
     if (startDate == null || endDate == null) {
-      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('請先選擇日期範圍')));
       return;
     }
     if (endDate.isBefore(startDate)) {
-      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('結束日期不能早於開始日期')));
       return;
     }
 
-    _loadingJoker.trick(true);
-    _resultsJoker.trick([]);
+    // Store the range used for this query
+    _lastQueryStartDate = startDate;
+    _lastQueryEndDate = endDate;
+    setState(() {});
 
     try {
-      final results = await fetchPunchInDataForRange(startDate, endDate);
-      if (mounted) {
-        _resultsJoker.trick(results);
-      }
+      // Ensure date format is yyyy-MM-dd as requested by user
+      await widget.attendancePresenter.getAttendanceRecords(
+        startDate: DateFormat('yyyy-MM-dd').format(startDate),
+        endDate: DateFormat('yyyy-MM-dd').format(endDate),
+      );
     } catch (e) {
+      debugPrint("Error calling getAttendanceRecords: $e");
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('查詢失敗: $e')));
-        _resultsJoker.trick([]);
-      }
-    } finally {
-      if (mounted) {
-        _loadingJoker.trick(false);
       }
     }
   }
 
-  // Update clear method to use Jokers (remove batch)
   void _clearQuery() {
     _startDateJoker.trick(null);
     _endDateJoker.trick(null);
-    _resultsJoker.trick([]);
-    _loadingJoker.trick(false);
+    // Clear the stored query range
+    _lastQueryStartDate = null;
+    _lastQueryEndDate = null;
+    widget.attendancePresenter.reset();
+    widget.attendancePresenter.trick(const AttendanceState.initial());
+    if (mounted) {
+      setState(() {}); // Update state after clearing
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return [
-      _startDateJoker,
-      _endDateJoker,
-      _loadingJoker,
-      _resultsJoker,
-    ].assemble<(DateTime?, DateTime?, bool, List<ClockInData>)>(
-      converter:
-          (values) => (
-            values[0] as DateTime?,
-            values[1] as DateTime?,
-            values[2] as bool,
-            values[3] as List<ClockInData>,
-          ),
-      builder: (context, queryState) {
-        final (startDate, endDate, isLoading, results) = queryState;
-        return Column(
-          children: [
-            FilterArea(
-              selectedStartDate: startDate,
-              selectedEndDate: endDate,
-              onSelectRange: _showDateRangePickerInSheet,
-              onSetYesterday: _setRangeToYesterday,
-              onSetToday: _setRangeToToday,
-              onSetThisWeek: _setRangeToThisWeek,
-              onSetThisMonth: _setRangeToThisMonth,
-              onClear: _clearQuery,
-              onQuery: _performQuery,
-            ),
-            const Divider(height: 1, thickness: 1),
-            Expanded(
-              child: QueryResultList(isLoading: isLoading, results: results),
-            ),
-          ],
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return [_startDateJoker, _endDateJoker].assemble<(DateTime?, DateTime?)>(
+      converter: (values) => (values[0] as DateTime?, values[1] as DateTime?),
+      builder: (context, dateData) {
+        final (currentStartDate, currentEndDate) = dateData;
+
+        // Determine if the query range spans multiple years based on last query
+        final bool shouldShowYear =
+            _lastQueryStartDate != null &&
+            _lastQueryEndDate != null &&
+            _lastQueryStartDate!.year != _lastQueryEndDate!.year;
+
+        return widget.attendancePresenter.focusOn<AttendanceState>(
+          selector: (state) => state,
+          builder: (context, attendanceState) {
+            bool isLoading = attendanceState is AttendanceLoading;
+            List<AttendanceTileData> tileDataList = []; // Use the new type
+
+            if (attendanceState is AttendanceSuccess) {
+              final results =
+                  attendanceState.attendanceRecords?.values.toList() ?? [];
+              // Sort results by date before processing
+              results.sort(
+                (a, b) =>
+                    (a.dateInfo?.date ?? '').compareTo(b.dateInfo?.date ?? ''),
+              );
+
+              tileDataList =
+                  results.map((record) {
+                    DateTime? recordDate;
+                    bool isHoliday = false;
+                    String formattedDateStr = record.dateInfo?.date ?? '未知日期';
+
+                    try {
+                      final dateString = record.dateInfo?.date;
+                      if (dateString != null) {
+                        DateTime? date;
+                        try {
+                          date = DateFormat(
+                            'yyyy-MM-dd',
+                          ).parseStrict(dateString);
+                        } catch (e) {
+                          debugPrint(
+                            'Failed to parse date: $dateString - Error: $e',
+                          );
+                        }
+
+                        if (date != null) {
+                          // Format date based on shouldShowYear calculated from *last query*
+                          final formatString =
+                              shouldShowYear ? 'yyyy/M/d' : 'M/d';
+                          formattedDateStr = DateFormat(
+                            formatString,
+                          ).format(date);
+                          recordDate =
+                              date; // Store parsed date for holiday check
+                          isHoliday = widget.holidayDateTimes.contains(
+                            DateUtils.dateOnly(recordDate),
+                          );
+                        }
+                      }
+                    } catch (e) {
+                      debugPrint(
+                        'Error processing date for list tile: ${record.dateInfo?.date} - $e',
+                      );
+                      formattedDateStr =
+                          record.dateInfo?.date ?? '解析錯誤'; // Fallback
+                    }
+
+                    final statusTag = CalendarUtils.getAttendanceStatusTag(
+                      record.attendance,
+                      record.timeoff,
+                      record.overtime,
+                      isHoliday,
+                    );
+                    final statusColor = CalendarUtils.getStatusTagColor(
+                      statusTag,
+                      colorScheme,
+                    );
+                    final statusIcon = CalendarUtils.getStatusTagIcon(
+                      statusTag,
+                    );
+
+                    return (
+                      record: record,
+                      statusTag: statusTag,
+                      statusColor: statusColor,
+                      statusIcon: statusIcon,
+                      formattedDate:
+                          formattedDateStr, // Use the new formatted string
+                      showYear:
+                          shouldShowYear, // Pass the flag based on last query
+                    );
+                  }).toList();
+            }
+
+            return Column(
+              children: [
+                FilterArea(
+                  selectedStartDate:
+                      currentStartDate, // FilterArea uses live joker state
+                  selectedEndDate: currentEndDate,
+                  onSelectRange: _showDateRangePickerInSheet,
+                  onSetYesterday: _setRangeToYesterday,
+                  onSetToday: _setRangeToToday,
+                  onSetThisWeek: _setRangeToThisWeek,
+                  onSetThisMonth: _setRangeToThisMonth,
+                  onClear: _clearQuery,
+                  onQuery: _performQuery,
+                ),
+                Expanded(
+                  child: QueryResultList(
+                    isLoading: isLoading,
+                    results: tileDataList,
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );

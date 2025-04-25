@@ -56,108 +56,111 @@ class FilterArea extends StatelessWidget {
           '${selectedStartDate!.year}/${selectedStartDate!.month}/${selectedStartDate!.day} - ${selectedEndDate!.year}/${selectedEndDate!.month}/${selectedEndDate!.day}';
     }
 
-    return Container(
-      padding: const EdgeInsets.all(12.0),
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 1.0,
+      shape: const RoundedRectangleBorder(),
       color: colorScheme.surfaceContainerLowest,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          InkWell(
-            // Date Range Selector
-            onTap: onSelectRange,
-            borderRadius: BorderRadius.circular(8.0),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 12.0,
-              ),
-              decoration: BoxDecoration(
-                border: Border.all(color: colorScheme.outlineVariant),
-                borderRadius: BorderRadius.circular(8.0),
-                color: colorScheme.surface,
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 20,
-                        color: colorScheme.primary,
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        dateRangeText,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            InkWell(
+              onTap: onSelectRange,
+              borderRadius: BorderRadius.circular(8.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 12.0,
+                ),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.0),
+                  color: colorScheme.surface,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 20,
+                          color: colorScheme.primary,
                         ),
+                        const SizedBox(width: 12),
+                        Text(
+                          dateRangeText,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.6,
                       ),
-                    ],
-                  ),
-                  Icon(
-                    Icons.arrow_drop_down,
-                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            // Quick Buttons
-            spacing: 8.0,
-            runSpacing: 8.0,
-            children: [
-              ElevatedButton(
-                onPressed: onSetYesterday,
-                style: buttonStyle,
-                child: const Text('昨日'),
-              ),
-              ElevatedButton(
-                onPressed: onSetToday,
-                style: buttonStyle,
-                child: const Text('本日'),
-              ),
-              ElevatedButton(
-                onPressed: onSetThisWeek,
-                style: buttonStyle,
-                child: const Text('本週'),
-              ),
-              ElevatedButton(
-                onPressed: onSetThisMonth,
-                style: buttonStyle,
-                child: const Text('本月'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Row(
-            // Action Buttons
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton(
-                onPressed: onClear,
-                style: outlinedButtonStyle,
-                child: const Text('清除查詢'),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton.icon(
-                onPressed: onQuery,
-                icon: const Icon(Icons.search, size: 18),
-                label: const Text('查詢'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 10,
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8.0,
+              runSpacing: 8.0,
+              children: [
+                ElevatedButton(
+                  onPressed: onSetYesterday,
+                  style: buttonStyle,
+                  child: const Text('昨日'),
+                ),
+                ElevatedButton(
+                  onPressed: onSetToday,
+                  style: buttonStyle,
+                  child: const Text('本日'),
+                ),
+                ElevatedButton(
+                  onPressed: onSetThisWeek,
+                  style: buttonStyle,
+                  child: const Text('本週'),
+                ),
+                ElevatedButton(
+                  onPressed: onSetThisMonth,
+                  style: buttonStyle,
+                  child: const Text('本月'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                OutlinedButton(
+                  onPressed: onClear,
+                  style: outlinedButtonStyle,
+                  child: const Text('清除查詢'),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: onQuery,
+                  icon: const Icon(Icons.search, size: 18),
+                  label: const Text('查詢'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

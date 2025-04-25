@@ -10,13 +10,24 @@ import '../../core/utils/notification.dart';
 import '../presenters/setting_presenter.dart';
 
 @RoutePage()
-class SettingScreen extends StatelessWidget {
+class SettingScreen extends StatefulWidget {
   const SettingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final presenter = SettingPresenter();
+  State<SettingScreen> createState() => _SettingScreenState();
+}
 
+class _SettingScreenState extends State<SettingScreen> {
+  late SettingPresenter _presenter;
+
+  @override
+  void initState() {
+    super.initState();
+    _presenter = Circus.hire<SettingPresenter>(SettingPresenter());
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final themeJoker = context.joker<AppThemeMode>();
 
     return Scaffold(
@@ -28,7 +39,7 @@ class SettingScreen extends StatelessWidget {
           children: [
             const Gap(16),
             // Profile Section
-            _buildProfileSection(context, presenter)
+            _buildProfileSection(context, _presenter)
                 .animate()
                 .fadeIn(duration: 600.ms)
                 .slideY(begin: 0.2, end: 0, duration: 400.ms),
@@ -74,7 +85,7 @@ class SettingScreen extends StatelessWidget {
                     value: themeJoker.state == AppThemeMode.dark,
                     onChanged: (value) {
                       // Update setting state
-                      presenter.toggleDarkMode(value);
+                      _presenter.toggleDarkMode(value);
                       // Update theme mode
                       themeJoker.trick(
                         value ? AppThemeMode.dark : AppThemeMode.light,
@@ -83,7 +94,7 @@ class SettingScreen extends StatelessWidget {
                   ),
 
                   // Notification switch
-                  presenter.perform(
+                  _presenter.perform(
                     builder: (context, state) {
                       return _buildSwitchTile(
                         context,
@@ -95,11 +106,11 @@ class SettingScreen extends StatelessWidget {
                             // Try to request notification permissions
                             await _requestNotificationPermissions(
                               context,
-                              presenter,
+                              _presenter,
                             );
                           } else {
                             // Directly disable notifications
-                            presenter.toggleNotifications(false);
+                            _presenter.toggleNotifications(false);
                           }
                         },
                       );

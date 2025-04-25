@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../core/config/storage_keys.dart';
@@ -23,13 +24,15 @@ class AttendancePresenter extends Presenter<AttendanceState> {
   }
 
   AttendanceRecord? _dailyAttendanceRecord;
-  final List<AttendanceRecord> _attendanceRecords = [];
+  final Map<String, AttendanceRecord> _attendanceRecords = {};
 
   Future<void> getAttendanceRecords({
     required String startDate,
     required String endDate,
   }) async {
     final cookie = AuthUtils.getAuthSession().cookie ?? '';
+
+    trick(const AttendanceState.loading());
 
     final result =
         await _repository
@@ -46,9 +49,32 @@ class AttendancePresenter extends Presenter<AttendanceState> {
       final jsonData = response.data as Map<String, dynamic>;
       final realData = jsonData['data'] as Map<String, dynamic>;
 
-      realData.forEach((_, data) {
-        final detail = (data as Map<String, dynamic>)[_userNo];
-        _attendanceRecords.add(AttendanceRecord.fromJson(detail));
+      _attendanceRecords.clear();
+
+      realData.forEach((date, data) {
+        // Check if data for the user exists for this date
+        if (data is Map<String, dynamic> && data.containsKey(_userNo)) {
+          final detail = data[_userNo];
+          // Ensure detail is a Map before parsing
+          if (detail is Map<String, dynamic>) {
+            try {
+              _attendanceRecords.addAll({
+                date: AttendanceRecord.fromJson(detail),
+              });
+            } catch (e) {
+              debugPrint("Error parsing AttendanceRecord for date $date: $e");
+              // Optionally add a placeholder or skip this record
+            }
+          } else {
+            debugPrint("Invalid detail format for date $date: $detail");
+          }
+        } else {
+          debugPrint(
+            "No data found for user $_userNo on date $date or invalid data structure.",
+          );
+          // Optionally add an empty/placeholder record for this date
+          // _attendanceRecords.addAll({date: AttendanceRecord(/* default values */)});
+        }
       });
 
       trick(AttendanceState.success(_attendanceRecords, null));
@@ -57,6 +83,8 @@ class AttendancePresenter extends Presenter<AttendanceState> {
 
   Future<void> getDailyAttendanceRecord({required String date}) async {
     final cookie = AuthUtils.getAuthSession().cookie ?? '';
+
+    trick(const AttendanceState.loading());
 
     final result =
         await _repository
@@ -73,12 +101,13 @@ class AttendancePresenter extends Presenter<AttendanceState> {
 
       _dailyAttendanceRecord = AttendanceRecord.fromJson(detail);
 
-      trick(AttendanceState.success([], _dailyAttendanceRecord));
+      trick(AttendanceState.success({}, _dailyAttendanceRecord));
     });
   }
 
   void reset() {
     _dailyAttendanceRecord = null;
     _attendanceRecords.clear();
+    trick(const AttendanceState.initial());
   }
 }

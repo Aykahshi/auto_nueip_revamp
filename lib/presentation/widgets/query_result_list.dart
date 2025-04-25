@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-// Import the freezed entity
-import '../../domain/entities/clock_in_data.dart';
+import '../screens/calendar_screen.dart'; // Import for AttendanceTileData
 import './shimmer_list_tile.dart';
-import 'clock_in_list_tile.dart';
+// Import the new tile for AttendanceRecord (assuming it exists or will be created)
+// If ClockInListTile is adapted, keep it. If not, create AttendanceListTile
+// For now, assume ClockInListTile will be adapted or we need a new one.
+// Let's create a placeholder `AttendanceListTile` import and use it.
+import 'attendance_list_tile.dart'; // Placeholder import
 
 class QueryResultList extends StatelessWidget {
   final bool isLoading;
-  final List<ClockInData> results;
+  // Change List<AttendanceRecord> to List<AttendanceTileData>
+  final List<AttendanceTileData> results;
 
   const QueryResultList({
     super.key,
@@ -22,9 +26,9 @@ class QueryResultList extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     if (isLoading) {
-      // Show shimmer effect while loading instead of just indicator
+      // Show shimmer effect while loading
       return ListView.builder(
-        itemCount: 8, // Show 8 shimmer items
+        itemCount: 8,
         itemBuilder: (context, index) => const ShimmerListTile(),
       );
     }
@@ -44,11 +48,11 @@ class QueryResultList extends StatelessWidget {
     return ListView.builder(
       itemCount: results.length,
       itemBuilder: (context, index) {
-        final ClockInData item = results[index];
-        return ClockInListTile(item: item)
-            .animate()
-            .fadeIn(delay: (index * 30).ms)
-            .moveX(begin: -15); // Adjusted animation
+        // Change type to AttendanceTileData
+        final AttendanceTileData itemData = results[index];
+        // Pass the entire itemData record to the tile
+        return AttendanceListTile(tileData: itemData) // Pass record
+        .animate().fadeIn(delay: (index * 30).ms).moveX(begin: -15);
       },
     );
   }
