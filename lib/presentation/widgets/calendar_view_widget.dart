@@ -27,13 +27,13 @@ class CalendarViewWidget extends StatelessWidget {
     final today = DateUtils.dateOnly(DateTime.now());
 
     return Card(
-      margin: EdgeInsets.all(context.i(8)), // Use context.i
+      margin: EdgeInsets.all(context.i(8)),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(context.r(12)),
-      ), // Use context.r
+      ),
       child: Padding(
-        padding: EdgeInsets.all(context.i(8)), // Use context.i
+        padding: EdgeInsets.all(context.i(8)),
         child: SfCalendar(
           controller: controller,
           view: CalendarView.month,
@@ -47,7 +47,7 @@ class CalendarViewWidget extends StatelessWidget {
             textAlign: TextAlign.center,
             textStyle: context.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w500,
-              fontSize: context.sp(22), // Use context.sp
+              fontSize: context.sp(22),
             ),
             backgroundColor: Colors.transparent,
           ),
@@ -55,18 +55,17 @@ class CalendarViewWidget extends StatelessWidget {
             dayTextStyle: context.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
               color: context.colorScheme.onSurfaceVariant,
-              fontSize: context.sp(12), // Use context.sp
+              fontSize: context.sp(12),
             ),
             backgroundColor: Colors.transparent,
           ),
           cellBorderColor: Colors.transparent,
-          todayHighlightColor:
-              context.colorScheme.primary, // Use context.colorScheme
+          todayHighlightColor: context.colorScheme.primary,
           selectionDecoration: BoxDecoration(
             color: Colors.transparent,
             border: Border.all(
-              color: context.colorScheme.primary, // Use context.colorScheme
-              width: context.w(1.5), // Use context.w
+              color: context.colorScheme.primary,
+              width: context.w(1.5),
             ),
             shape: BoxShape.circle,
           ),
@@ -126,7 +125,7 @@ class CalendarViewWidget extends StatelessWidget {
                 decoration = (decoration ?? const BoxDecoration()).copyWith(
                   border: Border.all(
                     color: context.colorScheme.primary,
-                    width: context.w(1.5), // Use context.w
+                    width: context.w(1.5),
                   ),
                   shape: BoxShape.circle,
                   // Keep today's background color, otherwise transparent
@@ -143,7 +142,7 @@ class CalendarViewWidget extends StatelessWidget {
                 style: TextStyle(
                   color: textColor,
                   fontWeight: fontWeight,
-                  fontSize: context.sp(14), // Use context.sp
+                  fontSize: context.sp(14),
                 ),
               ),
             );

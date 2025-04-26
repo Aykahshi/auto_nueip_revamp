@@ -67,8 +67,7 @@ class AttendanceListTile extends StatelessWidget {
             top: context.h(24),
             bottom: context.h(8),
           ),
-          contentPadding:
-              EdgeInsets.zero, // Remove default padding, handle inside content
+          contentPadding: EdgeInsets.zero,
           title: Text(
             dialogTitle,
             textAlign: TextAlign.center,
@@ -78,9 +77,9 @@ class AttendanceListTile extends StatelessWidget {
             ),
           ),
           content: Container(
-            width: double.maxFinite, // Ensure container takes width
+            width: double.maxFinite,
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.6, // Max height
+              maxHeight: MediaQuery.sizeOf(context).height * 0.6,
             ),
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(context.w(20), 0, context.w(20), 0),

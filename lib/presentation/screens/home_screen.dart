@@ -40,7 +40,6 @@ const List<String> _zhWeekdays = [
 class _HomeScreenState extends State<HomeScreen> {
   late final Joker<DateTime> _timeJoker;
   late final ClockPresenter _clockPresenter;
-  // Listener specifically for clock action status (notifications/snackbars)
   late final VoidCallback _actionStatusCancel;
 
   Timer? _timer;
@@ -74,8 +73,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _timeJoker.trick(DateTime.now());
       }
     });
-    // Initial fetch of clock times should be handled by the presenter
-    // e.g., in its onReady method or triggered by a cue.
   }
 
   Future<void> _performClockAction(ClockAction action) async {
@@ -91,18 +88,14 @@ class _HomeScreenState extends State<HomeScreen> {
       csrfToken: session.csrfToken ?? '',
       latitude: latitude,
       longitude: longitude,
-      // Pass accessToken needed for fetching times after successful action
       accessToken: session.accessToken ?? '',
     );
   }
 
   @override
   void dispose() {
-    _actionStatusCancel(); // Cancel the listener
+    _actionStatusCancel();
     _timer?.cancel();
-    // Assuming ClockPresenter is managed elsewhere (e.g., Circus)
-    // If created locally and not keepAlive, JokerState handles disposal.
-    // If keepAlive, ensure proper disposal mechanism is in place.
     super.dispose();
   }
 

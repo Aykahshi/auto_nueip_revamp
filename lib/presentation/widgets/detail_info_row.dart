@@ -14,8 +14,8 @@ class DetailInfoRow extends StatelessWidget {
   final Color? valueColor;
   final TextStyle? valueStyle;
   final TextStyle? labelStyle;
-  final TextStyle? placeholderStyle; // Style for '--' or placeholder
-  final int? maxLines; // Add maxLines parameter
+  final TextStyle? placeholderStyle;
+  final int? maxLines;
 
   const DetailInfoRow({
     required this.icon,
@@ -27,7 +27,7 @@ class DetailInfoRow extends StatelessWidget {
     this.valueStyle,
     this.labelStyle,
     this.placeholderStyle,
-    this.maxLines = 1, // Default to 1 line
+    this.maxLines = 1,
     super.key,
   });
 
@@ -66,7 +66,7 @@ class DetailInfoRow extends StatelessWidget {
           Icon(icon, size: context.r(18), color: effectiveIconColor),
           Gap(context.w(8)),
           Expanded(
-            flex: 2, // Give label slightly less space if needed
+            flex: 2,
             child: Text(
               label,
               style: effectiveLabelStyle,
@@ -76,7 +76,7 @@ class DetailInfoRow extends StatelessWidget {
           ),
           Gap(context.w(8)),
           Expanded(
-            flex: 3, // Give value more space
+            flex: 3,
             child: Text(
               value,
               style:
@@ -84,11 +84,8 @@ class DetailInfoRow extends StatelessWidget {
                       ? effectivePlaceholderStyle
                       : effectiveValueStyle,
               textAlign: TextAlign.left,
-              maxLines: maxLines, // Use the maxLines parameter
-              overflow:
-                  maxLines == 1
-                      ? TextOverflow.ellipsis
-                      : null, // Apply ellipsis only if maxLines is 1
+              maxLines: maxLines,
+              overflow: maxLines == 1 ? TextOverflow.ellipsis : null,
             ),
           ),
         ],

@@ -21,41 +21,36 @@ class ShimmerListTile extends StatelessWidget {
       height: placeholderHeight,
       decoration: BoxDecoration(
         color: color ?? Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(context.r(4)), // Use context.r
+        borderRadius: BorderRadius.circular(context.r(4)),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final shimmerColor = context.colorScheme.onSurface.withValues(
-      alpha: 0.08,
-    ); // Use context.colorScheme
+    final shimmerColor = context.colorScheme.onSurface.withValues(alpha: 0.08);
 
     return Card(
       elevation: 0.5,
       margin: EdgeInsets.symmetric(
         horizontal: context.w(8),
         vertical: context.h(4.5),
-      ), // Use context.w/h
-      color:
-          context
-              .colorScheme
-              .surfaceContainerHighest, // Use context.colorScheme
+      ),
+      color: context.colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(context.r(10)),
-      ), // Use context.r
+      ),
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: EdgeInsets.symmetric(
           horizontal: context.w(12),
           vertical: context.h(10),
-        ), // Use context.w/h
+        ),
         child: Row(
           children: [
             // Left side: Date and Weekday placeholder
             SizedBox(
-              width: context.w(65), // Use context.w
+              width: context.w(65),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -65,7 +60,7 @@ class ShimmerListTile extends StatelessWidget {
                     height: context.h(16),
                     color: shimmerColor,
                   ),
-                  Gap(context.h(5)), // Use context.h
+                  Gap(context.h(5)),
                   _buildPlaceholder(
                     context,
                     width: context.w(30),
@@ -76,32 +71,32 @@ class ShimmerListTile extends StatelessWidget {
               ),
             ),
             VerticalDivider(
-              width: context.w(16), // Use context.w
-              thickness: context.w(1), // Use context.w
-              indent: context.h(5), // Use context.h
-              endIndent: context.h(5), // Use context.h
+              width: context.w(16),
+              thickness: context.w(1),
+              indent: context.h(5),
+              endIndent: context.h(5),
             ),
             // Middle: Details placeholder
             Expanded(
               child: Padding(
-                padding: EdgeInsets.only(left: context.w(4)), // Use context.w
+                padding: EdgeInsets.only(left: context.w(4)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildPlaceholder(
                       context,
                       width: double.infinity,
-                      height: context.h(14), // Explicitly provide height
+                      height: context.h(14),
                       color: shimmerColor,
                     ),
-                    Gap(context.h(5)), // Use context.h
+                    Gap(context.h(5)),
                     _buildPlaceholder(
                       context,
                       width: context.w(100),
                       height: context.h(14),
                       color: shimmerColor,
                     ),
-                    Gap(context.h(5)), // Use context.h
+                    Gap(context.h(5)),
                     _buildPlaceholder(
                       context,
                       width: context.w(120),
@@ -112,28 +107,19 @@ class ShimmerListTile extends StatelessWidget {
                 ),
               ),
             ),
-            Gap(context.w(8)), // Use context.w
+            Gap(context.w(8)),
             // Right side: Status Tag placeholder
             ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth: context.w(75),
-              ), // Use context.w
+              constraints: BoxConstraints(minWidth: context.w(75)),
               child: Container(
                 padding: EdgeInsets.symmetric(
                   horizontal: context.w(8),
                   vertical: context.h(4),
-                ), // Use context.w/h
+                ),
                 decoration: BoxDecoration(
-                  color: shimmerColor.withValues(
-                    alpha: 0.5,
-                  ), // Lighter background
-                  borderRadius: BorderRadius.circular(
-                    context.r(12),
-                  ), // Use context.r
-                  border: Border.all(
-                    color: shimmerColor, // Use shimmer color for border too
-                    width: context.w(1), // Use context.w
-                  ),
+                  color: shimmerColor.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(context.r(12)),
+                  border: Border.all(color: shimmerColor, width: context.w(1)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -145,7 +131,7 @@ class ShimmerListTile extends StatelessWidget {
                       height: context.h(14),
                       color: shimmerColor,
                     ),
-                    Gap(context.w(4)), // Use context.w
+                    Gap(context.w(4)),
                     _buildPlaceholder(
                       context,
                       width: context.w(35),

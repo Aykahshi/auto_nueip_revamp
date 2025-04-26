@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../core/extensions/theme_extensions.dart'; // Import theme extension
+import '../../core/extensions/theme_extensions.dart';
 
 class FilterArea extends StatelessWidget {
   final DateTime? selectedStartDate;
@@ -30,32 +30,32 @@ class FilterArea extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final commonShape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(context.r(8)), // Use context.r
-    ); // Define common shape
+      borderRadius: BorderRadius.circular(context.r(8)),
+    );
     final buttonStyle = ElevatedButton.styleFrom(
       padding: EdgeInsets.symmetric(
         horizontal: context.w(12),
         vertical: context.h(8),
-      ), // Use context.w/h
-      textStyle: context.textTheme.labelMedium?.copyWith(
-        fontSize: context.sp(12), // Use context.sp
       ),
-      shape: commonShape, // Apply common shape
+      textStyle: context.textTheme.labelMedium?.copyWith(
+        fontSize: context.sp(12),
+      ),
+      shape: commonShape,
     );
     final outlinedButtonStyle = OutlinedButton.styleFrom(
       padding: EdgeInsets.symmetric(
         horizontal: context.w(12),
         vertical: context.h(8),
-      ), // Use context.w/h
+      ),
       textStyle: context.textTheme.labelMedium?.copyWith(
-        fontSize: context.sp(12), // Use context.sp
+        fontSize: context.sp(12),
       ),
       foregroundColor: context.colorScheme.error,
       side: BorderSide(
         color: context.colorScheme.error.withValues(alpha: 0.5),
         width: context.w(1),
-      ), // Use context.w for width
-      shape: commonShape, // Apply common shape
+      ),
+      shape: commonShape,
     );
 
     String dateRangeText;
@@ -103,15 +103,15 @@ class FilterArea extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.calendar_today_outlined,
-                          size: context.r(20), // Use context.r
+                          size: context.r(20),
                           color: context.colorScheme.primary,
                         ),
-                        SizedBox(width: context.w(12)), // Use context.w
+                        SizedBox(width: context.w(12)),
                         Text(
                           dateRangeText,
                           style: context.textTheme.titleMedium?.copyWith(
                             color: context.colorScheme.onSurfaceVariant,
-                            fontSize: context.sp(16), // Use context.sp
+                            fontSize: context.sp(16),
                           ),
                         ),
                       ],
@@ -126,10 +126,10 @@ class FilterArea extends StatelessWidget {
                 ),
               ),
             ),
-            SizedBox(height: context.h(10)), // Use context.h
+            SizedBox(height: context.h(10)),
             Wrap(
-              spacing: context.w(8), // Use context.w
-              runSpacing: context.h(8), // Use context.h
+              spacing: context.w(8),
+              runSpacing: context.h(8),
               children: [
                 ElevatedButton(
                   onPressed: onSetYesterday,
@@ -153,7 +153,7 @@ class FilterArea extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: context.h(10)), // Use context.h
+            SizedBox(height: context.h(10)),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -162,26 +162,18 @@ class FilterArea extends StatelessWidget {
                   style: outlinedButtonStyle,
                   child: const Text('清除查詢'),
                 ),
-                SizedBox(width: context.w(8)), // Use context.w
+                SizedBox(width: context.w(8)),
                 ElevatedButton.icon(
                   onPressed: onQuery,
-                  icon: Icon(
-                    Icons.search,
-                    size: context.r(18),
-                  ), // Use context.r
-                  label: Text(
-                    '查詢',
-                    style: TextStyle(
-                      fontSize: context.sp(14),
-                    ), // Use context.sp
-                  ),
+                  icon: Icon(Icons.search, size: context.r(18)),
+                  label: Text('查詢', style: TextStyle(fontSize: context.sp(14))),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: context.colorScheme.primary,
                     foregroundColor: context.colorScheme.onPrimary,
                     padding: EdgeInsets.symmetric(
                       horizontal: context.w(16),
                       vertical: context.h(10),
-                    ), // Use context.w/h
+                    ),
                   ),
                 ),
               ],

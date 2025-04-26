@@ -1,34 +1,31 @@
-import 'dart:async'; // For Future.delayed, StreamSubscription
-import 'dart:convert'; // For jsonDecode
+import 'dart:async';
+import 'dart:convert';
 
 import 'package:auto_route/annotations.dart';
-import 'package:collection/collection.dart'; // For firstWhereOrNull, whereNotNull
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
-import 'package:intl/intl.dart'; // Import Intl
-import 'package:joker_state/joker_state.dart'; // Import JokerState
-import 'package:syncfusion_flutter_calendar/calendar.dart'; // Import SfCalendar controller
+import 'package:intl/intl.dart';
+import 'package:joker_state/joker_state.dart';
+import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
-import '../../core/config/storage_keys.dart'; // Import StorageKeys
-// Corrected import path for the extension
+import '../../core/config/storage_keys.dart';
 import '../../core/extensions/list_holiday_extensions.dart';
-import '../../core/extensions/theme_extensions.dart'; // Import theme extension
-import '../../core/utils/calendar_utils.dart'; // Import CalendarUtils
-import '../../core/utils/local_storage.dart'; // Import LocalStorage
-// Import Attendance related models and state
+import '../../core/extensions/theme_extensions.dart';
+import '../../core/utils/calendar_utils.dart';
+import '../../core/utils/local_storage.dart';
 import '../../data/models/attendance_details.dart';
-import '../../data/models/holiday.dart'; // Import Holiday model
+import '../../data/models/holiday.dart';
 import '../../domain/entities/attendance_state.dart';
-import '../../domain/entities/holiday_state.dart'; // Import HolidayState
-// Import AttendancePresenter
+import '../../domain/entities/holiday_state.dart';
 import '../presenters/attendance_presenter.dart';
-import '../presenters/holiday_presenter.dart'; // Import HolidayPresenter
-import '../widgets/calendar_view_widget.dart'; // Import new widget
+import '../presenters/holiday_presenter.dart';
+import '../widgets/calendar_view_widget.dart';
 import '../widgets/filter_area.dart';
 import '../widgets/query_result_list.dart';
-import '../widgets/selected_day_details_card.dart'; // Import new widget
+import '../widgets/selected_day_details_card.dart';
 
 @RoutePage()
 class CalendarScreen extends StatefulWidget {
@@ -343,10 +340,6 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab>
 
   @override
   Widget build(BuildContext context) {
-    // final theme = Theme.of(context); // Removed
-    // final colorScheme = theme.colorScheme; // Replaced
-
-    // Holiday loading/error check remains the same
     if (widget.isLoadingHolidays) {
       return const Center(
         child: CircularProgressIndicator(key: ValueKey('holidays_loading')),
@@ -394,12 +387,10 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab>
             builder: (context, currentSelectedDate) {
               return CalendarViewWidget(
                 key: const ValueKey('calendar_view'),
-                initialDate:
-                    currentSelectedDate, // Use state for initial date too?
+                initialDate: currentSelectedDate,
                 holidays: widget.holidayDateTimes,
                 onSelectionChanged: _onCalendarDateSelected,
                 controller: _calendarController,
-                // Pass the current state down
                 selectedDate: currentSelectedDate,
               );
             },

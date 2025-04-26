@@ -2,14 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../../core/extensions/theme_extensions.dart'; // Import theme extension
-import '../screens/calendar_screen.dart'; // Import for AttendanceTileData
+import '../../core/extensions/theme_extensions.dart';
+import '../screens/calendar_screen.dart';
 import './shimmer_list_tile.dart';
-// Import the new tile for AttendanceRecord (assuming it exists or will be created)
-// If ClockInListTile is adapted, keep it. If not, create AttendanceListTile
-// For now, assume ClockInListTile will be adapted or we need a new one.
-// Let's create a placeholder `AttendanceListTile` import and use it.
-import 'attendance_list_tile.dart'; // Placeholder import
+import 'attendance_list_tile.dart';
 
 class QueryResultList extends StatelessWidget {
   final bool isLoading;
@@ -24,9 +20,6 @@ class QueryResultList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final theme = Theme.of(context); // Removed
-    // final colorScheme = theme.colorScheme; // Replaced
-
     if (isLoading) {
       // Show shimmer effect while loading
       return ListView.builder(
@@ -41,11 +34,7 @@ class QueryResultList extends StatelessWidget {
             Text(
               '無查詢結果或請點擊查詢',
               style: context.textTheme.bodyLarge?.copyWith(
-                // Use context.textTheme
-                color:
-                    context
-                        .colorScheme
-                        .onSurfaceVariant, // Use context.colorScheme
+                color: context.colorScheme.onSurfaceVariant,
                 fontSize: context.sp(16),
               ),
             ).animate().fadeIn(),
@@ -58,8 +47,9 @@ class QueryResultList extends StatelessWidget {
         // Change type to AttendanceTileData
         final AttendanceTileData itemData = results[index];
         // Pass the entire itemData record to the tile
-        return AttendanceListTile(tileData: itemData) // Pass record
-        .animate().fadeIn(delay: (index * 30).ms).moveX(begin: -15);
+        return AttendanceListTile(
+          tileData: itemData,
+        ).animate().fadeIn(delay: (index * 30).ms).moveX(begin: -15);
       },
     );
   }

@@ -12,23 +12,11 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final theme = Theme.of(context);
-    // final colorScheme = theme.colorScheme;
-    // final isDarkMode = theme.brightness == Brightness.dark;
-
     // Define specific selected colors for dark mode
-    const Color homeSelectedDark = Color(
-      0xFFD8A964,
-    ); // Muted Orange (_secondaryDark)
-    const Color calendarSelectedDark = Color(
-      0xFFE0E0E0,
-    ); // Light Grey (_textOnDark)
-    const Color leaveSelectedDark = Color(
-      0xFF4A7C82,
-    ); // Dark Teal (_tertiaryDark)
-    const Color settingsSelectedDark = Color(
-      0xFF3A5F84,
-    ); // Muted Blue (_primaryDark)
+    const Color homeSelectedDark = Color(0xFFD8A964);
+    const Color calendarSelectedDark = Color(0xFFE0E0E0);
+    const Color leaveSelectedDark = Color(0xFF4A7C82);
+    const Color settingsSelectedDark = Color(0xFF3A5F84);
 
     return AutoTabsScaffold(
       routes: const [
@@ -62,8 +50,8 @@ class MainScreen extends StatelessWidget {
               title: const Text("首頁"),
               selectedColor:
                   context.isDarkMode
-                      ? homeSelectedDark // Specific dark color
-                      : context.colorScheme.primary, // Light theme primary
+                      ? homeSelectedDark
+                      : context.colorScheme.primary,
             ),
 
             /// Calendar
@@ -73,8 +61,8 @@ class MainScreen extends StatelessWidget {
               title: const Text("日曆"),
               selectedColor:
                   context.isDarkMode
-                      ? calendarSelectedDark // Specific dark color
-                      : context.colorScheme.secondary, // Light theme secondary
+                      ? calendarSelectedDark
+                      : context.colorScheme.secondary,
             ),
 
             /// Leave
@@ -84,8 +72,8 @@ class MainScreen extends StatelessWidget {
               title: const Text("請假"),
               selectedColor:
                   context.isDarkMode
-                      ? leaveSelectedDark // Specific dark color
-                      : context.colorScheme.tertiary, // Light theme tertiary
+                      ? leaveSelectedDark
+                      : context.colorScheme.tertiary,
             ),
 
             /// Settings
@@ -95,10 +83,8 @@ class MainScreen extends StatelessWidget {
               title: const Text("設定"),
               selectedColor:
                   context.isDarkMode
-                      ? settingsSelectedDark // Specific dark color
-                      : context.colorScheme.onSurface.withValues(
-                        alpha: 0.7,
-                      ), // Light theme primary
+                      ? settingsSelectedDark
+                      : context.colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ],
         );
