@@ -1,94 +1,138 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+
+import '../../core/extensions/theme_extensions.dart'; // Import theme extension
 
 /// A shimmer placeholder widget mimicking the layout of [AttendanceListTile].
 class ShimmerListTile extends StatelessWidget {
   const ShimmerListTile({super.key});
 
-  Widget _buildPlaceholder({double? width, double height = 14, Color? color}) {
+  Widget _buildPlaceholder(
+    BuildContext context, {
+    double? width,
+    double? height,
+    Color? color,
+  }) {
+    // Ensure height has a default value handled by screenutil
+    final placeholderHeight = height ?? context.h(14);
     return Container(
       width: width,
-      height: height,
+      height: placeholderHeight,
       decoration: BoxDecoration(
         color: color ?? Colors.grey.shade300,
-        borderRadius: BorderRadius.circular(4.0),
+        borderRadius: BorderRadius.circular(context.r(4)), // Use context.r
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final shimmerColor = colorScheme.onSurface.withValues(alpha: 0.08);
+    final shimmerColor = context.colorScheme.onSurface.withValues(
+      alpha: 0.08,
+    ); // Use context.colorScheme
 
     return Card(
       elevation: 0.5,
-      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.5),
-      color: colorScheme.surfaceContainerHighest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      margin: EdgeInsets.symmetric(
+        horizontal: context.w(8),
+        vertical: context.h(4.5),
+      ), // Use context.w/h
+      color:
+          context
+              .colorScheme
+              .surfaceContainerHighest, // Use context.colorScheme
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.r(10)),
+      ), // Use context.r
       clipBehavior: Clip.antiAlias,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.w(12),
+          vertical: context.h(10),
+        ), // Use context.w/h
         child: Row(
           children: [
             // Left side: Date and Weekday placeholder
             SizedBox(
-              width: 65, // Match approximate width
+              width: context.w(65), // Use context.w
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  _buildPlaceholder(width: 40, height: 16, color: shimmerColor),
-                  const Gap(5),
-                  _buildPlaceholder(width: 30, height: 12, color: shimmerColor),
+                  _buildPlaceholder(
+                    context,
+                    width: context.w(40),
+                    height: context.h(16),
+                    color: shimmerColor,
+                  ),
+                  Gap(context.h(5)), // Use context.h
+                  _buildPlaceholder(
+                    context,
+                    width: context.w(30),
+                    height: context.h(12),
+                    color: shimmerColor,
+                  ),
                 ],
               ),
             ),
-            const VerticalDivider(
-              width: 16,
-              thickness: 1,
-              indent: 5,
-              endIndent: 5,
+            VerticalDivider(
+              width: context.w(16), // Use context.w
+              thickness: context.w(1), // Use context.w
+              indent: context.h(5), // Use context.h
+              endIndent: context.h(5), // Use context.h
             ),
             // Middle: Details placeholder
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(left: 4.0),
+                padding: EdgeInsets.only(left: context.w(4)), // Use context.w
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildPlaceholder(
+                      context,
                       width: double.infinity,
+                      height: context.h(14), // Explicitly provide height
                       color: shimmerColor,
                     ),
-                    const Gap(5),
-                    _buildPlaceholder(width: 100, color: shimmerColor),
-                    const Gap(5),
+                    Gap(context.h(5)), // Use context.h
                     _buildPlaceholder(
-                      width: 120,
-                      height: 10,
+                      context,
+                      width: context.w(100),
+                      height: context.h(14),
+                      color: shimmerColor,
+                    ),
+                    Gap(context.h(5)), // Use context.h
+                    _buildPlaceholder(
+                      context,
+                      width: context.w(120),
+                      height: context.h(10),
                       color: shimmerColor,
                     ), // Optional third line
                   ],
                 ),
               ),
             ),
-            const Gap(8),
+            Gap(context.w(8)), // Use context.w
             // Right side: Status Tag placeholder
             ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 75),
+              constraints: BoxConstraints(
+                minWidth: context.w(75),
+              ), // Use context.w
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 4.0,
-                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.w(8),
+                  vertical: context.h(4),
+                ), // Use context.w/h
                 decoration: BoxDecoration(
                   color: shimmerColor.withValues(
                     alpha: 0.5,
                   ), // Lighter background
-                  borderRadius: BorderRadius.circular(12.0),
+                  borderRadius: BorderRadius.circular(
+                    context.r(12),
+                  ), // Use context.r
                   border: Border.all(
                     color: shimmerColor, // Use shimmer color for border too
-                    width: 1.0,
+                    width: context.w(1), // Use context.w
                   ),
                 ),
                 child: Row(
@@ -96,14 +140,16 @@ class ShimmerListTile extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _buildPlaceholder(
-                      width: 14,
-                      height: 14,
+                      context,
+                      width: context.w(14),
+                      height: context.h(14),
                       color: shimmerColor,
                     ),
-                    const Gap(4),
+                    Gap(context.w(4)), // Use context.w
                     _buildPlaceholder(
-                      width: 35,
-                      height: 12,
+                      context,
+                      width: context.w(35),
+                      height: context.h(12),
                       color: shimmerColor,
                     ),
                   ],
