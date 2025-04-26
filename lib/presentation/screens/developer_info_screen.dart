@@ -88,6 +88,7 @@ class DeveloperInfoScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('開發者資訊'),
         leading: const AutoLeadingButton(),
+        centerTitle: true,
         elevation: 1,
       ),
       body: Center(
