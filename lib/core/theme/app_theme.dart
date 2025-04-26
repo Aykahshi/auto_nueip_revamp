@@ -14,7 +14,7 @@ const Color _textOnLight = Color(0xFF212121); // Dark Grey
 const Color _textOnPrimaryLight = Colors.white;
 
 // --- Dark Theme Color Palette ---
-const Color _primaryDark = Color(0xFF3A5F84); // Muted Blue
+const Color _primaryDark = Color(0xFF4DB6AC); // Teal (Updated from Muted Blue)
 const Color _secondaryDark = Color(0xFFD8A964); // Muted Orange
 const Color _tertiaryDark = Color(0xFF4A7C82); // Dark Teal/Green
 const Color _backgroundDark = Color(0xFF1A1D21); // Very Dark Grey/Blue

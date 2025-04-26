@@ -16,6 +16,7 @@ class DetailInfoRow extends StatelessWidget {
   final TextStyle? labelStyle;
   final TextStyle? placeholderStyle;
   final int? maxLines;
+  final bool useCompactFlex;
 
   const DetailInfoRow({
     required this.icon,
@@ -28,6 +29,7 @@ class DetailInfoRow extends StatelessWidget {
     this.labelStyle,
     this.placeholderStyle,
     this.maxLines = 1,
+    this.useCompactFlex = false,
     super.key,
   });
 
@@ -66,7 +68,7 @@ class DetailInfoRow extends StatelessWidget {
           Icon(icon, size: context.r(18), color: effectiveIconColor),
           Gap(context.w(8)),
           Expanded(
-            flex: 2,
+            flex: useCompactFlex ? 1 : 2,
             child: Text(
               label,
               style: effectiveLabelStyle,

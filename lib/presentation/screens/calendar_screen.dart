@@ -95,9 +95,6 @@ class _CalendarScreenState extends State<CalendarScreen>
   @override
   void dispose() {
     _tabController.dispose();
-    // Dispose presenters if hired locally (Circus.hire usually handles this if keepAlive: false)
-    // Circus.dispose<HolidayPresenter>(); // If keepAlive: true
-    // Circus.dispose<AttendancePresenter>(); // If keepAlive: true
     super.dispose();
   }
 
@@ -113,15 +110,10 @@ class _CalendarScreenState extends State<CalendarScreen>
 
         if (holidayState is HolidaySuccess) {
           currentHolidays = holidayState.holidays;
-          // Removed Future.microtask and setState
         } else if (holidayState is HolidayInitial) {
-          // Still in initial state, treat as loading
           isLoadingHolidays = true;
         }
-        // If error, currentHolidays remains empty. Loading state is handled above.
 
-        // Calculate Set<DateTime> for SfCalendar based on derived currentHolidays
-        // Ensure this runs only if holidays are available
         if (currentHolidays.isNotEmpty) {
           holidayDateTimes =
               currentHolidays
@@ -492,8 +484,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext sheetContext) {
-        // Directly use context extension for the sheet's theme data
-        final sheetTheme = Theme.of(sheetContext);
+        final sheetTheme = sheetContext.theme;
         final sheetColorScheme = sheetTheme.colorScheme;
         final safeAreaBottom = MediaQuery.viewInsetsOf(sheetContext).bottom;
 
@@ -501,7 +492,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
           padding: EdgeInsets.only(bottom: safeAreaBottom),
           child: Container(
             constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.5,
+              maxHeight: MediaQuery.sizeOf(context).height * 0.5,
             ),
             decoration: BoxDecoration(
               color: sheetColorScheme.surfaceContainer,
@@ -783,8 +774,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
             _lastQueryEndDate != null &&
             _lastQueryStartDate!.year != _lastQueryEndDate!.year;
 
-        return widget.attendancePresenter.focusOn<AttendanceState>(
-          selector: (state) => state,
+        return widget.attendancePresenter.perform(
           builder: (context, attendanceState) {
             bool isLoading = attendanceState is AttendanceLoading;
             List<AttendanceTileData> tileDataList = []; // Use the new type
@@ -859,10 +849,8 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                       statusTag: statusTag,
                       statusColor: statusColor,
                       statusIcon: statusIcon,
-                      formattedDate:
-                          formattedDateStr, // Use the new formatted string
-                      showYear:
-                          shouldShowYear, // Pass the flag based on last query
+                      formattedDate: formattedDateStr,
+                      showYear: shouldShowYear,
                     );
                   }).toList();
             }
@@ -870,8 +858,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
             return Column(
               children: [
                 FilterArea(
-                  selectedStartDate:
-                      currentStartDate, // FilterArea uses live joker state
+                  selectedStartDate: currentStartDate,
                   selectedEndDate: currentEndDate,
                   onSelectRange: _showDateRangePickerInSheet,
                   onSetYesterday: _setRangeToYesterday,
@@ -881,6 +868,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                   onClear: _clearQuery,
                   onQuery: _performQuery,
                 ),
+                Gap(context.h(10)),
                 Expanded(
                   child: QueryResultList(
                     isLoading: isLoading,

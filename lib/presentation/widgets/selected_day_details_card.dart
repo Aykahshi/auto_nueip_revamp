@@ -284,6 +284,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
                         color: leaveColor,
                         fontSize: context.sp(14),
                       ),
+                      useCompactFlex: true,
                     ),
                     DetailInfoRow(
                       icon: Icons.access_time_outlined,
@@ -294,6 +295,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
                         color: leaveColor,
                         fontSize: context.sp(14),
                       ),
+                      useCompactFlex: true,
                     ),
                     if (leave.remark != null && leave.remark!.isNotEmpty)
                       DetailInfoRow(
@@ -305,6 +307,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
                           color: leaveColor,
                           fontSize: context.sp(14),
                         ),
+                        useCompactFlex: true,
                       ),
                     if (index < timeoffRecords.length - 1)
                       Divider(
@@ -365,6 +368,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
               valueStyle: valueStyle,
               labelStyle: labelStyle,
               placeholderStyle: placeholderStyle,
+              useCompactFlex: true,
             ),
           DetailInfoRow(
             icon: Icons.login_outlined,
@@ -373,6 +377,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
             valueStyle: valueStyle,
             labelStyle: labelStyle,
             placeholderStyle: placeholderStyle,
+            useCompactFlex: true,
           ),
           DetailInfoRow(
             icon: Icons.logout_outlined,
@@ -381,6 +386,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
             valueStyle: valueStyle,
             labelStyle: labelStyle,
             placeholderStyle: placeholderStyle,
+            useCompactFlex: true,
           ),
           if (showDuration)
             DetailInfoRow(
@@ -390,6 +396,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
               valueStyle: valueStyle,
               labelStyle: labelStyle,
               placeholderStyle: placeholderStyle,
+              useCompactFlex: true,
             ),
           if (record.overtime != null && record.overtime!.isNotEmpty)
             _buildOvertimeRow(context, record.overtime!.first, labelStyle),
@@ -416,6 +423,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
         fontSize: context.sp(14),
       ),
       labelStyle: labelStyle,
+      useCompactFlex: true,
     );
   }
 }
