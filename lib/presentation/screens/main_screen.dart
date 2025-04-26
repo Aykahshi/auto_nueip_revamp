@@ -29,7 +29,7 @@ class MainScreen extends StatelessWidget {
       bottomNavigationBuilder: (_, tabsRouter) {
         return SalomonBottomBar(
           margin: EdgeInsets.symmetric(
-            horizontal: context.w(16),
+            horizontal: context.w(20),
             vertical: context.h(8),
           ),
           // Use theme surface color for background

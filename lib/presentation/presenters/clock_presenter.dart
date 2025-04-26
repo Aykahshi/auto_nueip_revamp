@@ -26,8 +26,8 @@ class ClockPresenter extends Presenter<ClockState> {
       );
 
   @override
-  void onInit() {
-    super.onInit();
+  void onReady() {
+    super.onReady();
     _init();
   }
 
