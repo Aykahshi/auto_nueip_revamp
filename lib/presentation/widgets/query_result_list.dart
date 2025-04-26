@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../../core/extensions/theme_extensions.dart'; // Import theme extension
 import '../screens/calendar_screen.dart'; // Import for AttendanceTileData
 import './shimmer_list_tile.dart';
 // Import the new tile for AttendanceRecord (assuming it exists or will be created)
@@ -22,8 +24,8 @@ class QueryResultList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    // final theme = Theme.of(context); // Removed
+    // final colorScheme = theme.colorScheme; // Replaced
 
     if (isLoading) {
       // Show shimmer effect while loading
@@ -38,8 +40,13 @@ class QueryResultList extends StatelessWidget {
         child:
             Text(
               '無查詢結果或請點擊查詢',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurfaceVariant,
+              style: context.textTheme.bodyLarge?.copyWith(
+                // Use context.textTheme
+                color:
+                    context
+                        .colorScheme
+                        .onSurfaceVariant, // Use context.colorScheme
+                fontSize: context.sp(16),
               ),
             ).animate().fadeIn(),
       );

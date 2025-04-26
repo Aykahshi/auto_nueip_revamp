@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:gap/gap.dart';
 import 'package:joker_state/joker_state.dart';
 
+import '../../core/extensions/theme_extensions.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/login_status_enum.dart';
@@ -60,7 +62,7 @@ class _LoginScreenState extends State<LoginScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Theme.of(context).colorScheme.error,
+        backgroundColor: context.colorScheme.error,
       ),
     );
   }
@@ -71,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final passwordVisibleJoker = Joker<bool>(false);
 
     // Get theme colors for the icon
-    final iconColor = Theme.of(context).colorScheme.primary;
+    final iconColor = context.colorScheme.primary;
 
     return Scaffold(
       body: SafeArea(
@@ -79,10 +81,10 @@ class _LoginScreenState extends State<LoginScreen> {
           builder: (context, isKeyboardVisible) {
             return Padding(
               padding: EdgeInsets.only(
-                left: 16.0,
-                right: 16.0,
-                top: 16.0,
-                bottom: isKeyboardVisible ? 16.0 : 16.0,
+                left: context.w(16),
+                right: context.w(16),
+                top: context.h(16),
+                bottom: isKeyboardVisible ? context.h(16) : context.h(16),
               ),
               // Perform UI updates based on presenter's state
               child: _presenter.perform(
@@ -116,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     .fadeIn();
                               },
                             ),
-                            const Gap(16.0),
+                            Gap(context.h(16)),
                             FormBuilderTextField(
                                   name: 'companyCode',
                                   decoration: const InputDecoration(
@@ -143,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   curve: Curves.easeOutCubic,
                                 )
                                 .fadeIn(duration: 400.ms, delay: 100.ms),
-                            const Gap(16.0),
+                            Gap(context.h(16)),
                             FormBuilderTextField(
                                   name: 'employeeId',
                                   decoration: const InputDecoration(
@@ -165,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   delay: 200.ms,
                                 )
                                 .fadeIn(duration: 400.ms, delay: 200.ms),
-                            const Gap(16.0),
+                            Gap(context.h(16)),
                             passwordVisibleJoker.perform(
                               builder: (context, isPasswordVisible) {
                                 return FormBuilderTextField(
@@ -208,12 +210,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                     .fadeIn(duration: 400.ms, delay: 300.ms);
                               },
                             ),
-                            const Gap(24.0),
+                            Gap(context.h(24)),
                             ElevatedButton(
                                   style: ElevatedButton.styleFrom(
-                                    minimumSize: const Size(
+                                    minimumSize: Size(
                                       double.infinity,
-                                      48,
+                                      context.h(48),
                                     ),
                                   ),
                                   // Use status from LoginState for onPressed
@@ -260,18 +262,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                     }
                                   },
                                   child: loginState.isLoading.reveal(
-                                    whenTrue: const SizedBox(
-                                      width: 24,
-                                      height: 24,
+                                    whenTrue: SizedBox(
+                                      width: context.w(24),
+                                      height: context.h(24),
                                       child: CircularProgressIndicator(
                                         color: Colors.white,
-                                        strokeWidth: 3,
+                                        strokeWidth: context.w(3),
                                       ),
                                     ),
-                                    whenFalse: const Text(
+                                    whenFalse: Text(
                                       '登入',
                                       style: TextStyle(
-                                        fontSize: 16,
+                                        fontSize: context.sp(16),
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
@@ -289,7 +291,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             if (isKeyboardVisible)
                               Gap(
                                 MediaQuery.viewInsetsOf(context).bottom > 100
-                                    ? 100
+                                    ? context.h(100)
                                     : MediaQuery.viewInsetsOf(context).bottom,
                               ),
                           ],

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+
+import '../../core/extensions/theme_extensions.dart';
 
 /// A reusable row widget for displaying a piece of detail information with an icon.
 class DetailInfoRow extends StatelessWidget {
@@ -30,39 +33,38 @@ class DetailInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     final effectiveLabelStyle =
         labelStyle ??
-        theme.textTheme.bodyMedium?.copyWith(
-          color: labelColor ?? colorScheme.onSurfaceVariant,
+        context.textTheme.bodyMedium?.copyWith(
+          color: labelColor ?? context.colorScheme.onSurfaceVariant,
+          fontSize: context.sp(14),
         );
     final effectiveValueStyle =
         valueStyle ??
-        theme.textTheme.bodyMedium?.copyWith(
+        context.textTheme.bodyMedium?.copyWith(
           fontWeight: FontWeight.w500,
-          color: valueColor ?? colorScheme.onSurface,
+          color: valueColor ?? context.colorScheme.onSurface,
+          fontSize: context.sp(14),
         );
     final effectivePlaceholderStyle =
         placeholderStyle ??
         effectiveValueStyle?.copyWith(
-          color: colorScheme.outline.withValues(alpha: 0.6),
+          color: context.colorScheme.outline.withValues(alpha: 0.6),
         );
-    final effectiveIconColor = iconColor ?? colorScheme.secondary;
+    final effectiveIconColor = iconColor ?? context.colorScheme.secondary;
 
     final bool isPlaceholder = value == '--' || value == 'N/A';
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
+      padding: EdgeInsets.symmetric(vertical: context.h(4)),
       child: Row(
         crossAxisAlignment:
             maxLines == 1
                 ? CrossAxisAlignment.center
                 : CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: effectiveIconColor),
-          const Gap(8),
+          Icon(icon, size: context.r(18), color: effectiveIconColor),
+          Gap(context.w(8)),
           Expanded(
             flex: 2, // Give label slightly less space if needed
             child: Text(
@@ -72,7 +74,7 @@ class DetailInfoRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const Gap(8),
+          Gap(context.w(8)),
           Expanded(
             flex: 3, // Give value more space
             child: Text(

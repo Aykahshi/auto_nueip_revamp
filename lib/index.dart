@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:joker_state/joker_state.dart';
 
 import 'core/config/storage_keys.dart';
@@ -26,17 +27,23 @@ class App extends StatelessWidget {
 
     final router = Circus.find<AppRouter>();
 
-    return JokerPortal<AppThemeMode>(
-      joker: themeJoker,
-      child: JokerCast<AppThemeMode>(
-        builder: (context, currentThemeMode) {
-          return KeyboardVisibilityProvider(
-            child: _AnimatedThemeApp(
-              themeMode: _getThemeMode(currentThemeMode),
-              router: router,
-            ),
-          );
-        },
+    return ScreenUtil(
+      options: const ScreenUtilOptions(
+        designSize: Size(393, 852),
+        paddingScaleStrategy: ScreenUtilScaleStrategy.both,
+      ),
+      child: JokerPortal<AppThemeMode>(
+        joker: themeJoker,
+        child: JokerCast<AppThemeMode>(
+          builder: (context, currentThemeMode) {
+            return KeyboardVisibilityProvider(
+              child: _AnimatedThemeApp(
+                themeMode: _getThemeMode(currentThemeMode),
+                router: router,
+              ),
+            );
+          },
+        ),
       ),
     );
   }

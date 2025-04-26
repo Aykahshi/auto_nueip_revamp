@@ -1,7 +1,9 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 
+import '../../core/extensions/theme_extensions.dart';
 import '../../core/router/app_router.dart';
 
 @RoutePage()
@@ -10,9 +12,9 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isDarkMode = theme.brightness == Brightness.dark;
+    // final theme = Theme.of(context);
+    // final colorScheme = theme.colorScheme;
+    // final isDarkMode = theme.brightness == Brightness.dark;
 
     // Define specific selected colors for dark mode
     const Color homeSelectedDark = Color(
@@ -35,18 +37,23 @@ class MainScreen extends StatelessWidget {
         LeaveRoute(),
         SettingRoute(),
       ],
-      backgroundColor: colorScheme.surface,
+      backgroundColor: context.colorScheme.surface,
       bottomNavigationBuilder: (_, tabsRouter) {
         return SalomonBottomBar(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          margin: EdgeInsets.symmetric(
+            horizontal: context.w(16),
+            vertical: context.h(8),
+          ),
           // Use theme surface color for background
-          backgroundColor: colorScheme.surface.withValues(
-            alpha: isDarkMode ? 0.95 : 0.9,
+          backgroundColor: context.colorScheme.surface.withValues(
+            alpha: context.isDarkMode ? 0.95 : 0.9,
           ),
           currentIndex: tabsRouter.activeIndex,
           onTap: tabsRouter.setActiveIndex,
           // Use theme onSurface color for unselected items
-          unselectedItemColor: colorScheme.onSurface.withValues(alpha: 0.6),
+          unselectedItemColor: context.colorScheme.onSurface.withValues(
+            alpha: 0.6,
+          ),
           items: [
             /// Home
             SalomonBottomBarItem(
@@ -54,9 +61,9 @@ class MainScreen extends StatelessWidget {
               activeIcon: const Icon(Icons.home),
               title: const Text("首頁"),
               selectedColor:
-                  isDarkMode
+                  context.isDarkMode
                       ? homeSelectedDark // Specific dark color
-                      : colorScheme.primary, // Light theme primary
+                      : context.colorScheme.primary, // Light theme primary
             ),
 
             /// Calendar
@@ -65,9 +72,9 @@ class MainScreen extends StatelessWidget {
               activeIcon: const Icon(Icons.calendar_today),
               title: const Text("日曆"),
               selectedColor:
-                  isDarkMode
+                  context.isDarkMode
                       ? calendarSelectedDark // Specific dark color
-                      : colorScheme.secondary, // Light theme secondary
+                      : context.colorScheme.secondary, // Light theme secondary
             ),
 
             /// Leave
@@ -76,9 +83,9 @@ class MainScreen extends StatelessWidget {
               activeIcon: const Icon(Icons.logout),
               title: const Text("請假"),
               selectedColor:
-                  isDarkMode
+                  context.isDarkMode
                       ? leaveSelectedDark // Specific dark color
-                      : colorScheme.tertiary, // Light theme tertiary
+                      : context.colorScheme.tertiary, // Light theme tertiary
             ),
 
             /// Settings
@@ -87,9 +94,9 @@ class MainScreen extends StatelessWidget {
               activeIcon: const Icon(Icons.settings),
               title: const Text("設定"),
               selectedColor:
-                  isDarkMode
+                  context.isDarkMode
                       ? settingsSelectedDark // Specific dark color
-                      : colorScheme.onSurface.withValues(
+                      : context.colorScheme.onSurface.withValues(
                         alpha: 0.7,
                       ), // Light theme primary
             ),

@@ -29,6 +29,7 @@ dependencies:
   google_fonts: ^6.2.1
   flutter_animate: ^4.5.2
   salomon_bottom_bar: ^3.3.2
+  flutter_screenutil: ^6.0.0-alpha.1
   animated_flip_counter: ^0.3.4
   syncfusion_flutter_datepicker: ^29.1.39
   syncfusion_flutter_calendar: ^29.1.39

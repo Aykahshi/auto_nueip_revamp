@@ -1,6 +1,9 @@
 import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
+
+import '../../core/extensions/theme_extensions.dart';
 
 @RoutePage()
 class LeaveScreen extends StatelessWidget {
@@ -19,9 +22,14 @@ class LeaveScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const Icon(Icons.build_outlined, size: 64),
-            const Gap(16),
-            Text('開發中', style: Theme.of(context).textTheme.titleLarge),
+            Icon(Icons.build_outlined, size: context.r(64)),
+            Gap(context.h(16)),
+            Text(
+              '開發中',
+              style: context.textTheme.titleLarge?.copyWith(
+                fontSize: context.sp(22),
+              ),
+            ),
           ],
         ),
       ),

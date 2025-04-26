@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+import '../../core/extensions/theme_extensions.dart'; // Import theme extension
 
 class FilterArea extends StatelessWidget {
   final DateTime? selectedStartDate;
@@ -26,21 +29,32 @@ class FilterArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final commonShape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(8.0),
+      borderRadius: BorderRadius.circular(context.r(8)), // Use context.r
     ); // Define common shape
     final buttonStyle = ElevatedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      textStyle: theme.textTheme.labelMedium,
+      padding: EdgeInsets.symmetric(
+        horizontal: context.w(12),
+        vertical: context.h(8),
+      ), // Use context.w/h
+      textStyle: context.textTheme.labelMedium?.copyWith(
+        fontSize: context.sp(12), // Use context.sp
+      ),
       shape: commonShape, // Apply common shape
     );
     final outlinedButtonStyle = OutlinedButton.styleFrom(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      textStyle: theme.textTheme.labelMedium,
-      foregroundColor: colorScheme.error,
-      side: BorderSide(color: colorScheme.error.withValues(alpha: 0.5)),
+      padding: EdgeInsets.symmetric(
+        horizontal: context.w(12),
+        vertical: context.h(8),
+      ), // Use context.w/h
+      textStyle: context.textTheme.labelMedium?.copyWith(
+        fontSize: context.sp(12), // Use context.sp
+      ),
+      foregroundColor: context.colorScheme.error,
+      side: BorderSide(
+        color: context.colorScheme.error.withValues(alpha: 0.5),
+        width: context.w(1),
+      ), // Use context.w for width
       shape: commonShape, // Apply common shape
     );
 
@@ -60,23 +74,27 @@ class FilterArea extends StatelessWidget {
       margin: EdgeInsets.zero,
       elevation: 1.0,
       shape: const RoundedRectangleBorder(),
-      color: colorScheme.surfaceContainerLowest,
+      color: context.colorScheme.surfaceContainerLowest,
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: EdgeInsets.all(context.i(12)), // Use context.i
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             InkWell(
               onTap: onSelectRange,
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(
+                context.r(8),
+              ), // Use context.r
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 12.0,
-                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.w(16),
+                  vertical: context.h(12),
+                ), // Use context.w/h
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8.0),
-                  color: colorScheme.surface,
+                  borderRadius: BorderRadius.circular(
+                    context.r(8),
+                  ), // Use context.r
+                  color: context.colorScheme.surface,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -85,21 +103,22 @@ class FilterArea extends StatelessWidget {
                       children: [
                         Icon(
                           Icons.calendar_today_outlined,
-                          size: 20,
-                          color: colorScheme.primary,
+                          size: context.r(20), // Use context.r
+                          color: context.colorScheme.primary,
                         ),
-                        const SizedBox(width: 12),
+                        SizedBox(width: context.w(12)), // Use context.w
                         Text(
                           dateRangeText,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                          style: context.textTheme.titleMedium?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                            fontSize: context.sp(16), // Use context.sp
                           ),
                         ),
                       ],
                     ),
                     Icon(
                       Icons.arrow_drop_down,
-                      color: colorScheme.onSurfaceVariant.withValues(
+                      color: context.colorScheme.onSurfaceVariant.withValues(
                         alpha: 0.6,
                       ),
                     ),
@@ -107,10 +126,10 @@ class FilterArea extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: context.h(10)), // Use context.h
             Wrap(
-              spacing: 8.0,
-              runSpacing: 8.0,
+              spacing: context.w(8), // Use context.w
+              runSpacing: context.h(8), // Use context.h
               children: [
                 ElevatedButton(
                   onPressed: onSetYesterday,
@@ -134,7 +153,7 @@ class FilterArea extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: context.h(10)), // Use context.h
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -143,18 +162,26 @@ class FilterArea extends StatelessWidget {
                   style: outlinedButtonStyle,
                   child: const Text('清除查詢'),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: context.w(8)), // Use context.w
                 ElevatedButton.icon(
                   onPressed: onQuery,
-                  icon: const Icon(Icons.search, size: 18),
-                  label: const Text('查詢'),
+                  icon: Icon(
+                    Icons.search,
+                    size: context.r(18),
+                  ), // Use context.r
+                  label: Text(
+                    '查詢',
+                    style: TextStyle(
+                      fontSize: context.sp(14),
+                    ), // Use context.sp
+                  ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: colorScheme.onPrimary,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
+                    backgroundColor: context.colorScheme.primary,
+                    foregroundColor: context.colorScheme.onPrimary,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: context.w(16),
+                      vertical: context.h(10),
+                    ), // Use context.w/h
                   ),
                 ),
               ],

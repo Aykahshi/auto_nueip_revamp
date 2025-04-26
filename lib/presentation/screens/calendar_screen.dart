@@ -4,6 +4,7 @@ import 'dart:convert'; // For jsonDecode
 import 'package:auto_route/annotations.dart';
 import 'package:collection/collection.dart'; // For firstWhereOrNull, whereNotNull
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart'; // Import Intl
 import 'package:joker_state/joker_state.dart'; // Import JokerState
@@ -13,7 +14,7 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import '../../core/config/storage_keys.dart'; // Import StorageKeys
 // Corrected import path for the extension
 import '../../core/extensions/list_holiday_extensions.dart';
-import '../../core/theme/app_theme.dart';
+import '../../core/extensions/theme_extensions.dart'; // Import theme extension
 import '../../core/utils/calendar_utils.dart'; // Import CalendarUtils
 import '../../core/utils/local_storage.dart'; // Import LocalStorage
 // Import Attendance related models and state
@@ -105,10 +106,6 @@ class _CalendarScreenState extends State<CalendarScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
     return _holidayPresenter.perform(
       builder: (context, holidayState) {
         // Derive holiday data directly from the state within the builder
@@ -165,9 +162,6 @@ class _CalendarScreenState extends State<CalendarScreen>
                   .toSet();
         }
 
-        final themeMode = context.joker<AppThemeMode>();
-        final isDarkMode = themeMode.state == AppThemeMode.dark;
-
         // --- Scaffold and TabBarView structure ---
         return Scaffold(
           appBar: AppBar(
@@ -177,16 +171,19 @@ class _CalendarScreenState extends State<CalendarScreen>
             bottom: TabBar(
               controller: _tabController,
               labelColor:
-                  !isDarkMode
-                      ? colorScheme.surface
-                      : colorScheme.onSurfaceVariant,
-              unselectedLabelColor: colorScheme.onSurfaceVariant,
-              indicatorColor: colorScheme.primary,
-              indicatorWeight: 3.0,
-              labelStyle: textTheme.titleSmall?.copyWith(
+                  !context.isDarkMode
+                      ? context.colorScheme.surface
+                      : context.colorScheme.onSurfaceVariant,
+              unselectedLabelColor: context.colorScheme.onSurfaceVariant,
+              indicatorColor: context.colorScheme.primary,
+              indicatorWeight: context.h(3.0),
+              labelStyle: context.textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.bold,
+                fontSize: context.sp(14),
               ),
-              unselectedLabelStyle: textTheme.titleSmall,
+              unselectedLabelStyle: context.textTheme.titleSmall?.copyWith(
+                fontSize: context.sp(14),
+              ),
               tabs: const [Tab(text: '單日檢視'), Tab(text: '區間查詢')],
             ),
           ),
@@ -346,8 +343,8 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    // final theme = Theme.of(context); // Removed
+    // final colorScheme = theme.colorScheme; // Replaced
 
     // Holiday loading/error check remains the same
     if (widget.isLoadingHolidays) {
@@ -359,20 +356,25 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab>
       return Center(
         key: const ValueKey('holidays_error'),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: EdgeInsets.all(context.i(16)),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, color: colorScheme.error, size: 48),
-              const SizedBox(height: 16),
+              Icon(
+                Icons.error_outline,
+                color: context.colorScheme.error,
+                size: context.r(48),
+              ),
+              Gap(context.h(16)),
               Text(
                 '無法載入假日資料',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: colorScheme.error,
+                style: context.textTheme.titleMedium?.copyWith(
+                  color: context.colorScheme.error,
+                  fontSize: context.sp(16),
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              Gap(context.h(16)),
               ElevatedButton.icon(
                 icon: const Icon(Icons.refresh),
                 label: const Text('重試'),
@@ -404,7 +406,12 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab>
           ),
           const Gap(8.0),
           Padding(
-            padding: const EdgeInsets.fromLTRB(8.0, 0, 8.0, 8.0),
+            padding: EdgeInsets.fromLTRB(
+              context.w(8),
+              0,
+              context.w(8),
+              context.h(8),
+            ),
             // Combine selected date and attendance state
             // No need to listen to _selectedDateJoker again here, already passed
             child: widget.attendancePresenter.focusOn<AttendanceState>(
@@ -494,6 +501,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (BuildContext sheetContext) {
+        // Directly use context extension for the sheet's theme data
         final sheetTheme = Theme.of(sheetContext);
         final sheetColorScheme = sheetTheme.colorScheme;
         final safeAreaBottom = MediaQuery.viewInsetsOf(sheetContext).bottom;
@@ -506,36 +514,37 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
             ),
             decoration: BoxDecoration(
               color: sheetColorScheme.surfaceContainer,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
+              borderRadius: BorderRadius.vertical(
+                top: Radius.circular(context.r(20)),
               ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 10.0),
+                  padding: EdgeInsets.symmetric(vertical: context.h(10)),
                   child: Container(
-                    width: 40,
-                    height: 5,
+                    width: context.w(40),
+                    height: context.h(5),
                     decoration: BoxDecoration(
                       color: sheetColorScheme.onSurfaceVariant.withValues(
                         alpha: 0.4,
                       ),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(context.r(10)),
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: EdgeInsets.symmetric(horizontal: context.w(16)),
                   child: Text(
                     "選擇日期範圍",
                     style: sheetTheme.textTheme.titleLarge?.copyWith(
                       color: sheetColorScheme.onSurface,
+                      fontSize: context.sp(22),
                     ),
                   ),
                 ),
-                const Divider(height: 16, thickness: 0.5),
+                Divider(height: context.h(16), thickness: context.w(0.5)),
                 Flexible(
                   child: SfDateRangePicker(
                     initialSelectedRange: currentSheetSelection,
@@ -552,6 +561,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                       viewHeaderStyle: DateRangePickerViewHeaderStyle(
                         textStyle: TextStyle(
                           color: sheetColorScheme.onSurfaceVariant,
+                          fontSize: context.sp(12),
                         ),
                       ),
                     ),
@@ -560,12 +570,17 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                       textAlign: TextAlign.center,
                       textStyle: sheetTheme.textTheme.titleMedium?.copyWith(
                         color: sheetColorScheme.onSurface,
+                        fontSize: context.sp(16),
                       ),
                     ),
                     monthCellStyle: DateRangePickerMonthCellStyle(
-                      textStyle: TextStyle(color: sheetColorScheme.onSurface),
+                      textStyle: TextStyle(
+                        color: sheetColorScheme.onSurface,
+                        fontSize: context.sp(14),
+                      ),
                       todayTextStyle: TextStyle(
                         color: sheetColorScheme.primary,
+                        fontSize: context.sp(14),
                       ),
                       todayCellDecoration: BoxDecoration(
                         border: Border.all(color: sheetColorScheme.primary),
@@ -573,15 +588,21 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                       ),
                       disabledDatesTextStyle: TextStyle(
                         color: sheetColorScheme.outline.withValues(alpha: 0.5),
+                        fontSize: context.sp(14),
                       ),
                     ),
                     yearCellStyle: DateRangePickerYearCellStyle(
-                      textStyle: TextStyle(color: sheetColorScheme.onSurface),
+                      textStyle: TextStyle(
+                        color: sheetColorScheme.onSurface,
+                        fontSize: context.sp(14),
+                      ),
                       todayTextStyle: TextStyle(
                         color: sheetColorScheme.primary,
+                        fontSize: context.sp(14),
                       ),
                       disabledDatesTextStyle: TextStyle(
                         color: sheetColorScheme.outline.withValues(alpha: 0.5),
+                        fontSize: context.sp(14),
                       ),
                     ),
                     rangeSelectionColor: sheetColorScheme.primaryContainer
@@ -590,9 +611,11 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                     endRangeSelectionColor: sheetColorScheme.primary,
                     selectionTextStyle: TextStyle(
                       color: sheetColorScheme.onPrimary,
+                      fontSize: context.sp(14),
                     ),
                     rangeTextStyle: TextStyle(
                       color: sheetColorScheme.onPrimaryContainer,
+                      fontSize: context.sp(14),
                     ),
                     minDate: DateTime(2010),
                     maxDate: DateTime(2030),
@@ -601,9 +624,9 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 12.0,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.w(16),
+                    vertical: context.h(12),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -611,11 +634,14 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                       TextButton(
                         child: Text(
                           '取消',
-                          style: TextStyle(color: sheetColorScheme.secondary),
+                          style: TextStyle(
+                            color: sheetColorScheme.secondary,
+                            fontSize: context.sp(14),
+                          ),
                         ),
                         onPressed: () => Navigator.pop(sheetContext),
                       ),
-                      const Gap(8.0),
+                      Gap(context.w(8)),
                       ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: sheetColorScheme.primary,
@@ -643,7 +669,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                     ],
                   ),
                 ),
-                const Gap(20.0),
+                Gap(context.h(20)),
               ],
             ),
           ),
@@ -695,15 +721,22 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
     final endDate = _endDateJoker.state;
 
     if (startDate == null || endDate == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('請先選擇日期範圍')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('請先選擇日期範圍', style: TextStyle(fontSize: context.sp(14))),
+        ),
+      );
       return;
     }
     if (endDate.isBefore(startDate)) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('結束日期不能早於開始日期')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '結束日期不能早於開始日期',
+            style: TextStyle(fontSize: context.sp(14)),
+          ),
+        ),
+      );
       return;
     }
 
@@ -721,9 +754,14 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
     } catch (e) {
       debugPrint("Error calling getAttendanceRecords: $e");
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('查詢失敗: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '查詢失敗: $e',
+              style: TextStyle(fontSize: context.sp(14)),
+            ),
+          ),
+        );
       }
     }
   }
@@ -743,9 +781,6 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return [_startDateJoker, _endDateJoker].assemble<(DateTime?, DateTime?)>(
       converter: (values) => (values[0] as DateTime?, values[1] as DateTime?),
       builder: (context, dateData) {
@@ -822,7 +857,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                     );
                     final statusColor = CalendarUtils.getStatusTagColor(
                       statusTag,
-                      colorScheme,
+                      context.colorScheme,
                     );
                     final statusIcon = CalendarUtils.getStatusTagIcon(
                       statusTag,

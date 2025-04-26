@@ -76,7 +76,6 @@ class LoginInterceptor extends Interceptor {
         // Handle potential parsing errors or missing keys gracefully.
         // We assume if parsing fails, it's not the specific "fail" JSON structure.
         // Log the error for debugging if necessary.
-        // print('Error processing login response data: $e');
       }
     }
     // If not the login API, not status 200, or not the "fail" structure,

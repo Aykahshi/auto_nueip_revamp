@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:joker_state/joker_state.dart';
+
+import '../../core/extensions/theme_extensions.dart';
 
 /// A card widget to display clock-in or clock-out time information.
 class TimeCard extends StatelessWidget {
@@ -33,57 +36,61 @@ class TimeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = Theme.of(context).colorScheme.surfaceContainerHighest;
-    final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
+    final cardColor = context.colorScheme.surfaceContainerHighest;
+    final titleStyle = context.textTheme.bodyMedium?.copyWith(
+      color: context.colorScheme.onSurfaceVariant,
       fontWeight: FontWeight.w500,
+      fontSize: context.sp(14),
     );
-    final timeStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
+    final timeStyle = context.textTheme.titleLarge?.copyWith(
       fontWeight: FontWeight.bold,
-      color: Theme.of(context).colorScheme.primary,
+      color: context.colorScheme.primary,
+      fontSize: context.sp(22),
     );
     // For placeholder text
-    final placeholderStyle = Theme.of(context).textTheme.titleLarge?.copyWith(
+    final placeholderStyle = context.textTheme.titleLarge?.copyWith(
       fontWeight: FontWeight.bold,
-      color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.5),
+      color: context.colorScheme.outline.withValues(alpha: 0.5),
+      fontSize: context.sp(22),
     );
 
     return Card(
       elevation: 2.0,
       color: cardColor,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12.0),
+        borderRadius: BorderRadius.circular(context.r(12)),
         side: BorderSide(
-          color: Theme.of(
-            context,
-          ).colorScheme.outlineVariant.withValues(alpha: 0.3),
-          width: 1.0,
+          color: context.colorScheme.outlineVariant.withValues(alpha: 0.3),
+          width: context.w(1),
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+        padding: EdgeInsets.symmetric(
+          horizontal: context.w(16),
+          vertical: context.h(12),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 18, color: iconColor),
-                const Gap(6),
+                Icon(icon, size: context.r(18), color: iconColor),
+                Gap(context.w(6)),
                 Text(title, style: titleStyle),
               ],
             ),
-            const Gap(8),
+            Gap(context.h(8)),
             isLoading.reveal(
               whenTrue: SizedBox(
-                height: 40,
+                height: context.h(40),
                 child: Center(
                   child: SizedBox(
-                    width: 20,
-                    height: 20,
+                    width: context.r(20),
+                    height: context.r(20),
                     child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Theme.of(context).colorScheme.primary,
+                      strokeWidth: context.w(2),
+                      color: context.colorScheme.primary,
                     ),
                   ),
                 ),

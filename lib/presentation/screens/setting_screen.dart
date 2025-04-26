@@ -1,9 +1,11 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:joker_state/joker_state.dart';
 
+import '../../core/extensions/theme_extensions.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/utils/local_storage.dart';
@@ -35,18 +37,18 @@ class _SettingScreenState extends State<SettingScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('設定'), centerTitle: true, elevation: 1),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        padding: EdgeInsets.symmetric(horizontal: context.w(16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Gap(16),
+            Gap(context.h(16)),
             // Profile Section
             _buildProfileSection(context, _presenter)
                 .animate()
                 .fadeIn(duration: 600.ms)
                 .slideY(begin: 0.2, end: 0, duration: 400.ms),
 
-            const Gap(24),
+            Gap(context.h(24)),
 
             // Account Settings
             _buildSettingsSection(context, '帳號設定', [
@@ -56,9 +58,14 @@ class _SettingScreenState extends State<SettingScreen> {
                     icon: Icons.person_outline,
                     onTap: () {
                       // Navigate to account editing screen
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(const SnackBar(content: Text('編輯帳號資訊 ')));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            '編輯帳號資訊 ',
+                            style: TextStyle(fontSize: context.sp(14)),
+                          ),
+                        ),
+                      );
                     },
                   ),
                   _buildSettingTile(
@@ -75,7 +82,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 .fadeIn(duration: 700.ms)
                 .slideY(begin: 0.2, end: 0, duration: 500.ms),
 
-            const Gap(16),
+            Gap(context.h(16)),
 
             // App Settings
             _buildSettingsSection(context, 'APP 設定', [
@@ -123,7 +130,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 .fadeIn(duration: 800.ms)
                 .slideY(begin: 0.2, end: 0, duration: 600.ms),
 
-            const Gap(16),
+            Gap(context.h(16)),
 
             // About Section
             _buildSettingsSection(context, '關於', [
@@ -147,7 +154,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 .fadeIn(duration: 900.ms)
                 .slideY(begin: 0.2, end: 0, duration: 700.ms),
 
-            const Gap(40),
+            Gap(context.h(40)),
           ],
         ),
       ),
@@ -171,9 +178,11 @@ Future<void> _requestNotificationPermissions(
 
     // Show success message
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('通知功能已啟用')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('通知功能已啟用', style: TextStyle(fontSize: context.sp(14))),
+        ),
+      );
     }
   } catch (e) {
     // If unable to send notification, permission denied
@@ -182,9 +191,14 @@ Future<void> _requestNotificationPermissions(
 
     // Show error message
     if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('無法啟用通知功能，請在設定中允許通知權限')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '無法啟用通知功能，請在設定中允許通知權限',
+            style: TextStyle(fontSize: context.sp(14)),
+          ),
+        ),
+      );
     }
   }
 }
@@ -192,9 +206,6 @@ Future<void> _requestNotificationPermissions(
 Widget _buildProfileSection(BuildContext context, SettingPresenter presenter) {
   return presenter.perform(
     builder: (context, state) {
-      final theme = Theme.of(context);
-      final colorScheme = theme.colorScheme;
-      final textTheme = theme.textTheme;
       final userInfo = state.userInfo; // Access the UserInfo object
 
       // Fallback values for display
@@ -208,10 +219,13 @@ Widget _buildProfileSection(BuildContext context, SettingPresenter presenter) {
           child: Card(
             elevation: 1,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(context.r(16)),
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+              padding: EdgeInsets.symmetric(
+                vertical: context.h(20),
+                horizontal: context.w(16),
+              ),
               child: Row(
                 children: [
                   // Profile Image (using asset based on theme)
@@ -219,8 +233,9 @@ Widget _buildProfileSection(BuildContext context, SettingPresenter presenter) {
                     builder: (context, themeMode) {
                       final isDarkMode = themeMode == AppThemeMode.dark;
                       return CircleAvatar(
-                        radius: 45, // Slightly smaller radius
-                        backgroundColor: colorScheme.surfaceContainerHighest,
+                        radius: context.r(45),
+                        backgroundColor:
+                            context.colorScheme.surfaceContainerHighest,
                         backgroundImage: AssetImage(
                           isDarkMode
                               ? 'assets/images/logo_dark.png'
@@ -229,7 +244,7 @@ Widget _buildProfileSection(BuildContext context, SettingPresenter presenter) {
                       );
                     },
                   ),
-                  const Gap(16),
+                  Gap(context.w(16)),
                   // User Info Text Column
                   Expanded(
                     child: Column(
@@ -237,26 +252,29 @@ Widget _buildProfileSection(BuildContext context, SettingPresenter presenter) {
                       children: [
                         Text(
                           displayName,
-                          style: textTheme.titleLarge?.copyWith(
+                          style: context.textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.bold,
+                            fontSize: context.sp(22),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const Gap(4),
+                        Gap(context.h(4)),
                         Text(
                           displayDept,
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                            fontSize: context.sp(14),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const Gap(2),
+                        Gap(context.h(2)),
                         Text(
                           displayCompany,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: colorScheme.outline,
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.outline,
+                            fontSize: context.sp(12),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -283,19 +301,20 @@ Widget _buildSettingsSection(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Padding(
-        padding: const EdgeInsets.only(left: 8.0, bottom: 8.0),
+        padding: EdgeInsets.only(left: context.w(8), bottom: context.h(8)),
         child: Text(
           title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          style: context.textTheme.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            color: Theme.of(context).colorScheme.primary,
+            color: context.colorScheme.primary,
+            fontSize: context.sp(16),
           ),
         ),
       ),
       Card(
         elevation: 1,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
+          borderRadius: BorderRadius.circular(context.r(16)),
         ),
         child: Column(children: children),
       ),
@@ -311,16 +330,23 @@ Widget _buildSettingTile(
   required Function()? onTap,
   bool isDestructive = false,
 }) {
-  final colorScheme = Theme.of(context).colorScheme;
-  final color = isDestructive ? Colors.red : colorScheme.onSurface;
+  final color = isDestructive ? Colors.red : context.colorScheme.onSurface;
 
   return ListTile(
         leading: Icon(icon, color: color),
-        title: Text(title, style: TextStyle(color: color)),
-        subtitle: subtitle != null ? Text(subtitle) : null,
+        title: Text(
+          title,
+          style: TextStyle(color: color, fontSize: context.sp(16)),
+        ),
+        subtitle:
+            subtitle != null
+                ? Text(subtitle, style: TextStyle(fontSize: context.sp(14)))
+                : null,
         trailing: onTap != null ? const Icon(Icons.chevron_right) : null,
         onTap: onTap,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(context.r(12)),
+        ),
       )
       .animate()
       .fadeIn(duration: 300.ms)
@@ -337,9 +363,11 @@ Widget _buildSwitchTile(
 }) {
   return ListTile(
         leading: Icon(icon),
-        title: Text(title),
+        title: Text(title, style: TextStyle(fontSize: context.sp(16))),
         trailing: Switch(value: value, onChanged: onChanged),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(context.r(12)),
+        ),
       )
       .animate()
       .fadeIn(duration: 300.ms)
@@ -352,12 +380,15 @@ void _showClearDataDialog(BuildContext context) {
     context: context,
     builder: (context) {
       return AlertDialog(
-        title: const Text('清除帳號資料'),
-        content: const Text('您確定要清除帳號資料嗎？此操作無法復原。'),
+        title: Text('清除帳號資料', style: TextStyle(fontSize: context.sp(20))),
+        content: Text(
+          '您確定要清除帳號資料嗎？此操作無法復原。',
+          style: TextStyle(fontSize: context.sp(16)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
+            child: Text('取消', style: TextStyle(fontSize: context.sp(14))),
           ),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -366,13 +397,18 @@ void _showClearDataDialog(BuildContext context) {
               await LocalStorage.clear();
               if (context.mounted) {
                 Navigator.pop(context);
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('帳號資料已清除')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      '帳號資料已清除',
+                      style: TextStyle(fontSize: context.sp(14)),
+                    ),
+                  ),
+                );
                 context.router.replace(const LoginRoute());
               }
             },
-            child: const Text('清除'),
+            child: Text('清除', style: TextStyle(fontSize: context.sp(14))),
           ),
         ],
       ).animate().scale(duration: 300.ms, curve: Curves.easeOutBack);

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+
+import '../../core/extensions/theme_extensions.dart'; // Import theme extension
 
 /// A widget that displays the SfCalendar with specific configurations.
 class CalendarViewWidget extends StatelessWidget {
@@ -21,18 +24,16 @@ class CalendarViewWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final today = DateUtils.dateOnly(DateTime.now());
 
     return Card(
-      margin: const EdgeInsets.all(
-        8.0,
-      ), // Keep card margin for visual separation
+      margin: EdgeInsets.all(context.i(8)), // Use context.i
       elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.r(12)),
+      ), // Use context.r
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: EdgeInsets.all(context.i(8)), // Use context.i
         child: SfCalendar(
           controller: controller,
           view: CalendarView.month,
@@ -44,24 +45,29 @@ class CalendarViewWidget extends StatelessWidget {
           ),
           headerStyle: CalendarHeaderStyle(
             textAlign: TextAlign.center,
-            textStyle: theme.textTheme.titleLarge?.copyWith(
+            textStyle: context.textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w500,
+              fontSize: context.sp(22), // Use context.sp
             ),
             backgroundColor: Colors.transparent,
           ),
           viewHeaderStyle: ViewHeaderStyle(
-            dayTextStyle: theme.textTheme.bodySmall?.copyWith(
+            dayTextStyle: context.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w600,
-              color: colorScheme.onSurfaceVariant,
+              color: context.colorScheme.onSurfaceVariant,
+              fontSize: context.sp(12), // Use context.sp
             ),
             backgroundColor: Colors.transparent,
           ),
           cellBorderColor: Colors.transparent,
           todayHighlightColor:
-              colorScheme.primary, // Keep default today highlight
+              context.colorScheme.primary, // Use context.colorScheme
           selectionDecoration: BoxDecoration(
             color: Colors.transparent,
-            border: Border.all(color: colorScheme.primary, width: 1.5),
+            border: Border.all(
+              color: context.colorScheme.primary, // Use context.colorScheme
+              width: context.w(1.5), // Use context.w
+            ),
             shape: BoxShape.circle,
           ),
           onSelectionChanged: (CalendarSelectionDetails details) {
@@ -79,44 +85,49 @@ class CalendarViewWidget extends StatelessWidget {
             final bool isOutsideMonth =
                 cellDate.month != controller.displayDate?.month;
 
-            Color textColor = colorScheme.onSurface; // Default
+            Color textColor = context.colorScheme.onSurface; // Default
             FontWeight fontWeight = FontWeight.normal;
             BoxDecoration? decoration;
 
             if (isOutsideMonth) {
               // Style for dates outside the current month
-              textColor = colorScheme.onSurface.withValues(alpha: 0.38);
+              textColor = context.colorScheme.onSurface.withValues(alpha: 0.38);
               fontWeight = FontWeight.normal;
               decoration = null; // No special decoration
             } else {
               // --- Styles for dates within the current month ---
               // Default for inside month
-              textColor = colorScheme.onSurface;
+              textColor = context.colorScheme.onSurface;
               fontWeight = FontWeight.normal;
               decoration = null;
 
               // Apply Holiday style
               if (isHoliday) {
-                textColor = colorScheme.error;
+                textColor = context.colorScheme.error;
               }
 
               // Apply Today style (overrides Holiday text color)
               if (isToday) {
-                textColor = colorScheme.primary;
+                textColor = context.colorScheme.primary;
                 fontWeight = FontWeight.bold;
                 decoration = BoxDecoration(
-                  color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+                  color: context.colorScheme.primaryContainer.withValues(
+                    alpha: 0.3,
+                  ),
                   shape: BoxShape.circle,
                 );
               }
 
               // Apply Selected style (overrides Today and Holiday text color)
               if (isSelected) {
-                textColor = colorScheme.primary; // Selected text is primary
+                textColor = context.colorScheme.primary;
                 fontWeight = FontWeight.bold;
                 // Apply border, keep today's background if applicable
                 decoration = (decoration ?? const BoxDecoration()).copyWith(
-                  border: Border.all(color: colorScheme.primary, width: 1.5),
+                  border: Border.all(
+                    color: context.colorScheme.primary,
+                    width: context.w(1.5), // Use context.w
+                  ),
                   shape: BoxShape.circle,
                   // Keep today's background color, otherwise transparent
                   color: isToday ? decoration?.color : Colors.transparent,
@@ -129,7 +140,11 @@ class CalendarViewWidget extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 details.date.day.toString(),
-                style: TextStyle(color: textColor, fontWeight: fontWeight),
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: fontWeight,
+                  fontSize: context.sp(14), // Use context.sp
+                ),
               ),
             );
           },

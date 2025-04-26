@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/extensions/theme_extensions.dart';
 import '../../core/utils/calendar_utils.dart';
 import '../../data/models/attendance_details.dart';
 import '../screens/calendar_screen.dart';
@@ -18,9 +20,6 @@ class AttendanceListTile extends StatelessWidget {
   // Method to show the details dialog
   Future<void> _showDetailsDialog(BuildContext context) {
     final record = tileData.record;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
 
     // Format the full date for the dialog title
     String dialogTitleDate = '未知日期';
@@ -53,19 +52,30 @@ class AttendanceListTile extends StatelessWidget {
     return showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) {
+        // Use context from dialog builder for dialog-specific theme data
+        final dialogTheme = Theme.of(dialogContext);
+        final dialogColorScheme = dialogTheme.colorScheme;
+        final dialogTextTheme = dialogTheme.textTheme;
+
         return AlertDialog(
           // Use a more subtle background
-          backgroundColor: colorScheme.surfaceContainer,
+          backgroundColor: dialogColorScheme.surfaceContainer,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
+            borderRadius: BorderRadius.circular(context.r(16)),
           ),
-          titlePadding: const EdgeInsets.only(top: 24, bottom: 8),
+          titlePadding: EdgeInsets.only(
+            top: context.h(24),
+            bottom: context.h(8),
+          ),
           contentPadding:
               EdgeInsets.zero, // Remove default padding, handle inside content
           title: Text(
             dialogTitle,
             textAlign: TextAlign.center,
-            style: textTheme.titleLarge?.copyWith(color: colorScheme.primary),
+            style: dialogTextTheme.titleLarge?.copyWith(
+              color: dialogColorScheme.primary,
+              fontSize: context.sp(22),
+            ),
           ),
           content: Container(
             width: double.maxFinite, // Ensure container takes width
@@ -73,23 +83,23 @@ class AttendanceListTile extends StatelessWidget {
               maxHeight: MediaQuery.sizeOf(context).height * 0.6, // Max height
             ),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+              padding: EdgeInsets.fromLTRB(context.w(20), 0, context.w(20), 0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Center(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10.0,
-                        vertical: 5,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.w(10),
+                        vertical: context.h(5),
                       ),
                       decoration: BoxDecoration(
                         color: tileData.statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12.0),
+                        borderRadius: BorderRadius.circular(context.r(12)),
                         border: Border.all(
                           color: tileData.statusColor.withValues(alpha: 0.3),
-                          width: 1.0,
+                          width: context.w(1),
                         ),
                       ),
                       child: Row(
@@ -97,23 +107,24 @@ class AttendanceListTile extends StatelessWidget {
                         children: [
                           Icon(
                             tileData.statusIcon,
-                            size: 14,
+                            size: context.r(14),
                             color: tileData.statusColor,
                           ),
-                          const Gap(4),
+                          Gap(context.w(4)),
                           Text(
                             tileData.statusTag,
-                            style: textTheme.labelMedium?.copyWith(
+                            style: dialogTextTheme.labelMedium?.copyWith(
                               color: tileData.statusColor,
                               height: 1.1,
                               fontWeight: FontWeight.bold,
+                              fontSize: context.sp(12),
                             ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const Gap(16),
+                  Gap(context.h(16)),
                   // Display details based on record data
                   if (record.attendance != null &&
                       !record.attendance!.isAbsent &&
@@ -146,18 +157,21 @@ class AttendanceListTile extends StatelessWidget {
                     ..._buildSection(context, '假日說明', [
                       Text(
                         record.dateInfo!.holiday!,
-                        style: textTheme.bodyMedium,
+                        style: dialogTextTheme.bodyMedium?.copyWith(
+                          fontSize: context.sp(14),
+                        ),
                       ),
                     ]),
                   if (tileData.statusTag == '曠職')
                     Center(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        padding: EdgeInsets.symmetric(vertical: context.h(16)),
                         child: Text(
                           '曠職',
-                          style: textTheme.titleLarge?.copyWith(
-                            color: colorScheme.error,
+                          style: dialogTextTheme.titleLarge?.copyWith(
+                            color: dialogColorScheme.error,
                             fontWeight: FontWeight.bold,
+                            fontSize: context.sp(22),
                           ),
                         ),
                       ),
@@ -168,11 +182,12 @@ class AttendanceListTile extends StatelessWidget {
                       (record.overtime?.isEmpty ?? true))
                     Center(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 16.0),
+                        padding: EdgeInsets.symmetric(vertical: context.h(16)),
                         child: Text(
                           '無出勤紀錄',
-                          style: textTheme.bodyLarge?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
+                          style: dialogTextTheme.bodyLarge?.copyWith(
+                            color: dialogColorScheme.onSurfaceVariant,
+                            fontSize: context.sp(16),
                           ),
                         ),
                       ),
@@ -181,10 +196,13 @@ class AttendanceListTile extends StatelessWidget {
               ),
             ),
           ),
-          actionsPadding: const EdgeInsets.only(bottom: 8, right: 16),
+          actionsPadding: EdgeInsets.only(
+            bottom: context.h(8),
+            right: context.w(16),
+          ),
           actions: [
             TextButton(
-              child: const Text('關閉'),
+              child: Text('關閉', style: TextStyle(fontSize: context.sp(14))),
               onPressed: () => Navigator.of(dialogContext).pop(),
             ),
           ],
@@ -199,25 +217,25 @@ class AttendanceListTile extends StatelessWidget {
     String title,
     List<Widget> children,
   ) {
-    final theme = Theme.of(context);
     return [
       Text(
         title,
-        style: theme.textTheme.titleSmall?.copyWith(
+        style: context.textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.bold,
+          fontSize: context.sp(14),
         ),
       ),
-      const Gap(4),
+      Gap(context.h(4)),
       Card(
         elevation: 0,
-        color: theme.colorScheme.surfaceContainerHighest,
+        color: context.colorScheme.surfaceContainerHighest,
         margin: EdgeInsets.zero,
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: EdgeInsets.all(context.i(12)),
           child: Column(children: children),
         ),
       ),
-      const Gap(12), // Space between sections
+      Gap(context.h(12)),
     ];
   }
 
@@ -336,7 +354,9 @@ class AttendanceListTile extends StatelessWidget {
           Center(
             child: Text(
               '無有效出勤資訊',
-              style: Theme.of(context).textTheme.bodyMedium,
+              style: context.textTheme.bodyMedium?.copyWith(
+                fontSize: context.sp(14),
+              ),
             ),
           ),
         ]
@@ -349,8 +369,6 @@ class AttendanceListTile extends StatelessWidget {
     List<TimeOffRecord> timeoffs,
   ) {
     if (timeoffs.isEmpty) return []; // Guard clause
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
     final leaveRecord = timeoffs.first; // Get only the first record
 
     return [
@@ -358,20 +376,20 @@ class AttendanceListTile extends StatelessWidget {
         icon: Icons.category_outlined,
         label: '請假類別',
         value: leaveRecord.ruleName ?? 'N/A',
-        valueColor: colorScheme.secondary,
+        valueColor: context.colorScheme.secondary,
       ),
       DetailInfoRow(
         icon: Icons.access_time_outlined,
         label: '請假時段',
         value: leaveRecord.time ?? '--',
-        valueColor: colorScheme.secondary,
+        valueColor: context.colorScheme.secondary,
       ),
       if (leaveRecord.remark != null && leaveRecord.remark!.isNotEmpty)
         DetailInfoRow(
           icon: Icons.notes_outlined,
           label: '請假原因',
           value: leaveRecord.remark ?? 'N/A',
-          valueColor: colorScheme.secondary,
+          valueColor: context.colorScheme.secondary,
           maxLines: null,
         ),
     ];
@@ -406,9 +424,6 @@ class AttendanceListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
     final record = tileData.record;
 
     // Recompute date parts here as build is called separately
@@ -545,85 +560,97 @@ class AttendanceListTile extends StatelessWidget {
     return InkWell(
       // Wrap Card with InkWell
       onTap: () => _showDetailsDialog(context), // Call the dialog method
-      borderRadius: BorderRadius.circular(10.0), // Match Card shape
+      borderRadius: BorderRadius.circular(context.r(10)), // Match Card shape
       child: Card(
         elevation: 0.5,
-        margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.5),
-        color: colorScheme.surfaceContainerHighest, // Slightly higher contrast
+        margin: EdgeInsets.symmetric(
+          horizontal: context.w(8),
+          vertical: context.h(4.5),
+        ), // Use context.w/h
+        color:
+            context
+                .colorScheme
+                .surfaceContainerHighest, // Use context.colorScheme
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          borderRadius: BorderRadius.circular(context.r(10)), // Use context.r
         ),
         clipBehavior: Clip.antiAlias,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+          padding: EdgeInsets.symmetric(
+            horizontal: context.w(12),
+            vertical: context.h(10),
+          ), // Use context.w/h
           child: Row(
             children: [
               // Left side: Date and Weekday
               SizedBox(
                 width:
                     tileData.showYear
-                        ? 80
-                        : 65, // Adjust width if year is shown
+                        ? context.w(80) // Use context.w
+                        : context.w(65), // Adjust width if year is shown
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       datePart, // Directly use the formatted date
-                      style: textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
+                      style: context.textTheme.titleMedium?.copyWith(
+                        color: context.colorScheme.primary,
                         fontWeight: FontWeight.bold,
                         fontSize:
                             tileData.showYear
-                                ? 13
-                                : null, // Slightly smaller if year included
+                                ? context.sp(13) // Use context.sp
+                                : context.sp(16), // Use context.sp
                         height: 1.1,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const Gap(3),
+                    Gap(context.h(3)), // Use context.h
                     Text(
                       weekdayPart, // Use the calculated weekday
-                      style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
+                      style: context.textTheme.bodySmall?.copyWith(
+                        color: context.colorScheme.onSurfaceVariant,
                         height: 1.1,
+                        fontSize: context.sp(12), // Use context.sp
                       ),
                       textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               ),
-              const VerticalDivider(
-                width: 16,
-                thickness: 1,
-                indent: 5,
-                endIndent: 5,
+              VerticalDivider(
+                width: context.w(16), // Use context.w
+                thickness: context.w(1), // Use context.w
+                indent: context.h(5), // Use context.h
+                endIndent: context.h(5), // Use context.h
               ),
               // Middle: Details Column
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(
-                    left: 4.0,
+                  padding: EdgeInsets.only(
+                    left: context.w(4), // Use context.w
                   ), // Keep slight indent for details
                   child: contentDetails,
                 ),
               ),
-              const Gap(8), // Add some spacing before the tag
+              Gap(context.w(8)), // Use context.w
               // Right side: Status Tag (Container)
               ConstrainedBox(
-                constraints: const BoxConstraints(
-                  minWidth: 75, // Minimum width for the status tag
+                constraints: BoxConstraints(
+                  minWidth: context.w(75), // Minimum width for the status tag
                 ),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8.0,
-                    vertical: 4.0,
-                  ),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: context.w(8),
+                    vertical: context.h(4),
+                  ), // Use context.w/h
                   decoration: BoxDecoration(
                     color: tileData.statusColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12.0),
+                    borderRadius: BorderRadius.circular(
+                      context.r(12),
+                    ), // Use context.r
                     border: Border.all(
                       color: tileData.statusColor.withValues(alpha: 0.3),
-                      width: 1.0,
+                      width: context.w(1), // Use context.w
                     ),
                   ),
                   child: Row(
@@ -633,18 +660,19 @@ class AttendanceListTile extends StatelessWidget {
                     children: [
                       Icon(
                         tileData.statusIcon,
-                        size: 14,
+                        size: context.r(14), // Use context.r
                         color: tileData.statusColor,
                       ),
-                      const Gap(4),
+                      Gap(context.w(4)), // Use context.w
                       Flexible(
                         // Allow text to wrap if needed, though unlikely with minWidth
                         child: Text(
                           tileData.statusTag,
-                          style: textTheme.labelMedium?.copyWith(
+                          style: context.textTheme.labelMedium?.copyWith(
                             color: tileData.statusColor,
                             fontWeight: FontWeight.w600,
                             height: 1.1,
+                            fontSize: context.sp(12), // Use context.sp
                           ),
                           overflow: TextOverflow.ellipsis, // Handle overflow
                         ),
@@ -668,33 +696,33 @@ class AttendanceListTile extends StatelessWidget {
     Color? color, // Specific color for status (like leave, OT)
     int? maxLines = 1, // Allow specifying maxLines
   }) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    // Use provided color for both icon and text if available,
-    // otherwise, use default theme colors.
-    final Color iconColor =
-        color?.withValues(alpha: 0.8) ??
-        colorScheme.secondary.withValues(alpha: 0.7);
-    final Color textColor = color ?? colorScheme.onSurfaceVariant;
-
     return Padding(
-      padding: const EdgeInsets.only(top: 3.0),
+      padding: EdgeInsets.only(top: context.h(3)), // Use context.h
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             icon,
-            size: 15,
-            color: iconColor, // Apply determined icon color
+            size: context.r(15), // Use context.r
+            color:
+                color?.withValues(alpha: 0.8) ??
+                context.colorScheme.secondary.withValues(
+                  alpha: 0.7,
+                ), // Use context.colorScheme
           ),
-          const Gap(5),
+          Gap(context.w(5)), // Use context.w
           Expanded(
             child: Text(
               text,
               maxLines: maxLines, // Use passed maxLines
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: textColor, // Apply determined text color
+              style: context.textTheme.bodySmall?.copyWith(
+                color:
+                    color ??
+                    context
+                        .colorScheme
+                        .onSurfaceVariant, // Use context.colorScheme
                 height: 1.2, // Adjust line height
+                fontSize: context.sp(12), // Use context.sp
                 overflow:
                     maxLines == 1
                         ? TextOverflow.ellipsis

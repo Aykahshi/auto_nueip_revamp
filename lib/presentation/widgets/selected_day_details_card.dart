@@ -1,9 +1,11 @@
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/extensions/theme_extensions.dart';
 import '../../core/utils/calendar_utils.dart';
 import '../../data/models/attendance_details.dart';
 import 'detail_info_row.dart';
@@ -27,10 +29,6 @@ class SelectedDayDetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
     final String titleDate = DateFormat('yyyy / M / d').format(selectedDate);
     final String titleWeekday = CalendarUtils.getWeekdayName(
       selectedDate.weekday,
@@ -43,7 +41,10 @@ class SelectedDayDetailsCard extends StatelessWidget {
 
     if (isKnownHoliday && attendanceRecord == null) {
       statusTag = '假日';
-      statusColor = CalendarUtils.getStatusTagColor(statusTag, colorScheme);
+      statusColor = CalendarUtils.getStatusTagColor(
+        statusTag,
+        context.colorScheme,
+      );
       statusIcon = CalendarUtils.getStatusTagIcon(statusTag);
     } else {
       statusTag = CalendarUtils.getAttendanceStatusTag(
@@ -52,7 +53,10 @@ class SelectedDayDetailsCard extends StatelessWidget {
         attendanceRecord?.overtime,
         isKnownHoliday,
       );
-      statusColor = CalendarUtils.getStatusTagColor(statusTag, colorScheme);
+      statusColor = CalendarUtils.getStatusTagColor(
+        statusTag,
+        context.colorScheme,
+      );
       statusIcon = CalendarUtils.getStatusTagIcon(statusTag);
     }
 
@@ -61,10 +65,12 @@ class SelectedDayDetailsCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       elevation: 1,
       clipBehavior: Clip.antiAlias,
-      color: colorScheme.surfaceContainerLowest,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.0)),
+      color: context.colorScheme.surfaceContainerLowest,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(context.r(8)),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: EdgeInsets.all(context.i(16)),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           mainAxisSize: MainAxisSize.min,
@@ -73,12 +79,13 @@ class SelectedDayDetailsCard extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 50.0),
+                  padding: EdgeInsets.symmetric(horizontal: context.w(50)),
                   child: Text(
                     titleText,
-                    style: textTheme.titleMedium?.copyWith(
+                    style: context.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: colorScheme.primary,
+                      color: context.colorScheme.primary,
+                      fontSize: context.sp(16),
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
@@ -89,28 +96,33 @@ class SelectedDayDetailsCard extends StatelessWidget {
                   Align(
                     alignment: Alignment.centerRight,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10.0,
-                        vertical: 5,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.w(10),
+                        vertical: context.h(5),
                       ),
                       decoration: BoxDecoration(
                         color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(12.0),
+                        borderRadius: BorderRadius.circular(context.r(12)),
                         border: Border.all(
                           color: statusColor.withValues(alpha: 0.3),
-                          width: 1.0,
+                          width: context.w(1),
                         ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(statusIcon, size: 14, color: statusColor),
-                          const SizedBox(width: 4),
+                          Icon(
+                            statusIcon,
+                            size: context.r(14),
+                            color: statusColor,
+                          ),
+                          SizedBox(width: context.w(4)),
                           Text(
                             statusTag,
-                            style: textTheme.labelSmall?.copyWith(
+                            style: context.textTheme.labelSmall?.copyWith(
                               color: statusColor,
                               height: 1.1,
+                              fontSize: context.sp(11),
                             ),
                           ),
                         ],
@@ -119,7 +131,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
                   ),
               ],
             ),
-            const Divider(height: 20, thickness: 0.5),
+            Divider(height: context.h(20), thickness: context.w(0.5)),
             AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               transitionBuilder: (child, animation) {
@@ -138,9 +150,6 @@ class SelectedDayDetailsCard extends StatelessWidget {
     String statusTag,
     Color statusColor,
   ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     if (isLoading) {
       return const Center(
         key: ValueKey('loading_details'),
@@ -178,8 +187,9 @@ class SelectedDayDetailsCard extends StatelessWidget {
       key: const ValueKey('no_data_details'),
       child: Text(
         '本日無出勤資料',
-        style: theme.textTheme.bodyLarge?.copyWith(
-          color: colorScheme.onSurfaceVariant,
+        style: context.textTheme.bodyLarge?.copyWith(
+          color: context.colorScheme.onSurfaceVariant,
+          fontSize: context.sp(16),
         ),
       ),
     );
@@ -190,16 +200,17 @@ class SelectedDayDetailsCard extends StatelessWidget {
     String? holidayDesc,
     String statusTag,
   ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final statusColor = CalendarUtils.getStatusTagColor(statusTag, colorScheme);
+    final statusColor = CalendarUtils.getStatusTagColor(
+      statusTag,
+      context.colorScheme,
+    );
     final statusIcon = Icons.auto_awesome;
     final displayStatus =
         holidayDesc == null || holidayDesc.isEmpty ? '假日' : holidayDesc;
 
     return Container(
       key: ValueKey('holiday_${selectedDate.toIso8601String()}'),
-      height: 150,
+      height: context.h(150),
       alignment: Alignment.center,
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -211,22 +222,27 @@ class SelectedDayDetailsCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(8.0),
+        borderRadius: BorderRadius.circular(context.r(8)),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(statusIcon, size: 52, color: statusColor.withValues(alpha: 0.9))
+          Icon(
+                statusIcon,
+                size: context.r(52),
+                color: statusColor.withValues(alpha: 0.9),
+              )
               .animate(onPlay: (controller) => controller.repeat(reverse: true))
               .scaleXY(end: 1.15, duration: 800.ms, curve: Curves.easeInOut)
               .fadeIn(),
-          const Gap(12),
+          Gap(context.h(12)),
           Text(
             displayStatus,
-            style: theme.textTheme.titleMedium?.copyWith(
+            style: context.textTheme.titleMedium?.copyWith(
               color: statusColor,
               fontWeight: FontWeight.w600,
+              fontSize: context.sp(16),
             ),
             textAlign: TextAlign.center,
           ),
@@ -239,20 +255,23 @@ class SelectedDayDetailsCard extends StatelessWidget {
     BuildContext context,
     List<TimeOffRecord> timeoffRecords,
   ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final leaveColor = colorScheme.secondary;
+    final leaveColor = context.colorScheme.secondary;
 
     return Container(
       key: const ValueKey('leave_details'),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8.0)),
-      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(context.r(8)),
+      ),
+      padding: EdgeInsets.symmetric(
+        vertical: context.h(8),
+        horizontal: context.w(4),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children:
             timeoffRecords.mapIndexed((index, leave) {
               return Padding(
-                padding: EdgeInsets.only(top: index > 0 ? 12.0 : 0),
+                padding: EdgeInsets.only(top: index > 0 ? context.h(12) : 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -261,8 +280,9 @@ class SelectedDayDetailsCard extends StatelessWidget {
                       label: '請假類別',
                       value: leave.ruleName ?? 'N/A',
                       valueColor: leaveColor,
-                      valueStyle: theme.textTheme.bodyMedium?.copyWith(
+                      valueStyle: context.textTheme.bodyMedium?.copyWith(
                         color: leaveColor,
+                        fontSize: context.sp(14),
                       ),
                     ),
                     DetailInfoRow(
@@ -270,8 +290,9 @@ class SelectedDayDetailsCard extends StatelessWidget {
                       label: '請假時間',
                       value: leave.time ?? '--',
                       valueColor: leaveColor,
-                      valueStyle: theme.textTheme.bodyMedium?.copyWith(
+                      valueStyle: context.textTheme.bodyMedium?.copyWith(
                         color: leaveColor,
+                        fontSize: context.sp(14),
                       ),
                     ),
                     if (leave.remark != null && leave.remark!.isNotEmpty)
@@ -280,16 +301,17 @@ class SelectedDayDetailsCard extends StatelessWidget {
                         label: '請假原因',
                         value: leave.remark!,
                         valueColor: leaveColor,
-                        valueStyle: theme.textTheme.bodyMedium?.copyWith(
+                        valueStyle: context.textTheme.bodyMedium?.copyWith(
                           color: leaveColor,
+                          fontSize: context.sp(14),
                         ),
                       ),
                     if (index < timeoffRecords.length - 1)
-                      const Divider(
-                        height: 16,
-                        thickness: 0.5,
-                        indent: 16,
-                        endIndent: 16,
+                      Divider(
+                        height: context.h(16),
+                        thickness: context.w(0.5),
+                        indent: context.w(16),
+                        endIndent: context.w(16),
                       ),
                   ],
                 ),
@@ -304,19 +326,19 @@ class SelectedDayDetailsCard extends StatelessWidget {
     AttendanceRecord record,
     String statusTag,
   ) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final valueStyle = textTheme.titleMedium?.copyWith(
+    final valueStyle = context.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.bold,
-      color: colorScheme.primary,
+      color: context.colorScheme.primary,
+      fontSize: context.sp(16),
     );
-    final labelStyle = textTheme.bodyMedium?.copyWith(
-      color: colorScheme.onSurfaceVariant,
+    final labelStyle = context.textTheme.bodyMedium?.copyWith(
+      color: context.colorScheme.onSurfaceVariant,
+      fontSize: context.sp(14),
     );
-    final placeholderStyle = textTheme.titleMedium?.copyWith(
+    final placeholderStyle = context.textTheme.titleMedium?.copyWith(
       fontWeight: FontWeight.bold,
-      color: colorScheme.outline.withValues(alpha: 0.6),
+      color: context.colorScheme.outline.withValues(alpha: 0.6),
+      fontSize: context.sp(16),
     );
 
     String getPunchTime(List<PunchRecord>? punches) {
@@ -371,7 +393,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
             ),
           if (record.overtime != null && record.overtime!.isNotEmpty)
             _buildOvertimeRow(context, record.overtime!.first, labelStyle),
-          const Gap(8),
+          Gap(context.h(8)),
         ],
       ).animate().fadeIn(duration: 200.ms),
     );
@@ -382,7 +404,6 @@ class SelectedDayDetailsCard extends StatelessWidget {
     OvertimeRecord ot,
     TextStyle? labelStyle,
   ) {
-    final textTheme = Theme.of(context).textTheme;
     final num? totalMinutes = num.tryParse(ot.totalTime ?? '');
     return DetailInfoRow(
       icon: Icons.more_time_outlined,
@@ -390,7 +411,10 @@ class SelectedDayDetailsCard extends StatelessWidget {
       value:
           '${ot.remark ?? 'N/A'} (${CalendarUtils.formatMinutes(totalMinutes)})',
       valueColor: Colors.red.shade600,
-      valueStyle: textTheme.bodyMedium?.copyWith(color: Colors.red.shade600),
+      valueStyle: context.textTheme.bodyMedium?.copyWith(
+        color: Colors.red.shade600,
+        fontSize: context.sp(14),
+      ),
       labelStyle: labelStyle,
     );
   }
