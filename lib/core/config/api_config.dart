@@ -10,6 +10,13 @@ sealed class ApiConfig {
   static const String TOKEN_URL = '$BASE_URL/oauth2/token/api';
   static const String RECORD_URL = '$BASE_URL/portal/Portal_punch_clock/ajax';
   static const String ATTENDANCE_URL = '$BASE_URL/attendance_record/ajax';
+  static const String INBOX_URL = '$BASE_URL/shared/getMessage';
+  static const String LEAVE_URL =
+      '$BASE_URL/leave_application/personal_leave_application_user/getLeaveList';
+  static const String UNREAD_URL =
+      'https://rd2-api.nueip.com/center/notice/get-unread';
+  static const String ANNOUNCEMENT_URL =
+      'https://rd2-api.nueip.com/center/notice';
   static const String HOLIDAY_URL =
       'https://cdn.jsdelivr.net/gh/ruyut/TaiwanCalendar/data/';
 

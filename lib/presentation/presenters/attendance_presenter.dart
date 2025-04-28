@@ -13,7 +13,7 @@ class AttendancePresenter extends Presenter<AttendanceState> {
   final NueipRepository _repository;
   late final String _userNo;
 
-  AttendancePresenter()
+  AttendancePresenter({super.keepAlive = true})
     : _repository = Circus.find<NueipRepositoryImpl>(),
       super(const AttendanceState.initial());
 

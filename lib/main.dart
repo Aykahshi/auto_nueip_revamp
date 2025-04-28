@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:joker_state/joker_state.dart';
 
+import 'core/config/storage_keys.dart';
 import 'core/network/api_client.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
@@ -13,7 +14,11 @@ import 'data/repositories/nueip_repository_impl.dart';
 import 'data/services/holiday_service.dart';
 import 'data/services/nueip_services.dart';
 import 'index.dart';
+import 'presentation/presenters/attendance_presenter.dart';
+import 'presentation/presenters/clock_presenter.dart';
+import 'presentation/presenters/holiday_presenter.dart';
 import 'presentation/presenters/login_presenter.dart';
+import 'presentation/presenters/setting_presenter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,6 +43,13 @@ Future<void> _initDependencies() async {
     keepAlive: true,
   );
 
+  // Add Company Address Joker registration
+  final initialAddress = LocalStorage.get<String>(
+    StorageKeys.companyAddress,
+    defaultValue: '',
+  );
+  Circus.summon<String>(initialAddress, tag: 'companyAddress', keepAlive: true);
+
   // Add API features registration
   Circus
     ..hire<ApiClient>(ApiClient())
@@ -52,8 +64,12 @@ Future<void> _initDependencies() async {
     ..hireLazily<HolidayRepositoryImpl>(() => HolidayRepositoryImpl())
     ..bindDependency<HolidayRepositoryImpl, HolidayService>();
 
-  // Add login presenter registration
-  Circus.hire<LoginPresenter>(LoginPresenter());
+  // Add Presenters registration
+  Circus.hireLazily<HolidayPresenter>(() => HolidayPresenter());
+  Circus.hireLazily<AttendancePresenter>(() => AttendancePresenter());
+  Circus.hireLazily<LoginPresenter>(() => LoginPresenter());
+  Circus.hireLazily<SettingPresenter>(() => SettingPresenter());
+  Circus.hireLazily<ClockPresenter>(() => ClockPresenter());
 
   // Add theme mode Joker registration
   Circus.summon<AppThemeMode>(

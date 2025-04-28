@@ -70,33 +70,33 @@ sealed class CalendarUtils {
     List<OvertimeRecord>? overtime,
     bool isHoliday,
   ) {
-    // Priority 1: Overtime
-    if (overtime != null && overtime.isNotEmpty) {
-      return '加班';
-    }
-    // Priority 2: Time Off (Leave)
-    if (timeoff != null && timeoff.isNotEmpty) {
-      // If time off exists, the tag is simply "請假"
-      return '請假';
-    }
+    // Priority 1: Specific events override attendance status
+    if (overtime != null && overtime.isNotEmpty) return '加班';
+    if (timeoff != null && timeoff.isNotEmpty) return '請假';
 
-    // --- Only check below if no Overtime and no Time Off ---
+    // Priority 2: Check absence first (曠職)
+    if (attendance != null && attendance.isAbsent) return '曠職';
 
-    // Priority 3: Holiday (if no OT/Leave)
+    // Priority 3: Check missing punch (缺卡) - Requires at least one punch
+    // Assumes isMissPunch correctly flags if either clockIn or clockOut is missing when expected.
+    if (attendance != null && attendance.isMissPunch) return '缺卡';
+
+    // Priority 4: Holiday (only if not OT/Leave/Absent/MissPunch)
     if (isHoliday) return '假日';
 
-    // Priority 4: Attendance Status (Workday, no OT/Leave)
+    // Priority 5: Attendance status if it's a workday with *complete* punches
+    // (If we reached here, it implies !isAbsent and !isMissPunch)
     if (attendance != null) {
-      if (attendance.isAbsent) return '曠職';
-      if (attendance.isMissPunch) return '缺卡';
       if (attendance.isLate && attendance.isLeaveEarly) return '遲到/早退';
       if (attendance.isLate) return '遲到';
       if (attendance.isLeaveEarly) return '早退';
-      // If punch in/out exists but no other issues
+
+      // If attendance exists, isn't absent, isn't missing punch, and isn't late/early,
+      // and we've passed the isMissPunch check, it implies punches are complete.
       return '正常';
     }
 
-    // Priority 5: No data at all (Workday, no record)
+    // Priority 6: No data at all (Workday, no attendance record)
     return '無資料';
   }
 
@@ -139,7 +139,7 @@ sealed class CalendarUtils {
       case '加班':
         return Icons.more_time_outlined;
       case '假日':
-        return Icons.cake_outlined;
+        return Icons.auto_awesome;
       case '無資料':
         return Icons.help_outline;
       // Default assumes leave type

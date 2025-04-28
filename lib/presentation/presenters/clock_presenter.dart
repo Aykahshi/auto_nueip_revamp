@@ -16,7 +16,7 @@ import '../../domain/repositories/nueip_repository.dart';
 class ClockPresenter extends Presenter<ClockState> {
   final NueipRepository _repository;
 
-  ClockPresenter({NueipRepository? repository})
+  ClockPresenter({NueipRepository? repository, super.keepAlive = true})
     : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
       super(
         const ClockState(

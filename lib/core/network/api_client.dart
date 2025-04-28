@@ -18,7 +18,12 @@ class ApiClient {
 
   ApiClient()
     : _dio = Dio(
-        BaseOptions(headers: ApiConfig.HEADERS, followRedirects: false),
+        BaseOptions(
+          headers: ApiConfig.HEADERS,
+          followRedirects: false,
+          connectTimeout: const Duration(seconds: 15),
+          receiveTimeout: const Duration(seconds: 15),
+        ),
       ),
       _cookieJar = CookieJar() {
     _dio.interceptors.add(CookieManager(_cookieJar));
@@ -30,7 +35,7 @@ class ApiClient {
         PrettyDioLogger(
           requestHeader: true,
           requestBody: true,
-          responseBody: false,
+          responseBody: true,
           responseHeader: false,
         ),
       );
@@ -40,6 +45,11 @@ class ApiClient {
   void updateAuthSession(AuthSession session) {
     _dio.options.headers['Cookie'] = session.cookie;
     _dio.options.headers['Authorization'] = 'Bearer ${session.accessToken}';
+  }
+
+  void clearAuthSession() {
+    _dio.options.headers['Cookie'] = '';
+    _dio.options.headers['Authorization'] = '';
   }
 
   Future<Response<T>> get<T>(

@@ -7,7 +7,7 @@ import '../../data/models/auth_session.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
 import '../config/api_config.dart';
 import '../extensions/cookie_parser.dart';
-import '../extensions/extract_token_from_html.dart';
+import '../extensions/htmlx.dart';
 import '../network/api_client.dart';
 import 'auth_utils.dart';
 

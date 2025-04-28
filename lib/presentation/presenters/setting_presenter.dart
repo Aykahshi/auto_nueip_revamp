@@ -1,6 +1,7 @@
 import 'package:joker_state/joker_state.dart';
 
 import '../../core/config/storage_keys.dart';
+import '../../core/utils/auth_utils.dart';
 import '../../core/utils/local_storage.dart';
 import '../../data/models/user_info.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
@@ -10,7 +11,7 @@ import '../../domain/repositories/nueip_repository.dart';
 class SettingPresenter extends Presenter<SettingState> {
   final NueipRepository _repository;
 
-  SettingPresenter()
+  SettingPresenter({super.keepAlive = true})
     : _repository = Circus.find<NueipRepositoryImpl>(),
       super(
         SettingState(
@@ -33,6 +34,12 @@ class SettingPresenter extends Presenter<SettingState> {
         ),
       ),
     );
+  }
+
+  Future<void> clearProflie() async {
+    await AuthUtils.resetAuthSession();
+    await AuthUtils.clearCredentials();
+    trickWith((state) => state.copyWith(error: null));
   }
 
   Future<void> getUserInfo() async {

@@ -9,7 +9,7 @@ class HolidayPresenter extends Presenter<HolidayState> {
   final HolidayRepository _repository;
 
   // Constructor finds the registered HolidayRepository via CircusRing
-  HolidayPresenter({HolidayRepository? repository})
+  HolidayPresenter({HolidayRepository? repository, super.keepAlive = true})
     : _repository = repository ?? Circus.find<HolidayRepositoryImpl>(),
       super(
         const HolidayState.initial(),

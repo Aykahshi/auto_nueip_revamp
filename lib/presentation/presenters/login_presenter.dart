@@ -30,7 +30,7 @@ class LoginPresenter extends Presenter<LoginStatus> {
       return;
     }
 
-    final (companyCode, employeeId, password) = AuthUtils.getCredentials();
+    final (companyCode, employeeId, password, _) = AuthUtils.getCredentials();
 
     if (companyCode.isEmpty || employeeId.isEmpty || password.isEmpty) {
       return;

@@ -4,17 +4,23 @@ import 'package:joker_state/joker_state.dart';
 import '../../data/models/auth_session.dart';
 import '../../presentation/presenters/login_presenter.dart';
 import '../config/storage_keys.dart';
+import '../network/api_client.dart';
 import 'local_storage.dart';
 
 sealed class AuthUtils {
   const AuthUtils._();
 
   static bool isLoggedIn() {
-    final (companyCode, employeeId, password) = getCredentials();
+    final (companyCode, employeeId, password, _) = getCredentials();
 
     return companyCode.isNotEmpty &&
         employeeId.isNotEmpty &&
         password.isNotEmpty;
+  }
+
+  static Future<void> resetAuthSession() async {
+    await LocalStorage.remove(StorageKeys.authSession);
+    Circus.find<ApiClient>().clearAuthSession();
   }
 
   /// Save auth data to storage
@@ -24,7 +30,7 @@ sealed class AuthUtils {
     String password,
   ) async {
     // ignore: no_leading_underscores_for_local_identifiers
-    final (_companyCode, _employeeId, _password) = getCredentials();
+    final (_companyCode, _employeeId, _password, _) = getCredentials();
 
     if (_companyCode == companyCode &&
         _employeeId == employeeId &&
@@ -44,8 +50,19 @@ sealed class AuthUtils {
     }
   }
 
-  static Future<void> checkAuthSession() async {
+  static Future<void> checkAuthSession({bool force = false}) async {
     final loginPresenter = Circus.find<LoginPresenter>();
+
+    if (force) {
+      await resetAuthSession();
+      final (companyCode, employeeId, password, _) = getCredentials();
+      await loginPresenter.login(
+        companyCode: companyCode,
+        employeeId: employeeId,
+        password: password,
+      );
+      return;
+    }
 
     await loginPresenter.init();
   }
@@ -77,6 +94,8 @@ sealed class AuthUtils {
   static Future<void> updateAuthSession(AuthSession session) async {
     Circus.spotlight<AuthSession>(tag: 'auth').whisper(session);
 
+    Circus.find<ApiClient>().updateAuthSession(session);
+
     await LocalStorage.set<List<String>>(StorageKeys.authSession, [
       session.accessToken ?? '',
       session.cookie ?? '',
@@ -95,21 +114,29 @@ sealed class AuthUtils {
     );
   }
 
-  static (String companyCode, String employeeId, String password)
+  static (
+    String companyCode,
+    String employeeId,
+    String password,
+    String companyAddress,
+  )
   getCredentials() {
     return (
       LocalStorage.get<String>(defaultValue: '', StorageKeys.companyCode),
       LocalStorage.get<String>(defaultValue: '', StorageKeys.employeeId),
       LocalStorage.get<String>(defaultValue: '', StorageKeys.password),
+      LocalStorage.get<String>(defaultValue: '', StorageKeys.companyAddress),
     );
   }
 
   /// Clear all auth data from storage
   static Future<void> clearCredentials() async {
     await Future.wait([
+      LocalStorage.remove(StorageKeys.authSession),
       LocalStorage.remove(StorageKeys.companyCode),
       LocalStorage.remove(StorageKeys.employeeId),
       LocalStorage.remove(StorageKeys.password),
+      LocalStorage.remove(StorageKeys.companyAddress),
     ]);
   }
 }

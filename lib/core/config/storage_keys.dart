@@ -12,9 +12,6 @@ sealed class StorageKeys {
   /// Key for storing the fetched holiday list.
   static const String holidays = 'holidays';
 
-  /// Key for storing the username.
-  static const String username = 'username';
-
   /// Key for storing the user number.
   static const String userNo = 'user_no';
 
@@ -26,4 +23,13 @@ sealed class StorageKeys {
 
   /// Key for storing the auth session.
   static const String authSession = 'auth_session';
+
+  /// Key for storing the company address.
+  static const String companyAddress = 'company_address';
+
+  /// Key for storing the company address latitude.
+  static const String companyLatitude = 'company_latitude';
+
+  /// Key for storing the company address longitude.
+  static const String companyLongitude = 'company_longitude';
 }

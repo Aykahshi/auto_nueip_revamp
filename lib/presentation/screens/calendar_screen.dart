@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -44,8 +44,8 @@ class _CalendarScreenState extends State<CalendarScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _attendancePresenter = AttendancePresenter();
-    _holidayPresenter = HolidayPresenter();
+    _attendancePresenter = Circus.find<AttendancePresenter>();
+    _holidayPresenter = Circus.find<HolidayPresenter>();
     _loadInitialHolidays();
   }
 
@@ -621,7 +621,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                             fontSize: context.sp(14),
                           ),
                         ),
-                        onPressed: () => Navigator.pop(sheetContext),
+                        onPressed: () => sheetContext.router.pop(),
                       ),
                       Gap(context.w(8)),
                       ElevatedButton(
@@ -645,7 +645,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                             _startDateJoker.trick(newStartDate);
                             _endDateJoker.trick(newEndDate);
                           }
-                          Navigator.pop(sheetContext);
+                          sheetContext.router.pop();
                         },
                       ),
                     ],
