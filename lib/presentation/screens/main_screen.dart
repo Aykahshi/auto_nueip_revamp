@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -31,6 +33,10 @@ class MainScreen extends StatelessWidget {
           backgroundColor: context.colorScheme.surface.withValues(
             alpha: context.isDarkMode ? 0.95 : 0.9,
           ),
+          itemPadding: EdgeInsets.symmetric(
+            horizontal: context.w(16),
+            vertical: context.h(12),
+          ),
           currentIndex: tabsRouter.activeIndex,
           onTap: tabsRouter.setActiveIndex,
           // Use theme onSurface color for unselected items
@@ -42,7 +48,12 @@ class MainScreen extends StatelessWidget {
             SalomonBottomBarItem(
               icon: const Icon(Icons.home_outlined),
               activeIcon: const Icon(Icons.home),
-              title: const Text("首頁"),
+              title: Padding(
+                padding: EdgeInsets.only(
+                  bottom: context.h(Platform.isAndroid ? 2 : 0),
+                ),
+                child: const Text("首頁"),
+              ),
               selectedColor:
                   context.isDarkMode
                       ? homeSelectedDark
@@ -53,7 +64,12 @@ class MainScreen extends StatelessWidget {
             SalomonBottomBarItem(
               icon: const Icon(Icons.calendar_today_outlined),
               activeIcon: const Icon(Icons.calendar_today),
-              title: const Text("日曆"),
+              title: Padding(
+                padding: EdgeInsets.only(
+                  bottom: context.h(Platform.isAndroid ? 2 : 0),
+                ),
+                child: const Text("日曆"),
+              ),
               selectedColor:
                   context.isDarkMode
                       ? calendarSelectedDark
@@ -64,7 +80,12 @@ class MainScreen extends StatelessWidget {
             SalomonBottomBarItem(
               icon: const Icon(Icons.description_outlined),
               activeIcon: const Icon(Icons.description),
-              title: const Text("表單"),
+              title: Padding(
+                padding: EdgeInsets.only(
+                  bottom: context.h(Platform.isAndroid ? 2 : 0),
+                ),
+                child: const Text("表單"),
+              ),
               selectedColor:
                   context.isDarkMode
                       ? leaveSelectedDark
@@ -75,7 +96,12 @@ class MainScreen extends StatelessWidget {
             SalomonBottomBarItem(
               icon: const Icon(Icons.settings_outlined),
               activeIcon: const Icon(Icons.settings),
-              title: const Text("設定"),
+              title: Padding(
+                padding: EdgeInsets.only(
+                  bottom: context.h(Platform.isAndroid ? 2 : 0),
+                ),
+                child: const Text("設定"),
+              ),
               selectedColor:
                   context.isDarkMode
                       ? settingsSelectedDark
