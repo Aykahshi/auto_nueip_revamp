@@ -42,7 +42,7 @@ class FilterArea extends StatelessWidget {
       ),
       shape: commonShape,
     );
-    final outlinedButtonStyle = OutlinedButton.styleFrom(
+    final textButtonStyle = TextButton.styleFrom(
       padding: EdgeInsets.symmetric(
         horizontal: context.w(12),
         vertical: context.h(8),
@@ -51,10 +51,6 @@ class FilterArea extends StatelessWidget {
         fontSize: context.sp(12),
       ),
       foregroundColor: context.colorScheme.error,
-      side: BorderSide(
-        color: context.colorScheme.error.withValues(alpha: 0.5),
-        width: context.w(1),
-      ),
       shape: commonShape,
     );
 
@@ -157,9 +153,9 @@ class FilterArea extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                OutlinedButton(
+                TextButton(
                   onPressed: onClear,
-                  style: outlinedButtonStyle,
+                  style: textButtonStyle,
                   child: const Text('清除查詢'),
                 ),
                 SizedBox(width: context.w(8)),

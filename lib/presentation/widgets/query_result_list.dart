@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:gap/gap.dart';
 
 import '../../core/extensions/theme_extensions.dart';
 import '../screens/calendar_screen.dart';
@@ -29,16 +30,7 @@ class QueryResultList extends StatelessWidget {
     }
 
     if (results.isEmpty) {
-      return Center(
-        child:
-            Text(
-              '無查詢結果或請點擊查詢',
-              style: context.textTheme.bodyLarge?.copyWith(
-                color: context.colorScheme.onSurfaceVariant,
-                fontSize: context.sp(16),
-              ),
-            ).animate().fadeIn(),
-      );
+      return _buildEmptyState(context, '無查詢結果或請點擊查詢');
     }
 
     return ListView.builder(
@@ -53,4 +45,28 @@ class QueryResultList extends StatelessWidget {
       },
     );
   }
+}
+
+Widget _buildEmptyState(BuildContext context, String message) {
+  return Center(
+    key: ValueKey(message),
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          Icons.calendar_month_outlined,
+          size: context.r(64),
+          color: context.colorScheme.outline.withValues(alpha: 0.7),
+        ),
+        Gap(context.h(16)),
+        Text(
+          message,
+          style: context.textTheme.titleMedium?.copyWith(
+            color: context.colorScheme.outline,
+            fontSize: context.sp(16),
+          ),
+        ),
+      ],
+    ),
+  );
 }

@@ -455,7 +455,6 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
   late final Joker<DateTime?> _startDateJoker;
   late final Joker<DateTime?> _endDateJoker;
 
-  // Store the date range used for the last successful query
   DateTime? _lastQueryStartDate;
   DateTime? _lastQueryEndDate;
 
@@ -466,6 +465,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
     _endDateJoker = Joker<DateTime?>(null);
   }
 
+  // --- Restore original methods ---
   void _showDateRangePickerInSheet() {
     PickerDateRange? initialRange;
     final currentStart = _startDateJoker.state;
@@ -476,7 +476,6 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
       initialRange = PickerDateRange(currentStart, currentStart);
     }
 
-    // Store the selection made within the picker temporarily
     PickerDateRange? currentSheetSelection = initialRange;
 
     showModalBottomSheet<void>(
@@ -689,15 +688,10 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
   void _setRangeToThisMonth() {
     final n = DateTime.now();
     final firstDay = DateTime(n.year, n.month, 1);
-    final lastDay = DateTime(
-      n.year,
-      n.month + 1,
-      0,
-    ); // 0th day of next month is last day of current
+    final lastDay = DateTime(n.year, n.month + 1, 0);
     _setRange(firstDay, lastDay);
   }
 
-  // Updated to use AttendancePresenter - Verify date format
   Future<void> _performQuery() async {
     final startDate = _startDateJoker.state;
     final endDate = _endDateJoker.state;
@@ -722,13 +716,11 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
       return;
     }
 
-    // Store the range used for this query
     _lastQueryStartDate = startDate;
     _lastQueryEndDate = endDate;
-    setState(() {});
+    // setState(() {}); // No longer needed
 
     try {
-      // Ensure date format is yyyy-MM-dd as requested by user
       await widget.attendancePresenter.getAttendanceRecords(
         startDate: DateFormat('yyyy-MM-dd').format(startDate),
         endDate: DateFormat('yyyy-MM-dd').format(endDate),
@@ -751,15 +743,13 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
   void _clearQuery() {
     _startDateJoker.trick(null);
     _endDateJoker.trick(null);
-    // Clear the stored query range
     _lastQueryStartDate = null;
     _lastQueryEndDate = null;
     widget.attendancePresenter.reset();
     widget.attendancePresenter.trick(const AttendanceState.initial());
-    if (mounted) {
-      setState(() {}); // Update state after clearing
-    }
+    // No need for setState here
   }
+  // --- End of restored methods ---
 
   @override
   Widget build(BuildContext context) {
@@ -768,7 +758,6 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
       builder: (context, dateData) {
         final (currentStartDate, currentEndDate) = dateData;
 
-        // Determine if the query range spans multiple years based on last query
         final bool shouldShowYear =
             _lastQueryStartDate != null &&
             _lastQueryEndDate != null &&
@@ -777,12 +766,11 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
         return widget.attendancePresenter.perform(
           builder: (context, attendanceState) {
             bool isLoading = attendanceState is AttendanceLoading;
-            List<AttendanceTileData> tileDataList = []; // Use the new type
+            List<AttendanceTileData> tileDataList = [];
 
             if (attendanceState is AttendanceSuccess) {
               final results =
                   attendanceState.attendanceRecords?.values.toList() ?? [];
-              // Sort results by date before processing
               results.sort(
                 (a, b) =>
                     (a.dateInfo?.date ?? '').compareTo(b.dateInfo?.date ?? ''),
@@ -809,14 +797,12 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                         }
 
                         if (date != null) {
-                          // Format date based on shouldShowYear calculated from *last query*
                           final formatString =
                               shouldShowYear ? 'yyyy/M/d' : 'M/d';
                           formattedDateStr = DateFormat(
                             formatString,
                           ).format(date);
-                          recordDate =
-                              date; // Store parsed date for holiday check
+                          recordDate = date;
                           isHoliday = widget.holidayDateTimes.contains(
                             DateUtils.dateOnly(recordDate),
                           );
@@ -826,8 +812,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                       debugPrint(
                         'Error processing date for list tile: ${record.dateInfo?.date} - $e',
                       );
-                      formattedDateStr =
-                          record.dateInfo?.date ?? '解析錯誤'; // Fallback
+                      formattedDateStr = record.dateInfo?.date ?? '解析錯誤';
                     }
 
                     final statusTag = CalendarUtils.getAttendanceStatusTag(
@@ -857,6 +842,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
 
             return Column(
               children: [
+                // Restore FilterArea usage
                 FilterArea(
                   selectedStartDate: currentStartDate,
                   selectedEndDate: currentEndDate,
