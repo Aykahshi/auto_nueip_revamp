@@ -74,6 +74,17 @@ sealed class AuthUtils {
     return !isExpired;
   }
 
+  static Future<void> updateAuthSession(AuthSession session) async {
+    Circus.spotlight<AuthSession>(tag: 'auth').whisper(session);
+
+    await LocalStorage.set<List<String>>(StorageKeys.authSession, [
+      session.accessToken ?? '',
+      session.cookie ?? '',
+      session.csrfToken ?? '',
+      session.expiryTime.toString(),
+    ]);
+  }
+
   static AuthSession getAuthSession() {
     final session = Circus.spotlight<AuthSession>(tag: 'auth').state;
 

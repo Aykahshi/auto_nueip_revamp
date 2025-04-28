@@ -57,7 +57,7 @@ Future<void> _initDependencies() async {
 
   // Add theme mode Joker registration
   Circus.summon<AppThemeMode>(
-    AppThemeMode.system,
+    AppThemeMode.light,
     tag: 'themeMode',
     keepAlive: true,
   );
