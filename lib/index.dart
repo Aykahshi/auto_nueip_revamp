@@ -121,20 +121,25 @@ class _AnimatedThemeAppState extends State<_AnimatedThemeApp>
                   ? AppTheme.darkTheme
                   : AppTheme.lightTheme,
           duration: const Duration(milliseconds: 600),
-          child: MaterialApp.router(
-            title: 'Auto NUEIP',
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
-            themeMode: widget.themeMode,
-            locale: const Locale('zh', 'TW'),
-            localizationsDelegates: const [
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
-            ],
-            supportedLocales: const [Locale('zh', 'TW')],
-            debugShowCheckedModeBanner: false,
-            routerConfig: widget.router.config(),
+          child: MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: TextScaler.noScaling),
+            child: MaterialApp.router(
+              title: 'Auto NUEIP',
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: widget.themeMode,
+              locale: const Locale('zh', 'TW'),
+              localizationsDelegates: const [
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('zh', 'TW')],
+              debugShowCheckedModeBanner: false,
+              routerConfig: widget.router.config(),
+            ),
           ),
         );
       },
