@@ -34,7 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     _formKey = GlobalKey<FormBuilderState>();
 
-    _presenter = Circus.hire<LoginPresenter>(LoginPresenter());
+    _presenter = Circus.find<LoginPresenter>();
 
     // Listen to presenter state changes
     _cancel = _presenter.listen((previous, current) {

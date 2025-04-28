@@ -19,12 +19,7 @@ class MainScreen extends StatelessWidget {
     const Color settingsSelectedDark = Color(0xFF3A5F84);
 
     return AutoTabsScaffold(
-      routes: const [
-        HomeRoute(),
-        CalendarRoute(),
-        LeaveRoute(),
-        SettingRoute(),
-      ],
+      routes: const [HomeRoute(), CalendarRoute(), FormRoute(), SettingRoute()],
       backgroundColor: context.colorScheme.surface,
       bottomNavigationBuilder: (_, tabsRouter) {
         return SalomonBottomBar(
@@ -65,11 +60,11 @@ class MainScreen extends StatelessWidget {
                       : context.colorScheme.secondary,
             ),
 
-            /// Leave
+            /// Forms (Previously Leave)
             SalomonBottomBarItem(
-              icon: const Icon(Icons.logout_outlined),
-              activeIcon: const Icon(Icons.logout),
-              title: const Text("請假"),
+              icon: const Icon(Icons.description_outlined),
+              activeIcon: const Icon(Icons.description),
+              title: const Text("表單"),
               selectedColor:
                   context.isDarkMode
                       ? leaveSelectedDark

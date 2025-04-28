@@ -9,8 +9,11 @@ import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:joker_state/joker_state.dart';
 
+import '../../core/config/storage_keys.dart';
 import '../../core/extensions/theme_extensions.dart';
+import '../../core/router/app_router.dart';
 import '../../core/utils/auth_utils.dart';
+import '../../core/utils/local_storage.dart';
 import '../../core/utils/notification.dart';
 import '../../data/models/clock_action_enum.dart';
 import '../../data/models/daily_clock_detail.dart';
@@ -39,7 +42,7 @@ const List<String> _zhWeekdays = [
 
 class _HomeScreenState extends State<HomeScreen> {
   late final Joker<DateTime> _timeJoker;
-  late final ClockPresenter _clockPresenter;
+  late final ClockPresenter _presenter;
   late final VoidCallback _actionStatusCancel;
 
   Timer? _timer;
@@ -48,10 +51,10 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _timeJoker = Joker<DateTime>(DateTime.now());
-    _clockPresenter = ClockPresenter();
+    _presenter = Circus.find<ClockPresenter>();
 
     // Listen to all state changes, but only act on status change
-    _actionStatusCancel = _clockPresenter.listen((previous, current) {
+    _actionStatusCancel = _presenter.listen((previous, current) {
       // Only trigger notification/snackbar if action status has changed
       if (previous?.status != current.status) {
         if (current.status == ClockActionStatus.success) {
@@ -78,11 +81,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _performClockAction(ClockAction action) async {
     final session = AuthUtils.getAuthSession();
 
-    // Consider fetching location dynamically if needed
-    double latitude = 22.6283906;
-    double longitude = 120.2932479;
+    final double latitude = LocalStorage.get<double>(
+      StorageKeys.companyLatitude,
+      defaultValue: 0,
+    );
+    final double longitude = LocalStorage.get<double>(
+      StorageKeys.companyLongitude,
+      defaultValue: 0,
+    );
 
-    await _clockPresenter.clockAction(
+    await _presenter.clockAction(
       action: action,
       cookie: session.cookie ?? '',
       csrfToken: session.csrfToken ?? '',
@@ -101,6 +109,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final addressJoker = Circus.spotlight<String>(tag: 'companyAddress');
+
     final dateTextStyle = context.textTheme.titleMedium?.copyWith(
       color: context.colorScheme.onSurfaceVariant,
       fontSize: context.sp(16),
@@ -121,287 +131,406 @@ class _HomeScreenState extends State<HomeScreen> {
       body: Center(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: context.w(20)),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Card(
-                    elevation: 4.0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(context.r(16)),
-                    ),
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(
-                        vertical: context.h(24),
-                        horizontal: context.w(32),
-                      ),
-                      child: _timeJoker.perform(
-                        builder: (context, currentTime) {
-                          final formattedDate = DateFormat(
-                            'yyyy / MM / dd',
-                          ).format(currentTime);
-                          final formattedDay =
-                              _zhWeekdays[currentTime.weekday - 1];
+          child: addressJoker.perform(
+            builder: (context, companyAddress) {
+              final bool isAddressSet = companyAddress.isNotEmpty;
 
-                          return Column(
-                            children: [
-                              Text(
-                                formattedDate,
-                                style: dateTextStyle,
-                              ).animate().fadeIn(delay: 200.ms),
-                              Gap(context.h(4)),
-                              Text(
-                                formattedDay,
-                                style: dayTextStyle,
-                              ).animate().fadeIn(delay: 300.ms),
-                              Gap(context.h(16)),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                mainAxisSize: MainAxisSize.min,
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  // --- Address Warning Section --- (Conditional display based on Joker state)
+                  if (!isAddressSet)
+                    Card(
+                          color: context.colorScheme.errorContainer.withValues(
+                            alpha: 0.8,
+                          ),
+                          elevation: 2,
+                          margin: EdgeInsets.only(bottom: context.h(20)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(context.r(12)),
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              vertical: context.h(12),
+                              horizontal: context.w(16),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: context.colorScheme.onErrorContainer,
+                                ),
+                                Gap(context.w(12)),
+                                Expanded(
+                                  child: Text(
+                                    '尚未設定公司地址，打卡功能已禁用。\n請至「設定 > 編輯帳號資訊」設定。',
+                                    style: context.textTheme.bodyMedium
+                                        ?.copyWith(
+                                          color:
+                                              context
+                                                  .colorScheme
+                                                  .onErrorContainer,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.settings,
+                                    color: context.colorScheme.onErrorContainer,
+                                  ),
+                                  tooltip: '前往設定',
+                                  onPressed: () {
+                                    context.router.push(
+                                      const ProfileEditingRoute(),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        )
+                        .animate()
+                        .fadeIn(duration: 400.ms)
+                        .shakeX(hz: 3, amount: 4),
+
+                  Card(
+                        elevation: 4.0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(context.r(16)),
+                        ),
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            vertical: context.h(24),
+                            horizontal: context.w(32),
+                          ),
+                          child: _timeJoker.perform(
+                            builder: (context, currentTime) {
+                              final formattedDate = DateFormat(
+                                'yyyy / MM / dd',
+                              ).format(currentTime);
+                              final formattedDay =
+                                  _zhWeekdays[currentTime.weekday - 1];
+
+                              return Column(
                                 children: [
-                                  AnimatedFlipCounter(
-                                    value: currentTime.hour,
-                                    duration: const Duration(milliseconds: 500),
-                                    textStyle: timeTextStyle,
-                                    prefix: currentTime.hour < 10 ? "0" : "",
-                                  ),
                                   Text(
-                                    ":",
-                                    style: timeTextStyle?.copyWith(
-                                      fontWeight: FontWeight.normal,
-                                      fontSize: context.sp(45),
-                                    ),
-                                  ),
-                                  AnimatedFlipCounter(
-                                    value: currentTime.minute,
-                                    duration: const Duration(milliseconds: 500),
-                                    textStyle: timeTextStyle,
-                                    prefix: currentTime.minute < 10 ? "0" : "",
-                                  ),
+                                    formattedDate,
+                                    style: dateTextStyle,
+                                  ).animate().fadeIn(delay: 200.ms),
+                                  Gap(context.h(4)),
                                   Text(
-                                    ":",
-                                    style: timeTextStyle?.copyWith(
-                                      fontWeight: FontWeight.normal,
-                                      fontSize: context.sp(45),
-                                    ),
-                                  ),
-                                  AnimatedFlipCounter(
-                                    value: currentTime.second,
-                                    duration: const Duration(milliseconds: 500),
-                                    textStyle: timeTextStyle,
-                                    prefix: currentTime.second < 10 ? "0" : "",
+                                    formattedDay,
+                                    style: dayTextStyle,
+                                  ).animate().fadeIn(delay: 300.ms),
+                                  Gap(context.h(16)),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      AnimatedFlipCounter(
+                                        value: currentTime.hour,
+                                        duration: const Duration(
+                                          milliseconds: 500,
+                                        ),
+                                        textStyle: timeTextStyle,
+                                        prefix:
+                                            currentTime.hour < 10 ? "0" : "",
+                                      ),
+                                      Text(
+                                        ":",
+                                        style: timeTextStyle?.copyWith(
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: context.sp(45),
+                                        ),
+                                      ),
+                                      AnimatedFlipCounter(
+                                        value: currentTime.minute,
+                                        duration: const Duration(
+                                          milliseconds: 500,
+                                        ),
+                                        textStyle: timeTextStyle,
+                                        prefix:
+                                            currentTime.minute < 10 ? "0" : "",
+                                      ),
+                                      Text(
+                                        ":",
+                                        style: timeTextStyle?.copyWith(
+                                          fontWeight: FontWeight.normal,
+                                          fontSize: context.sp(45),
+                                        ),
+                                      ),
+                                      AnimatedFlipCounter(
+                                        value: currentTime.second,
+                                        duration: const Duration(
+                                          milliseconds: 500,
+                                        ),
+                                        textStyle: timeTextStyle,
+                                        prefix:
+                                            currentTime.second < 10 ? "0" : "",
+                                      ),
+                                    ],
                                   ),
                                 ],
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                  )
-                  .animate()
-                  .fadeIn(delay: 300.ms, duration: 600.ms)
-                  .slideY(begin: 0.2, duration: 500.ms, curve: Curves.easeOut)
-                  .then(delay: 1500.ms)
-                  .shimmer(
-                    duration: 1800.ms,
-                    delay: 500.ms,
-                    color: context.colorScheme.primary.withValues(alpha: 0.1),
-                  ),
-
-              Gap(context.h(40)),
-
-              // --- Clock Action Buttons ---
-              _clockPresenter.focusOn<
-                (
-                  ClockActionStatus, // status
-                  DailyClockDetail?, // details
-                  ClockAction?, // activeAction
-                )
-              >(
-                selector:
-                    (state) => (
-                      state.status,
-                      state.details,
-                      state.activeAction,
-                    ),
-                builder: (context, data) {
-                  final status = data.$1;
-                  final details = data.$2;
-                  final activeAction = data.$3;
-
-                  final bool canClockIn = details?.clockInTime == null;
-                  final bool canClockOut =
-                      details?.clockInTime != null &&
-                      details?.clockOutTime == null;
-                  final isActionLoading = status == ClockActionStatus.loading;
-
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      // --- Clock In Button ---
-                      ElevatedButton.icon(
-                            icon:
-                                isActionLoading &&
-                                        activeAction == ClockAction.IN
-                                    ? SizedBox(
-                                      width: context.r(20),
-                                      height: context.r(20),
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: context.w(2),
-                                      ),
-                                    )
-                                    : const Icon(Icons.work_outline),
-                            label: const Text('上班打卡'),
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: context.w(32),
-                                vertical: context.h(16),
-                              ),
-                              textStyle: TextStyle(
-                                fontSize: context.sp(18),
-                                fontWeight: FontWeight.bold,
-                              ),
-                              elevation: 3,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  context.r(30),
-                                ),
-                              ),
-                            ),
-                            onPressed:
-                                canClockIn && !isActionLoading
-                                    ? () => _performClockAction(ClockAction.IN)
-                                    : null,
-                          )
-                          .animate()
-                          .fadeIn(delay: 500.ms, duration: 600.ms)
-                          .slideX(
-                            begin: -0.5,
-                            duration: 500.ms,
-                            curve: Curves.easeOut,
+                              );
+                            },
                           ),
-                      // --- Clock Out Button ---
-                      ElevatedButton.icon(
-                            icon:
-                                isActionLoading &&
-                                        activeAction == ClockAction.OUT
-                                    ? SizedBox(
-                                      width: context.r(20),
-                                      height: context.r(20),
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: context.w(2),
-                                      ),
-                                    )
-                                    : const Icon(Icons.work_off_outlined),
-                            label: const Text('下班打卡'),
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: context.w(32),
-                                vertical: context.h(16),
-                              ),
-                              textStyle: TextStyle(
-                                fontSize: context.sp(18),
-                                fontWeight: FontWeight.bold,
-                              ),
-                              backgroundColor: context.colorScheme.secondary,
-                              foregroundColor: context.colorScheme.onSecondary,
-                              elevation: 3,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(
-                                  context.r(30),
-                                ),
-                              ),
-                            ),
-                            onPressed:
-                                canClockOut && !isActionLoading
-                                    ? () => _performClockAction(ClockAction.OUT)
-                                    : null,
-                          )
-                          .animate()
-                          .fadeIn(delay: 500.ms, duration: 600.ms)
-                          .slideX(
-                            begin: 0.5,
-                            duration: 500.ms,
-                            curve: Curves.easeOut,
-                          ),
-                    ],
-                  );
-                },
-              ),
-
-              Gap(context.h(30)),
-
-              // --- Time Cards Display ---
-              _clockPresenter.focusOn<(ClockTimeStatus, DailyClockDetail?)>(
-                selector: (state) => (state.timeStatus, state.details),
-                builder: (context, data) {
-                  final timeStatus = data.$1;
-                  final details = data.$2;
-
-                  DateTime? clockInTime;
-                  DateTime? clockOutTime;
-
-                  if (details != null) {
-                    try {
-                      clockInTime =
-                          details.clockInTime != null
-                              ? DateFormat(
-                                'HH:mm:ss',
-                              ).parse(details.clockInTime!)
-                              : null;
-                      clockOutTime =
-                          details.clockOutTime != null
-                              ? DateFormat(
-                                'HH:mm:ss',
-                              ).parse(details.clockOutTime!)
-                              : null;
-                    } catch (e) {
-                      // Handle potential parsing errors if format is unexpected
-                      debugPrint("Error parsing time string: $e");
-                      // Optionally set times to null or show an error state in the card
-                      clockInTime = null;
-                      clockOutTime = null;
-                    }
-                  }
-
-                  final isTimeLoading = timeStatus == ClockTimeStatus.loading;
-
-                  return IntrinsicHeight(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: TimeCard(
-                                time: clockInTime,
-                                title: '上班時間',
-                                icon: Icons.login,
-                                iconColor: Colors.green,
-                                isLoading: isTimeLoading,
-                              ),
-                            ),
-                            Gap(context.w(16)),
-                            Expanded(
-                              child: TimeCard(
-                                time: clockOutTime,
-                                title: '下班時間',
-                                icon: Icons.logout,
-                                iconColor: Colors.redAccent,
-                                isLoading: isTimeLoading,
-                              ),
-                            ),
-                          ],
                         ),
                       )
                       .animate()
-                      .fadeIn(delay: 700.ms, duration: 600.ms)
+                      .fadeIn(delay: 300.ms, duration: 600.ms)
                       .slideY(
-                        begin: 0.3,
+                        begin: 0.2,
                         duration: 500.ms,
                         curve: Curves.easeOut,
+                      )
+                      .then(delay: 1500.ms)
+                      .shimmer(
+                        duration: 1800.ms,
+                        delay: 500.ms,
+                        color: context.colorScheme.primary.withValues(
+                          alpha: 0.1,
+                        ),
+                      ),
+
+                  Gap(context.h(40)),
+
+                  // --- Clock Action Buttons ---
+                  _presenter.focusOn<
+                    (
+                      ClockActionStatus, // status
+                      DailyClockDetail?, // details
+                      ClockAction?, // activeAction
+                    )
+                  >(
+                    selector:
+                        (state) => (
+                          state.status,
+                          state.details,
+                          state.activeAction,
+                        ),
+                    builder: (context, data) {
+                      final status = data.$1;
+                      final details = data.$2;
+                      final activeAction = data.$3;
+
+                      final bool canClockIn = details?.clockInTime == null;
+                      final bool canClockOut =
+                          details?.clockInTime != null &&
+                          details?.clockOutTime == null;
+                      final isActionLoading =
+                          status == ClockActionStatus.loading;
+
+                      return Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          // --- Clock In Button ---
+                          ElevatedButton.icon(
+                                icon:
+                                    isActionLoading &&
+                                            activeAction == ClockAction.IN
+                                        ? SizedBox(
+                                          width: context.r(20),
+                                          height: context.r(20),
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: context.w(2),
+                                          ),
+                                        )
+                                        : const Icon(Icons.work_outline),
+                                label: const Text('上班打卡'),
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: context.w(32),
+                                    vertical: context.h(16),
+                                  ),
+                                  textStyle: TextStyle(
+                                    fontSize: context.sp(18),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  elevation: 3,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      context.r(30),
+                                    ),
+                                  ),
+                                ),
+                                onPressed:
+                                    canClockIn &&
+                                            isAddressSet &&
+                                            !isActionLoading
+                                        ? () =>
+                                            _performClockAction(ClockAction.IN)
+                                        : null,
+                              )
+                              .animate(
+                                target:
+                                    canClockIn &&
+                                            isAddressSet &&
+                                            !isActionLoading
+                                        ? 1.0
+                                        : 0.8,
+                              )
+                              .scaleXY(
+                                end:
+                                    canClockIn &&
+                                            isAddressSet &&
+                                            !isActionLoading
+                                        ? 1.0
+                                        : 0.95,
+                                duration: 200.ms,
+                              )
+                              .fadeIn(delay: 500.ms, duration: 600.ms)
+                              .slideX(
+                                begin: -0.5,
+                                duration: 500.ms,
+                                curve: Curves.easeOut,
+                              ),
+                          // --- Clock Out Button ---
+                          ElevatedButton.icon(
+                                icon:
+                                    isActionLoading &&
+                                            activeAction == ClockAction.OUT
+                                        ? SizedBox(
+                                          width: context.r(20),
+                                          height: context.r(20),
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: context.w(2),
+                                          ),
+                                        )
+                                        : const Icon(Icons.work_off_outlined),
+                                label: const Text('下班打卡'),
+                                style: ElevatedButton.styleFrom(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: context.w(32),
+                                    vertical: context.h(16),
+                                  ),
+                                  textStyle: TextStyle(
+                                    fontSize: context.sp(18),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  backgroundColor:
+                                      context.colorScheme.secondary,
+                                  foregroundColor:
+                                      context.colorScheme.onSecondary,
+                                  elevation: 3,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      context.r(30),
+                                    ),
+                                  ),
+                                ),
+                                onPressed:
+                                    canClockOut &&
+                                            isAddressSet &&
+                                            !isActionLoading
+                                        ? () =>
+                                            _performClockAction(ClockAction.OUT)
+                                        : null,
+                              )
+                              .animate(
+                                target:
+                                    canClockOut &&
+                                            isAddressSet &&
+                                            !isActionLoading
+                                        ? 1.0
+                                        : 0.8,
+                              )
+                              .scaleXY(
+                                end:
+                                    canClockOut &&
+                                            isAddressSet &&
+                                            !isActionLoading
+                                        ? 1.0
+                                        : 0.95,
+                                duration: 200.ms,
+                              )
+                              .fadeIn(delay: 500.ms, duration: 600.ms)
+                              .slideX(
+                                begin: 0.5,
+                                duration: 500.ms,
+                                curve: Curves.easeOut,
+                              ),
+                        ],
                       );
-                },
-              ),
-            ],
+                    },
+                  ),
+
+                  Gap(context.h(30)),
+
+                  // --- Time Cards Display ---
+                  _presenter.focusOn<(ClockTimeStatus, DailyClockDetail?)>(
+                    selector: (state) => (state.timeStatus, state.details),
+                    builder: (context, data) {
+                      final timeStatus = data.$1;
+                      final details = data.$2;
+
+                      DateTime? clockInTime;
+                      DateTime? clockOutTime;
+
+                      if (details != null) {
+                        try {
+                          clockInTime =
+                              details.clockInTime != null
+                                  ? DateFormat(
+                                    'HH:mm:ss',
+                                  ).parse(details.clockInTime!)
+                                  : null;
+                          clockOutTime =
+                              details.clockOutTime != null
+                                  ? DateFormat(
+                                    'HH:mm:ss',
+                                  ).parse(details.clockOutTime!)
+                                  : null;
+                        } catch (e) {
+                          // Handle potential parsing errors if format is unexpected
+                          debugPrint("Error parsing time string: $e");
+                          // Optionally set times to null or show an error state in the card
+                          clockInTime = null;
+                          clockOutTime = null;
+                        }
+                      }
+
+                      final isTimeLoading =
+                          timeStatus == ClockTimeStatus.loading;
+
+                      return IntrinsicHeight(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: TimeCard(
+                                    time: clockInTime,
+                                    title: '上班時間',
+                                    icon: Icons.login,
+                                    iconColor: Colors.green,
+                                    isLoading: isTimeLoading,
+                                  ),
+                                ),
+                                Gap(context.w(16)),
+                                Expanded(
+                                  child: TimeCard(
+                                    time: clockOutTime,
+                                    title: '下班時間',
+                                    icon: Icons.logout,
+                                    iconColor: Colors.redAccent,
+                                    isLoading: isTimeLoading,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(delay: 700.ms, duration: 600.ms)
+                          .slideY(
+                            begin: 0.3,
+                            duration: 500.ms,
+                            curve: Curves.easeOut,
+                          );
+                    },
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),

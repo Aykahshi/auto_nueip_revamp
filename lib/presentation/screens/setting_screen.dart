@@ -8,25 +8,34 @@ import 'package:joker_state/joker_state.dart';
 import '../../core/extensions/theme_extensions.dart';
 import '../../core/router/app_router.dart';
 import '../../core/theme/app_theme.dart';
-import '../../core/utils/local_storage.dart';
 import '../../core/utils/notification.dart';
 import '../presenters/setting_presenter.dart';
 
 @RoutePage()
-class SettingScreen extends StatefulWidget {
+class SettingScreen extends StatelessWidget {
   const SettingScreen({super.key});
 
   @override
-  State<SettingScreen> createState() => _SettingScreenState();
+  Widget build(BuildContext context) {
+    return const AutoRouter();
+  }
 }
 
-class _SettingScreenState extends State<SettingScreen> {
+@RoutePage()
+class SettingMainScreen extends StatefulWidget {
+  const SettingMainScreen({super.key});
+
+  @override
+  State<SettingMainScreen> createState() => _SettingMainScreenState();
+}
+
+class _SettingMainScreenState extends State<SettingMainScreen> {
   late SettingPresenter _presenter;
 
   @override
   void initState() {
     super.initState();
-    _presenter = SettingPresenter();
+    _presenter = Circus.find<SettingPresenter>();
     _presenter.getUserInfo();
   }
 
@@ -58,14 +67,11 @@ class _SettingScreenState extends State<SettingScreen> {
                     icon: Icons.person_outline,
                     onTap: () {
                       // Navigate to account editing screen
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            '編輯帳號資訊 ',
-                            style: TextStyle(fontSize: context.sp(14)),
-                          ),
-                        ),
-                      );
+                      context.router.push(const ProfileEditingRoute()).then((
+                        _,
+                      ) {
+                        _presenter.getUserInfo();
+                      });
                     },
                   ),
                   _buildSettingTile(
@@ -73,7 +79,7 @@ class _SettingScreenState extends State<SettingScreen> {
                     title: '清除帳號資料',
                     icon: Icons.delete_outline,
                     onTap: () {
-                      _showClearDataDialog(context);
+                      _showClearDataDialog(context, _presenter);
                     },
                     isDestructive: true,
                   ),
@@ -375,7 +381,7 @@ Widget _buildSwitchTile(
       .shimmer(delay: 200.ms, duration: 600.ms);
 }
 
-void _showClearDataDialog(BuildContext context) {
+void _showClearDataDialog(BuildContext context, SettingPresenter presenter) {
   showDialog(
     context: context,
     builder: (context) {
@@ -387,16 +393,16 @@ void _showClearDataDialog(BuildContext context) {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => context.router.pop(),
             child: Text('取消', style: TextStyle(fontSize: context.sp(14))),
           ),
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             onPressed: () async {
-              // Implement clear data logic
-              await LocalStorage.clear();
+              await presenter.clearProflie();
+
               if (context.mounted) {
-                Navigator.pop(context);
+                context.router.pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
