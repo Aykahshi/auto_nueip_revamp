@@ -65,17 +65,15 @@ dev_dependencies:
   json_serializable: ^6.9.5
 
 flutter_native_splash:
-  color: '#FFFFFF'
-  image: assets/images/splash_screen.png
-  color_dark: '#333333'
-  image_dark: assets/images/splash_screen_dark.png
+  image: assets/images/splash_logo.png
+  background_image: assets/images/splash_bg.png
+  image_dark: assets/images/splash_logo_dark.png
+  background_image_dark: assets/images/splash_bg_dark.png
   android_12:
-    image: assets/images/android12_splash.png
-    color: '#FFFFFF'
-    icon_background_color: '#FFFFFF'
-    image_dark: assets/images/android12_splash_dark.png
-    color_dark: '#333333'
-    icon_background_color_dark: '#333333'
+    image: assets/images/splash_aos12.png
+    color: '#A8D4C6'
+    image_dark: assets/images/splash_aos12_dark.png
+    color_dark: '#252A30'
 
 flutter_launcher_icons:
   android: 'launcher_icon'
