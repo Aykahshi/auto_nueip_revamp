@@ -11,8 +11,10 @@ sealed class ApiConfig {
   static const String RECORD_URL = '$BASE_URL/portal/Portal_punch_clock/ajax';
   static const String ATTENDANCE_URL = '$BASE_URL/attendance_record/ajax';
   static const String INBOX_URL = '$BASE_URL/shared/getMessage';
+  static const String EMPLOYEE_LIST_URL = '$BASE_URL/shared/org3layermenu_ajax';
   static const String LEAVE_URL =
-      '$BASE_URL/leave_application/personal_leave_application_user/getLeaveList';
+      '$BASE_URL/leave_application/personal_leave_application_user';
+  static const String LEAVE_RULES_URL = '$LEAVE_URL/getLeaveList';
   static const String UNREAD_URL =
       'https://rd2-api.nueip.com/center/notice/get-unread';
   static const String ANNOUNCEMENT_URL =

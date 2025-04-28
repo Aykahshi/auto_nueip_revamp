@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
 import '../../core/network/failure.dart';
+import '../../data/models/employee_list.dart';
 
 abstract class NueipRepository {
   TaskEither<Failure, Response> login({
@@ -37,4 +38,8 @@ abstract class NueipRepository {
   });
 
   TaskEither<Failure, Response> getUserInfo();
+
+  TaskEither<Failure, Map<String, List<Employee>>> getEmployees();
+
+  TaskEither<Failure, List<String>> getLeaveRules();
 }

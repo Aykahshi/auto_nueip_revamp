@@ -4,6 +4,7 @@ import 'package:joker_state/joker_state.dart';
 
 import '../../core/network/failure.dart';
 import '../../domain/repositories/nueip_repository.dart';
+import '../models/employee_list.dart';
 import '../services/nueip_services.dart';
 
 class NueipRepositoryImpl implements NueipRepository {
@@ -75,5 +76,15 @@ class NueipRepositoryImpl implements NueipRepository {
   @override
   TaskEither<Failure, Response> getUserInfo() {
     return _service.getUserInfo();
+  }
+
+  @override
+  TaskEither<Failure, Map<String, List<Employee>>> getEmployees() {
+    return _service.getEmployees();
+  }
+
+  @override
+  TaskEither<Failure, List<String>> getLeaveRules() {
+    return _service.getLeaveRules();
   }
 }
