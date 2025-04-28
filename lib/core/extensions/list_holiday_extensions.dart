@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../../data/models/holiday.dart';
 
 extension HolidayListValidation on List<Holiday> {
-  /// Checks if the list contains holiday data for the previous, current, and next year.
+  /// Checks if the list contains holiday data for the previous and current year.
   /// Assumes holiday.date is a "YYYYMMDD" string.
   bool coversRequiredYears() {
     if (isEmpty) {
@@ -12,7 +12,7 @@ extension HolidayListValidation on List<Holiday> {
     }
 
     final currentYear = DateTime.now().year;
-    final requiredYears = {currentYear - 1, currentYear, currentYear + 1};
+    final requiredYears = {currentYear - 1, currentYear};
 
     // Efficiently check if holidays exist for each required year
     final Set<int> yearsInData = {};

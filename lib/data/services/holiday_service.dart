@@ -49,7 +49,8 @@ class HolidayService {
     return TaskEither.tryCatch(
       () async {
         final currentYear = DateTime.now().year;
-        final yearsToFetch = [currentYear - 1, currentYear, currentYear + 1];
+        // Modify the years to fetch: only current and previous year
+        final yearsToFetch = [currentYear - 1, currentYear];
         final List<Future<List<Holiday>>> fetchFutures = [];
 
         debugPrint(
@@ -73,7 +74,7 @@ class HolidayService {
             allHolidays.where((element) => element.isHoliday).toList();
 
         debugPrint(
-          'Total holidays fetched & filtered across 3 years: ${filteredHolidays.length}',
+          'Total holidays fetched & filtered across 2 years: ${filteredHolidays.length}',
         );
 
         // Attempt to serialize and store (on main thread)
