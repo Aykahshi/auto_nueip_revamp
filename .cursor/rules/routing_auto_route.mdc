@@ -1,0 +1,29 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Routing with Auto Route
+
+This project uses the [auto_route](https://pub.dev/packages/auto_route) package for declarative routing.
+
+## Key Components
+
+- **Router Configuration**: The main router setup is likely defined in `lib/core/router/app_router.dart`. This file typically contains the `AppRouter` class annotated with `@AutoRouterConfig`.
+  - Reference: [`lib/core/router/app_router.dart`](mdc:lib/core/router/app_router.dart)
+- **Route Definitions**: Routes are usually defined by annotating Page widgets with `@RoutePage`.
+- **Generated Code**: `auto_route` generates necessary routing code, typically in files ending with `.gr.dart` (e.g., `app_router.gr.dart`). These files should not be manually edited.
+- **Initialization**: The `AppRouter` instance is created and registered with `Circus` in [`lib/main.dart`](mdc:lib/main.dart).
+- **Usage**: The router configuration is passed to `MaterialApp.router` in [`lib/index.dart`](mdc:lib/index.dart).
+
+## Navigation
+
+- Use the generated `AppRouter` instance (obtained via `Circus.find<AppRouter>()` or context extensions like `context.router`) to navigate between screens (e.g., `router.push(MyRoute())`, `context.router.pop()`).
+- Refer to the [auto_route documentation](https://pub.dev/packages/auto_route) for detailed usage patterns like passing arguments, nested navigation, guards, etc.
+
+## Code Generation
+
+- Run the build runner command to generate/update the routing code after modifying route definitions or the router configuration:
+  ```bash
+  flutter pub run build_runner build --delete-conflicting-outputs
+  ```

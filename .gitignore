@@ -47,9 +47,6 @@ app.*.map.json
 # FVM
 /.fvm/
 
-# Cursor
-/.cursor/
-
 # Ignore all generated files
 *.g.dart
 *.gr.dart

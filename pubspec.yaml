@@ -29,7 +29,7 @@ dependencies:
   gap: ^3.0.1
   google_fonts: ^6.2.1
   flutter_animate: ^4.5.2
-  dropdown_button2: ^2.3.9
+  dropdown_button2: ^3.0.0-beta.22
   salomon_bottom_bar: ^3.3.2
   flutter_screenutil: ^6.0.0-alpha.1
   animated_flip_counter: ^0.3.4
