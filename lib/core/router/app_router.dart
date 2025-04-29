@@ -1,8 +1,11 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/material.dart';
 
+import '../../data/models/leave_record.dart';
 import '../../presentation/screens/apply_form_screen.dart';
 import '../../presentation/screens/calendar_screen.dart';
 import '../../presentation/screens/developer_info_screen.dart';
+import '../../presentation/screens/form_detail_screen.dart';
 import '../../presentation/screens/form_screen.dart';
 import '../../presentation/screens/home_screen.dart';
 import '../../presentation/screens/login_screen.dart';
@@ -39,6 +42,7 @@ class AppRouter extends RootStackRouter {
           page: FormRoute.page,
           children: [
             AutoRoute(page: FormHistoryRoute.page, initial: true),
+            AutoRoute(page: FormDetailRoute.page),
             AutoRoute(page: ApplyFormRoute.page),
           ],
         ),

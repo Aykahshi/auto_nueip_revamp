@@ -5,6 +5,10 @@ import 'package:joker_state/joker_state.dart';
 import '../../core/network/failure.dart';
 import '../../domain/repositories/nueip_repository.dart';
 import '../models/employee_list.dart';
+import '../models/form_type_enum.dart';
+import '../models/leave_record.dart';
+import '../models/leave_sign_data.dart';
+import '../models/user_sn.dart';
 import '../services/nueip_services.dart';
 
 class NueipRepositoryImpl implements NueipRepository {
@@ -86,5 +90,33 @@ class NueipRepositoryImpl implements NueipRepository {
   @override
   TaskEither<Failure, List<String>> getLeaveRules() {
     return _service.getLeaveRules();
+  }
+
+  @override
+  TaskEither<Failure, List<LeaveRecord>> getLeaveRecords({
+    required String employee,
+    required String startDate,
+    required String endDate,
+    required String cookie,
+  }) {
+    return _service.getLeaveRecords(
+      employee: employee,
+      startDate: startDate,
+      endDate: endDate,
+      cookie: cookie,
+    );
+  }
+
+  @override
+  TaskEither<Failure, UserSn> getUserSn() {
+    return _service.getUserSn();
+  }
+
+  @override
+  TaskEither<Failure, LeaveSignData> getLeaveSignData({
+    required FormType type,
+    required String id,
+  }) {
+    return _service.getLeaveSignData(type: type, id: id);
   }
 }

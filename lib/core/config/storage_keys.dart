@@ -32,4 +32,7 @@ sealed class StorageKeys {
 
   /// Key for storing the company address longitude.
   static const String companyLongitude = 'company_longitude';
+
+  /// Key for storing the user SN.
+  static const String userSn = 'user_sn';
 }

@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:joker_state/joker_state.dart';
@@ -9,8 +10,12 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 import '../../core/extensions/theme_extensions.dart';
 import '../../core/router/app_router.dart';
+import '../../data/models/leave_record.dart'; // Import LeaveRecord model
 import '../../domain/entities/form_history_query.dart';
+import '../../domain/entities/leave_record_state.dart';
+import '../presenters/leave_record_presenter.dart'; // Import LeaveRecordPresenter
 import '../widgets/filter_area.dart';
+import '../widgets/leave_record_list_tile.dart'; // Import List Tile
 
 // --- Mock Data Definitions (can be moved later) ---
 
@@ -124,10 +129,12 @@ class FormHistoryScreen extends StatefulWidget {
 }
 
 class _FormHistoryScreenState extends State<FormHistoryScreen> {
-  // Use Joker to manage the *applied* query state
+  // Joker for applied query state
   late final Joker<FormHistoryQuery> _historyJoker;
+  // Joker Presenter for leave records state
+  late final LeaveRecordPresenter _leaveRecordPresenter;
 
-  // Temporary state for date selection before query
+  // Temporary state for date selection
   DateTime? _tempStartDate;
   DateTime? _tempEndDate;
 
@@ -135,12 +142,17 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
   void initState() {
     super.initState();
     _historyJoker = Joker<FormHistoryQuery>(
-      // Initialize with default query (no date filter)
       const FormHistoryQuery(historyType: FormHistoryType.leave),
     );
-    // Initialize temp dates based on joker state (optional, start clean)
-    // _tempStartDate = _historyJoker.state.startDate;
-    // _tempEndDate = _historyJoker.state.endDate;
+    // Directly create the presenter instance
+    _leaveRecordPresenter = LeaveRecordPresenter();
+
+    // Optional: Register with Circus if needed globally (using summon on the instance)
+    // Circus.summon<LeaveRecordPresenter>(_leaveRecordPresenter, tag: 'leaveRecord');
+
+    // Fetch initial data if needed (e.g., for the current month?)
+    // Or wait for the first query by the user.
+    // Let's wait for the user query for now.
   }
 
   void _showDateRangePickerInSheet() {
@@ -324,13 +336,6 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                               _tempStartDate = newStartDate;
                               _tempEndDate = newEndDate;
                             });
-                            // DO NOT update _historyJoker here
-                            // _historyJoker.trickWith(
-                            //   (state) => state.copyWith(
-                            //     startDate: newStartDate,
-                            //     endDate: newEndDate,
-                            //   ),
-                            // );
                           }
                           sheetContext.router.pop();
                         },
@@ -387,86 +392,42 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
       _tempStartDate = null;
       _tempEndDate = null;
     });
-    // Also clear applied dates in Joker state immediately?
-    // Or only clear applied on next query? Let's clear applied immediately.
+    // Clear applied dates in Joker state
     _historyJoker.trickWith(
       (state) => state.copyWith(startDate: null, endDate: null),
     );
+    // Reset leave record presenter state
+    _leaveRecordPresenter.reset();
   }
 
-  // This function is now called ONLY when the query button is pressed
+  // Modified to trigger fetch from presenter
   void _performQuery() {
-    // Apply the temporary dates to the Joker state
+    // Apply the temporary dates to the Joker state for FilterArea display
     _historyJoker.trickWith(
       (state) =>
           state.copyWith(startDate: _tempStartDate, endDate: _tempEndDate),
     );
-    debugPrint(
-      'Performing query for: ${_historyJoker.state.startDate} to ${_historyJoker.state.endDate}',
+    // Trigger fetch in the presenter using the temporary dates
+    _leaveRecordPresenter.fetchLeaveRecords(
+      startDate: _tempStartDate,
+      endDate: _tempEndDate,
     );
-    // You might trigger data fetching here based on _historyJoker.state
-  }
-
-  // Helper to get status color
-  Color _getStatusColor(FormStatus status, BuildContext context) {
-    switch (status) {
-      case FormStatus.approved:
-        return Colors.green.shade600;
-      case FormStatus.pending:
-        return Colors.orange.shade700;
-      case FormStatus.rejected:
-        return context.colorScheme.error;
-    }
-  }
-
-  // Helper to get status icon
-  IconData _getStatusIcon(FormStatus status) {
-    switch (status) {
-      case FormStatus.approved:
-        return Icons.check_circle_outline;
-      case FormStatus.pending:
-        return Icons.hourglass_empty_outlined;
-      case FormStatus.rejected:
-        return Icons.cancel_outlined;
-    }
+    debugPrint(
+      'Triggering leave record fetch for: $_tempStartDate to $_tempEndDate',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('表單專區'),
-        centerTitle: true,
-        elevation: 1,
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Icon(Icons.build_outlined, size: context.r(64)),
-            Gap(context.h(16)),
-            Text(
-              '開發中',
-              style: context.textTheme.titleLarge?.copyWith(
-                fontSize: context.sp(22),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    // Use Joker.perform to listen to *applied* state changes
     return _historyJoker.perform(
       builder: (context, historyState) {
-        // historyState is FormHistoryQuery
+        // historyState is FormHistoryQuery (used for FilterArea and type switching)
         return Scaffold(
           appBar: AppBar(
             title: Text(
               historyState.historyType == FormHistoryType.leave
                   ? '請假紀錄'
-                  : '請款紀錄',
+                  : '請款紀錄', // Keep expense title
             ),
             centerTitle: true,
             elevation: 1,
@@ -495,10 +456,12 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                   _historyJoker.trickWith(
                     (state) => state.copyWith(
                       historyType: nextType,
-                      startDate: null, // Clear applied dates on type switch
+                      startDate: null,
                       endDate: null,
                     ),
                   );
+                  // Reset presenter when switching tabs
+                  _leaveRecordPresenter.reset();
                 },
               ),
             ],
@@ -515,7 +478,7 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                 onSetThisWeek: _setRangeToThisWeek,
                 onSetThisMonth: _setRangeToThisMonth,
                 onClear: _clearQuery,
-                onQuery: _performQuery, // Trigger query application
+                onQuery: _performQuery, // Trigger query application & fetch
               ),
               Expanded(
                 child: AnimatedSwitcher(
@@ -523,18 +486,44 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                   transitionBuilder: (child, animation) {
                     return FadeTransition(opacity: animation, child: child);
                   },
+                  // Use LeaveRecordPresenter for leave tab, mock data for expense tab
                   child:
-                      // Build list based on *applied* filter state from Joker
                       historyState.historyType == FormHistoryType.leave
-                          ? _buildLeaveHistoryList(
-                            context,
-                            historyState.startDate, // Use applied start date
-                            historyState.endDate, // Use applied end date
+                          ? _leaveRecordPresenter.perform(
+                            // Listen to presenter state
+                            builder: (context, leaveState) {
+                              if (leaveState is LeaveRecordLoading) {
+                                return const Center(
+                                  key: ValueKey('leave_loading'),
+                                  child: CircularProgressIndicator(),
+                                );
+                              } else if (leaveState is LeaveRecordError) {
+                                return _buildErrorState(
+                                  context,
+                                  leaveState.failure.message,
+                                );
+                              } else if (leaveState is LeaveRecordSuccess) {
+                                return _buildLeaveHistoryList(
+                                  context,
+                                  leaveState.records,
+                                );
+                              } else {
+                                // Initial state
+                                return _buildEmptyState(
+                                  context,
+                                  '請選擇日期範圍並查詢請假紀錄',
+                                  key: const ValueKey(
+                                    'leave_initial',
+                                  ), // Add key
+                                );
+                              }
+                            },
                           )
                           : _buildExpenseHistoryList(
+                            // Still uses mock data
                             context,
-                            historyState.startDate, // Use applied start date
-                            historyState.endDate, // Use applied end date
+                            historyState.startDate,
+                            historyState.endDate,
                           ),
                 ),
               ),
@@ -542,170 +531,225 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () {
-              context.router.push(const ApplyFormRoute());
+              context.router.push(
+                ApplyFormRoute(formType: historyState.historyType),
+              );
             },
-            label: const Text('申請新表單'),
+            label: Text(
+              historyState.historyType == FormHistoryType.leave
+                  ? '申請請假'
+                  : '申請請款',
+            ),
             icon: const Icon(Icons.add),
-            tooltip: '申請請假或請款單',
+            tooltip:
+                historyState.historyType == FormHistoryType.leave
+                    ? '申請新的請假單'
+                    : '申請新的請款單',
           ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.5),
         );
       },
     );
   }
 
-  // Builds the list for Leave History
+  // Updated to use LeaveRecordListTile
   Widget _buildLeaveHistoryList(
     BuildContext context,
-    DateTime? startDate,
-    DateTime? endDate,
+    List<LeaveRecord> records,
   ) {
-    final filteredData =
-        mockLeaveData.where((req) {
-          if (startDate == null || endDate == null) return true;
-          return !(req.endDate.isBefore(startDate) ||
-              req.startDate.isAfter(endDate));
-        }).toList();
+    final filteredData = records.where((r) => !r.isCanceled).toList();
 
     if (filteredData.isEmpty) {
-      return _buildEmptyState(context, '此區間尚無請假紀錄');
+      return _buildEmptyState(
+        context,
+        '此區間尚無請假紀錄',
+        key: const ValueKey('leave_empty'),
+      );
     }
-    return ListView.builder(
-      key: const ValueKey('leave_list'),
-      padding: EdgeInsets.all(context.i(12)),
-      itemCount: filteredData.length,
-      itemBuilder: (context, index) {
-        final request = filteredData[index];
-        final statusColor = _getStatusColor(request.status, context);
-        final statusIcon = _getStatusIcon(request.status);
-        final dateFormat = DateFormat('yyyy/MM/dd');
-
-        return Card(
-          elevation: 1.5,
-          margin: EdgeInsets.only(bottom: context.h(10)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(context.r(8)),
-          ),
-          child: ListTile(
-            leading: Icon(statusIcon, color: statusColor, size: context.r(30)),
-            title: Text(
-              '${request.leaveType} - ${request.applicant}',
-              style: context.textTheme.titleMedium?.copyWith(
-                fontSize: context.sp(16),
-                fontWeight: FontWeight.w500,
+    // Wrap with AnimationLimiter for staggered animations (optional but nice)
+    return AnimationLimiter(
+      child: ListView.builder(
+        key: const ValueKey('leave_list'),
+        padding: EdgeInsets.symmetric(
+          vertical: context.h(8),
+        ), // Adjusted padding
+        itemCount: filteredData.length,
+        itemBuilder: (context, index) {
+          final request = filteredData[index];
+          // Use AnimationConfiguration for staggered effect
+          return AnimationConfiguration.staggeredList(
+            position: index,
+            duration: const Duration(milliseconds: 375),
+            child: SlideAnimation(
+              verticalOffset: 50.0,
+              child: FadeInAnimation(
+                child: LeaveRecordListTile(
+                  key: ValueKey(
+                    'leave_${request.startTime}_${request.ruleName}',
+                  ),
+                  record: request,
+                  onTap: () {
+                    // Navigate to FormDetailScreen with LeaveRecord object and qryNo as formId
+                    context.router.push(
+                      FormDetailRoute(
+                        formId: request.qryNo, // Pass qryNo as formId
+                        leaveRecord: request,
+                        formType: FormHistoryType.leave,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-            subtitle: Text(
-              '${dateFormat.format(request.startDate)} - ${dateFormat.format(request.endDate)}',
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: context.colorScheme.outline,
-                fontSize: context.sp(14),
-              ),
-            ),
-            trailing: Text(
-              request.status.name.toUpperCase(),
-              style: TextStyle(
-                color: statusColor,
-                fontWeight: FontWeight.bold,
-                fontSize: context.sp(12),
-              ),
-            ),
-            onTap: () {
-              /* TODO: Show details */
-            },
-          ),
-        ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1);
-      },
+          );
+        },
+      ),
     );
   }
 
-  // Builds the list for Expense History
+  // Builds the list for Expense History (remains unchanged, uses mock data)
   Widget _buildExpenseHistoryList(
     BuildContext context,
     DateTime? startDate,
     DateTime? endDate,
   ) {
+    // ... (implementation using mockExpenseData is unchanged)
+    const currentType = FormHistoryType.expense;
     final filteredData =
         mockExpenseData.where((req) {
           if (startDate == null || endDate == null) return true;
+          // Adjust date comparison if needed for Expense request date
           return !(req.requestDate.isBefore(startDate) ||
               req.requestDate.isAfter(endDate));
         }).toList();
 
     if (filteredData.isEmpty) {
-      return _buildEmptyState(context, '此區間尚無請款紀錄');
+      return _buildEmptyState(
+        context,
+        '此區間尚無請款紀錄',
+        key: const ValueKey('expense_empty'),
+      ); // Add key
     }
-    return ListView.builder(
-      key: const ValueKey('expense_list'),
-      padding: EdgeInsets.all(context.i(12)),
-      itemCount: filteredData.length,
-      itemBuilder: (context, index) {
-        final request = filteredData[index];
-        final statusColor = _getStatusColor(request.status, context);
-        final statusIcon = _getStatusIcon(request.status);
-        final dateFormat = DateFormat('yyyy/MM/dd');
-        final amountFormat = NumberFormat.currency(
-          locale: 'zh_TW',
-          symbol: 'NT\$',
-          decimalDigits: 0,
-        );
+    // Add animation for consistency
+    return AnimationLimiter(
+      child: ListView.builder(
+        key: const ValueKey('expense_list'),
+        padding: EdgeInsets.symmetric(vertical: context.h(8)),
+        itemCount: filteredData.length,
+        itemBuilder: (context, index) {
+          final request = filteredData[index];
+          final statusColor = _getExpenseStatusColor(request.status, context);
+          final statusIcon = _getExpenseStatusIcon(request.status);
+          final dateFormat = DateFormat('yyyy/MM/dd');
+          final amountFormat = NumberFormat.currency(
+            locale: 'zh_TW',
+            symbol: 'NT\$',
+            decimalDigits: 0,
+          );
 
-        return Card(
-          elevation: 1.5,
-          margin: EdgeInsets.only(bottom: context.h(10)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(context.r(8)),
-          ),
-          child: ListTile(
-            leading: Icon(statusIcon, color: statusColor, size: context.r(30)),
-            title: Text(
-              '${request.expenseType} - ${request.applicant}',
-              style: context.textTheme.titleMedium?.copyWith(
-                fontSize: context.sp(16),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            subtitle: Text(
-              '申請日期: ${dateFormat.format(request.requestDate)}',
-              style: context.textTheme.bodyMedium?.copyWith(
-                color: context.colorScheme.outline,
-                fontSize: context.sp(14),
-              ),
-            ),
-            trailing: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  amountFormat.format(request.amount),
-                  style: TextStyle(
-                    color: context.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: context.sp(14),
+          // Apply animation
+          return AnimationConfiguration.staggeredList(
+            position: index,
+            duration: const Duration(milliseconds: 375),
+            child: SlideAnimation(
+              verticalOffset: 50.0,
+              child: FadeInAnimation(
+                child: Card(
+                  elevation: 1.5,
+                  margin: EdgeInsets.symmetric(
+                    vertical: context.h(5),
+                    horizontal: context.w(8),
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(context.r(8)),
+                  ),
+                  child: ListTile(
+                    leading: Icon(
+                      statusIcon,
+                      color: statusColor,
+                      size: context.r(30),
+                    ),
+                    title: Text(
+                      '${request.expenseType} - ${request.applicant}',
+                      style: context.textTheme.titleMedium?.copyWith(
+                        fontSize: context.sp(16),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '申請日期: ${dateFormat.format(request.requestDate)}',
+                      style: context.textTheme.bodyMedium?.copyWith(
+                        color: context.colorScheme.outline,
+                        fontSize: context.sp(14),
+                      ),
+                    ),
+                    trailing: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          amountFormat.format(request.amount),
+                          style: TextStyle(
+                            color: context.colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: context.sp(14),
+                          ),
+                        ),
+                        Text(
+                          request.status.name.toUpperCase(),
+                          style: TextStyle(
+                            color: statusColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: context.sp(12),
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () {
+                      // Navigate to detail screen with id (assuming it's qryNo for mock) and type
+                      context.router.push(
+                        FormDetailRoute(
+                          formId: request.id,
+                          formType: currentType,
+                        ),
+                      );
+                    },
                   ),
                 ),
-                Text(
-                  request.status.name.toUpperCase(),
-                  style: TextStyle(
-                    color: statusColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: context.sp(12),
-                  ),
-                ),
-              ],
+              ),
             ),
-            onTap: () {
-              /* TODO: Show details */
-            },
-          ),
-        ).animate().fadeIn(delay: (100 * index).ms).slideX(begin: 0.1);
-      },
+          );
+        },
+      ),
     );
   }
 
-  // Builds the empty state widget
-  Widget _buildEmptyState(BuildContext context, String message) {
+  // Keep expense status helpers as they are used by the mock expense list
+  Color _getExpenseStatusColor(FormStatus status, BuildContext context) {
+    switch (status) {
+      case FormStatus.approved:
+        return Colors.green.shade600;
+      case FormStatus.pending:
+        return Colors.orange.shade700;
+      case FormStatus.rejected:
+        return context.colorScheme.error;
+    }
+  }
+
+  IconData _getExpenseStatusIcon(FormStatus status) {
+    switch (status) {
+      case FormStatus.approved:
+        return Icons.check_circle_outline;
+      case FormStatus.pending:
+        return Icons.hourglass_empty_outlined;
+      case FormStatus.rejected:
+        return Icons.cancel_outlined;
+    }
+  }
+
+  // Builds the empty state widget (added optional key)
+  Widget _buildEmptyState(BuildContext context, String message, {Key? key}) {
     return Center(
-      key: ValueKey(message),
+      key: key ?? ValueKey(message), // Use provided key or default
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -721,8 +765,49 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
               color: context.colorScheme.outline,
               fontSize: context.sp(16),
             ),
+            textAlign: TextAlign.center,
           ),
         ],
+      ),
+    );
+  }
+
+  // Builds the error state widget
+  Widget _buildErrorState(BuildContext context, String message, {Key? key}) {
+    return Center(
+      key: key ?? const ValueKey('error_state'),
+      child: Padding(
+        padding: EdgeInsets.all(context.i(16)),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: context.colorScheme.error,
+              size: context.r(48),
+            ),
+            Gap(context.h(16)),
+            Text(
+              message,
+              style: context.textTheme.titleMedium?.copyWith(
+                color: context.colorScheme.error,
+                fontSize: context.sp(16),
+              ),
+              textAlign: TextAlign.center,
+            ),
+            // Add retry button?
+            Gap(context.h(16)),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.refresh),
+              label: const Text('重試'),
+              onPressed: _performQuery, // Retry the query
+              style: ElevatedButton.styleFrom(
+                foregroundColor: context.colorScheme.onError,
+                backgroundColor: context.colorScheme.error,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

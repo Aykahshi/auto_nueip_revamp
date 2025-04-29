@@ -20,6 +20,7 @@ dependencies:
   cookie_jar: ^4.0.8
   pretty_dio_logger: ^1.4.0
   dio_cookie_manager: ^3.2.0
+  cached_network_image: ^3.4.1
 
   # state
   joker_state: ^3.1.1
@@ -28,6 +29,7 @@ dependencies:
   gap: ^3.0.1
   google_fonts: ^6.2.1
   flutter_animate: ^4.5.2
+  dropdown_button2: ^2.3.9
   salomon_bottom_bar: ^3.3.2
   flutter_screenutil: ^6.0.0-alpha.1
   animated_flip_counter: ^0.3.4
@@ -39,6 +41,7 @@ dependencies:
   intl: ^0.19.0
   fpdart: ^1.1.1
   geocoding: ^3.0.0
+  photo_view: ^0.15.0
   collection: ^1.19.1
   auto_route: ^10.0.1
   url_launcher: ^6.3.1

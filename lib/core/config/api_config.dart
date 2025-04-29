@@ -11,6 +11,7 @@ sealed class ApiConfig {
   static const String RECORD_URL = '$BASE_URL/portal/Portal_punch_clock/ajax';
   static const String ATTENDANCE_URL = '$BASE_URL/attendance_record/ajax';
   static const String INBOX_URL = '$BASE_URL/shared/getMessage';
+  static const String USER_SN_URL = '$BASE_URL/widget/deptChain/getUserDeptMap';
   static const String EMPLOYEE_LIST_URL = '$BASE_URL/shared/org3layermenu_ajax';
   static const String LEAVE_URL =
       '$BASE_URL/leave_application/personal_leave_application_user';
@@ -19,12 +20,10 @@ sealed class ApiConfig {
       'https://rd2-api.nueip.com/center/notice/get-unread';
   static const String ANNOUNCEMENT_URL =
       'https://rd2-api.nueip.com/center/notice';
+  static const String SIGN_DATA_URL =
+      '$BASE_URL/leader_audit_work_list/getSignData';
   static const String HOLIDAY_URL =
       'https://cdn.jsdelivr.net/gh/ruyut/TaiwanCalendar/data/';
-
-  static const String GOOGLE_API_KEY = 'API_KEY_HERE';
-  static const String GOOGLE_GEOCODING_URL =
-      'https://maps.googleapis.com/maps/api/geocode/json?';
 
   static const Map<String, String> HEADERS = {
     'Content-Type': 'application/x-www-form-urlencoded',

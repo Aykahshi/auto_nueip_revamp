@@ -8,6 +8,10 @@ import '../../core/network/api_client.dart';
 import '../../core/network/failure.dart';
 import '../../core/utils/local_storage.dart';
 import '../models/employee_list.dart';
+import '../models/form_type_enum.dart';
+import '../models/leave_record.dart';
+import '../models/leave_sign_data.dart';
+import '../models/user_sn.dart';
 import '../models/work_hours.dart';
 
 class NueipService {
@@ -291,6 +295,140 @@ class NueipService {
         return workHoursList;
       },
       (e, _) => Failure(message: e.toString(), status: 'get_work_hours_failed'),
+    );
+  }
+
+  TaskEither<Failure, List<LeaveRecord>> getLeaveRecords({
+    required String employee,
+    required String startDate,
+    required String endDate,
+    required String cookie,
+  }) {
+    return TaskEither.tryCatch(
+      () async {
+        final userSn = LocalStorage.get<List<String>>(
+          StorageKeys.userSn,
+          defaultValue: [],
+        );
+
+        if (userSn.isEmpty) return [];
+
+        final sn = UserSn(
+          company: userSn[0],
+          department: userSn[1],
+          system: userSn[2],
+        );
+
+        final String employee = '${sn.company}_${sn.department}_${sn.system}';
+
+        final Map<String, dynamic> queryParams = {
+          'action': 'list',
+          's_date': startDate,
+          'e_date': endDate,
+          'employee': employee,
+          'resource': 'all',
+          'qry_no': '',
+          'filtMethod': 'all',
+        };
+
+        final response = await _client.post(
+          ApiConfig.LEAVE_URL,
+          data: queryParams,
+          options: Options(
+            contentType: 'application/x-www-form-urlencoded',
+            responseType: ResponseType.json,
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+          ),
+        );
+
+        final responseData = response.data as Map<String, dynamic>;
+        if (!responseData.containsKey('result') ||
+            responseData['result'] is! List) {
+          throw Exception('Invalid response format for leave records');
+        }
+
+        final List<dynamic> resultList =
+            responseData['result'] as List<dynamic>;
+
+        final leaveRecords =
+            resultList
+                .map(
+                  (item) => LeaveRecord.fromJson(item as Map<String, dynamic>),
+                )
+                .toList();
+
+        return leaveRecords;
+      },
+      (e, _) =>
+          Failure(message: e.toString(), status: 'get_leave_records_failed'),
+    );
+  }
+
+  TaskEither<Failure, UserSn> getUserSn() {
+    return TaskEither.tryCatch(() async {
+      final response = await _client.post(ApiConfig.USER_SN_URL);
+
+      final userNo = LocalStorage.get<String>(
+        StorageKeys.userNo,
+        defaultValue: '',
+      );
+
+      if (userNo.isEmpty) {
+        return const UserSn(system: '', company: '', department: '');
+      }
+
+      final responseData = response.data as Map<String, dynamic>;
+      final data = responseData[userNo] as Map<String, dynamic>;
+
+      final sn = UserSn.fromJson(data);
+
+      await LocalStorage.set<List<String>>(StorageKeys.userSn, [
+        sn.company,
+        sn.department,
+        sn.system,
+      ]);
+
+      return sn;
+    }, (e, _) => Failure(message: e.toString(), status: 'get_user_sn_failed'));
+  }
+
+  TaskEither<Failure, LeaveSignData> getLeaveSignData({
+    required FormType type,
+    required String id,
+  }) {
+    return TaskEither.tryCatch(
+      () async {
+        final formData = {
+          'p_no': type.value,
+          'fn_typ': "1,3",
+          's_sn': id,
+          'return': 'data',
+        };
+
+        final response = await _client.post(
+          ApiConfig.SIGN_DATA_URL,
+          data: formData,
+          options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
+        );
+
+        if (response.statusCode != 200) {
+          throw Exception(
+            'Failed to get sign data. Status: ${response.statusCode}',
+          );
+        }
+
+        final responseData = response.data as Map<String, dynamic>;
+
+        final leaveData = responseData['data']['leave'] as Map<String, dynamic>;
+
+        final leaveSignData = LeaveSignData.fromJson(leaveData);
+
+        return leaveSignData;
+      },
+      (e, s) => Failure(
+        message: 'Failed to get sign data: ${e.toString()}',
+        status: 'get_sign_failed',
+      ),
     );
   }
 }
