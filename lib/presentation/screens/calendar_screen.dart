@@ -758,13 +758,16 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
       builder: (context, dateData) {
         final (currentStartDate, currentEndDate) = dateData;
 
-        final bool shouldShowYear =
-            _lastQueryStartDate != null &&
-            _lastQueryEndDate != null &&
-            _lastQueryStartDate!.year != _lastQueryEndDate!.year;
+        // Note: shouldShowYear calculation is moved inside the presenter builder below
 
         return widget.attendancePresenter.perform(
           builder: (context, attendanceState) {
+            // Calculate shouldShowYear based on the range of the last successful query
+            final bool shouldShowYear =
+                _lastQueryStartDate != null &&
+                _lastQueryEndDate != null &&
+                _lastQueryStartDate!.year != _lastQueryEndDate!.year;
+
             bool isLoading = attendanceState is AttendanceLoading;
             List<AttendanceTileData> tileDataList = [];
 

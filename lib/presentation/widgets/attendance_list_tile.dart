@@ -376,12 +376,14 @@ class AttendanceListTile extends StatelessWidget {
         label: '請假類別',
         value: leaveRecord.ruleName ?? 'N/A',
         valueColor: context.colorScheme.secondary,
+        maxLines: null, // Allow leave category to wrap
       ),
       DetailInfoRow(
         icon: Icons.access_time_outlined,
         label: '請假時段',
         value: leaveRecord.time ?? '--',
         valueColor: context.colorScheme.secondary,
+        // Time usually doesn't need to wrap, keep default maxLines = 1
       ),
       if (leaveRecord.remark != null && leaveRecord.remark!.isNotEmpty)
         DetailInfoRow(
@@ -389,7 +391,7 @@ class AttendanceListTile extends StatelessWidget {
           label: '請假原因',
           value: leaveRecord.remark ?? 'N/A',
           valueColor: context.colorScheme.secondary,
-          maxLines: null,
+          maxLines: null, // Already set, but ensure it's here
         ),
     ];
   }
@@ -409,6 +411,7 @@ class AttendanceListTile extends StatelessWidget {
         label: '加班時數',
         value: CalendarUtils.formatMinutes(totalMinutes),
         valueColor: Colors.red.shade600,
+        // Duration usually doesn't need to wrap, keep default maxLines = 1
       ),
       if (otRecord.remark != null && otRecord.remark!.isNotEmpty)
         DetailInfoRow(
@@ -416,7 +419,7 @@ class AttendanceListTile extends StatelessWidget {
           label: '加班事由',
           value: otRecord.remark!,
           valueColor: Colors.red.shade600,
-          maxLines: null,
+          maxLines: null, // Ensure overtime reason can wrap
         ),
     ];
   }

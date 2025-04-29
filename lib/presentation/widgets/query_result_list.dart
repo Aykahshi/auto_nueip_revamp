@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+// Remove flutter_animate import if no longer needed elsewhere
+// import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:gap/gap.dart';
 
 import '../../core/extensions/theme_extensions.dart';
@@ -33,16 +35,32 @@ class QueryResultList extends StatelessWidget {
       return _buildEmptyState(context, '無查詢結果或請點擊查詢');
     }
 
-    return ListView.builder(
-      itemCount: results.length,
-      itemBuilder: (context, index) {
-        // Change type to AttendanceTileData
-        final AttendanceTileData itemData = results[index];
-        // Pass the entire itemData record to the tile
-        return AttendanceListTile(
-          tileData: itemData,
-        ).animate().fadeIn(delay: (index * 30).ms).moveX(begin: -15);
-      },
+    // Wrap the ListView with AnimationLimiter
+    return AnimationLimiter(
+      child: ListView.builder(
+        itemCount: results.length,
+        itemBuilder: (context, index) {
+          // Change type to AttendanceTileData
+          final AttendanceTileData itemData = results[index];
+          // Apply staggered animation configuration
+          return AnimationConfiguration.staggeredList(
+            position: index,
+            duration: const Duration(milliseconds: 375), // Animation duration
+            child: SlideAnimation(
+              // Slide animation
+              verticalOffset: 50.0, // Start 50 pixels below final position
+              child: FadeInAnimation(
+                // Fade-in animation
+                child: AttendanceListTile(
+                  // Use a unique key for potentially better performance/state management
+                  key: ValueKey(itemData.record.dateInfo?.date ?? index),
+                  tileData: itemData,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 }
