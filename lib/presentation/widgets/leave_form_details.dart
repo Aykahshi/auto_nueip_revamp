@@ -80,7 +80,7 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
         iconColor ?? colorScheme.secondary.withValues(alpha: 0.8);
 
     return Padding(
-      padding: EdgeInsets.only(top: context.h(5), bottom: context.h(1)),
+      padding: EdgeInsets.symmetric(vertical: context.h(2)),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -545,29 +545,29 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
                     .slideY(begin: 0.05, curve: Curves.easeInOut),
 
               Gap(context.h(20)),
-              if (record.isCancelable)
-                Center(
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.cancel_outlined),
-                    label: const Text('撤銷申請 (待實作)'),
-                    style: ElevatedButton.styleFrom(
-                      foregroundColor: colorScheme.error,
-                      backgroundColor: colorScheme.errorContainer.withValues(
-                        alpha: 0.4,
-                      ),
-                      elevation: 0,
-                      padding: EdgeInsets.symmetric(
-                        horizontal: context.w(16),
-                        vertical: context.h(10),
-                      ),
-                    ),
-                    onPressed: () {
-                      ScaffoldMessenger.of(
-                        context,
-                      ).showSnackBar(const SnackBar(content: Text('撤銷功能尚未實作')));
-                    },
-                  ),
-                ),
+              // if (record.isCancelable)
+              //   Center(
+              //     child: ElevatedButton.icon(
+              //       icon: const Icon(Icons.cancel_outlined),
+              //       label: const Text('撤銷申請 (待實作)'),
+              //       style: ElevatedButton.styleFrom(
+              //         foregroundColor: colorScheme.error,
+              //         backgroundColor: colorScheme.errorContainer.withValues(
+              //           alpha: 0.4,
+              //         ),
+              //         elevation: 0,
+              //         padding: EdgeInsets.symmetric(
+              //           horizontal: context.w(16),
+              //           vertical: context.h(10),
+              //         ),
+              //       ),
+              //       onPressed: () {
+              //         ScaffoldMessenger.of(
+              //           context,
+              //         ).showSnackBar(const SnackBar(content: Text('撤銷功能尚未實作')));
+              //       },
+              //     ),
+              //   ),
             ],
           ),
         ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1);
