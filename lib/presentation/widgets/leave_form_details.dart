@@ -31,13 +31,12 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
   @override
   void initState() {
     super.initState();
-    _signPresenter = SignPresenter();
+    _signPresenter = Circus.find<SignPresenter>();
     _signPresenter.fetchSignData(FormType.leave, widget.leaveRecord.id);
   }
 
   @override
   void dispose() {
-    _signPresenter.dispose(); // Dispose the presenter
     super.dispose();
   }
 

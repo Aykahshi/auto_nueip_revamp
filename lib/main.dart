@@ -17,8 +17,10 @@ import 'index.dart';
 import 'presentation/presenters/attendance_presenter.dart';
 import 'presentation/presenters/clock_presenter.dart';
 import 'presentation/presenters/holiday_presenter.dart';
+import 'presentation/presenters/leave_record_presenter.dart';
 import 'presentation/presenters/login_presenter.dart';
 import 'presentation/presenters/setting_presenter.dart';
+import 'presentation/presenters/sign_presenter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -70,6 +72,8 @@ Future<void> _initDependencies() async {
   Circus.hireLazily<LoginPresenter>(() => LoginPresenter());
   Circus.hireLazily<SettingPresenter>(() => SettingPresenter());
   Circus.hireLazily<ClockPresenter>(() => ClockPresenter());
+  Circus.hireLazily<LeaveRecordPresenter>(() => LeaveRecordPresenter());
+  Circus.contract<SignPresenter>(() => SignPresenter());
 
   // Add theme mode Joker registration
   Circus.summon<AppThemeMode>(

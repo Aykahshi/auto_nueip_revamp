@@ -1,3 +1,5 @@
+import 'dart:io' show File;
+
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:joker_state/joker_state.dart';
@@ -279,12 +281,6 @@ class NueipService {
 
         final response = await _client.post(ApiConfig.LEAVE_URL, data: request);
 
-        if (response.statusCode != 200) {
-          throw Exception(
-            'Failed to fetch work hours. Status: ${response.statusCode}',
-          );
-        }
-
         final List<dynamic> data = response.data as List<dynamic>;
 
         final workHoursList =
@@ -411,12 +407,6 @@ class NueipService {
           options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
         );
 
-        if (response.statusCode != 200) {
-          throw Exception(
-            'Failed to get sign data. Status: ${response.statusCode}',
-          );
-        }
-
         final responseData = response.data as Map<String, dynamic>;
 
         final leaveData = responseData['data']['leave'] as Map<String, dynamic>;
@@ -428,6 +418,81 @@ class NueipService {
       (e, s) => Failure(
         message: 'Failed to get sign data: ${e.toString()}',
         status: 'get_sign_failed',
+      ),
+    );
+  }
+
+  TaskEither<Failure, Response> sendLeaveForm({
+    required String ruleId,
+    required String startDate,
+    required String endDate,
+    required String startTime,
+    required String endTime,
+    required int hours,
+    required int minutes,
+    required String agentId,
+    required String remark,
+    List<File>? files,
+    required String cookie,
+  }) {
+    return TaskEither.tryCatch(
+      () async {
+        final formData = FormData();
+
+        final userSn = LocalStorage.get<List<String>>(
+          StorageKeys.userSn,
+          defaultValue: [],
+        );
+
+        final sn = UserSn(
+          company: userSn[0],
+          department: userSn[1],
+          system: userSn[2],
+        );
+
+        final String employee = '${sn.company}_${sn.department}_${sn.system}';
+
+        formData.fields.addAll([
+          MapEntry('myFLayer', ruleId),
+          MapEntry('leave[0][start]', startTime),
+          MapEntry('leave[0][end]', endTime),
+          MapEntry('leave[0][hour]', hours.toString()),
+          MapEntry('leave[0][min]', minutes.toString()),
+          MapEntry('leave[0][date]', startDate),
+          MapEntry('s_date', startDate),
+          MapEntry('d_date', endDate),
+          MapEntry('FLayer2', sn.company),
+          MapEntry('SLayer2', sn.department),
+          MapEntry('sub_usn', agentId),
+          MapEntry('TLayer2', employee),
+          MapEntry('remark', remark),
+          const MapEntry('action', 'add'),
+          const MapEntry('pageType', 'leave'),
+        ]);
+
+        if (files != null && files.isNotEmpty) {
+          for (var i = 0; i < files.length; i++) {
+            final file = files[i];
+            final fileName = file.path.split('/').last;
+            formData.files.add(
+              MapEntry(
+                'files[]',
+                await MultipartFile.fromFile(file.path, filename: fileName),
+              ),
+            );
+          }
+        }
+
+        final response = await _client.post(
+          ApiConfig.LEAVE_URL,
+          data: formData,
+          options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
+        );
+        return response;
+      },
+      (e, s) => Failure(
+        message: 'Failed to send form request: ${e.toString()}',
+        status: 'send_form_failed',
       ),
     );
   }

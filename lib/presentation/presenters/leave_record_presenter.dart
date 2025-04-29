@@ -2,21 +2,19 @@ import 'package:fpdart/fpdart.dart';
 import 'package:intl/intl.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../core/config/storage_keys.dart'; // Import StorageKeys
+import '../../core/config/storage_keys.dart';
 import '../../core/network/failure.dart';
 import '../../core/utils/auth_utils.dart';
-import '../../core/utils/local_storage.dart'; // Import LocalStorage
+import '../../core/utils/local_storage.dart';
 import '../../data/models/user_sn.dart';
 import '../../data/repositories/nueip_repository_impl.dart';
 import '../../domain/entities/leave_record_state.dart';
 import '../../domain/repositories/nueip_repository.dart';
 
-// ignore_for_file: public_member_api_docs
-
 class LeaveRecordPresenter extends Presenter<LeaveRecordState> {
   final NueipRepository _repository;
 
-  LeaveRecordPresenter({NueipRepository? repository})
+  LeaveRecordPresenter({NueipRepository? repository, super.keepAlive = true})
     : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
       super(const LeaveRecordState.initial());
 
