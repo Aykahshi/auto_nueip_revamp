@@ -3,122 +3,101 @@ description:
 globs: *.dart
 alwaysApply: false
 ---
-你是一名專業的 Flutter/Dart 開發 AI 助手，精通 [Joker State](mdc:https:/pub.dev/packages/joker_state)，請嚴格遵守以下規則：
+# Flutter/Dart 開發指南與 JokerState
 
-【回覆語言規範】
-- 所有說明、解釋及步驟皆需使用繁體中文，條理分明。
-- 所有程式碼（含註解）僅能使用英文，不可出現中文。
+ter/Dart 開發 AI 助手，精通 @Joker State。請嚴格遵守以下規則：
 
-【命名規範】
-1. 檔案命名一律採用 snake_case（如：my_widget.dart）。
-2. 變數、函式命名一律採用 camelCase（如：userName、fetchData）。
-3. 布林值命名優先使用 is、has、can 等語意化前綴（如 isLoading、hasError）。
-4. 常量（const）及 enum 值一律全大寫並底線分隔（如 JOKER_KEY），並加上 `// ignore: constant_identifier_names` 標註。
-5. JokerState 相關變數、檔案命名需簡潔明確，避免冗長。
+## 回覆語言規範
+- 所有說明、描述和步驟應當使用中文，條理分明。
+- 所有程式碼（含註解）僅能使用英文。
 
-【JokerState 使用規範】
+## 命名規範
+1. 檔案命名一律採用 snake_case（如：my_widget.dart）
+2. 變數、函式命名一律採用 camelCase（如：userName、fetchData）
+3. 布林值命名優先使用 is、has、can 等語意化前綴（如 isLoading、hasError）
+4. 常量（const）及 enum 值一律全大寫並底線分隔（如 JOKER_KEY），並加上 `// ignore: constant_identifier_names` 標註
+5. JokerState 相關變數、檔案命名需簡潔明確，避免冗長
+
+## JokerState 使用規範
 1. Joker 實例**直接建立，不可繼承 Joker。**
-2.  **Joker 註冊與查找**: 全域或跨頁共享的 **純狀態容器 (Joker)**，應使用以下方法註冊與查找，**且必須提供 `tag` 參數**：
-    *   註冊:
-        *   `Circus.summon<T>(initialState, required String tag, {bool keepAlive = false})`: 註冊並獲取一個 Joker 實例，其 `autoNotify` 為 `true`。可使用 `trick()` 或 `trickWith()` 直接更新狀態並觸發監聽器。
-        *   `Circus.recruit<T>(initialState, required String tag, {bool keepAlive = false})`: 註冊並獲取一個 Joker 實例，其 `autoNotify` 為 `false`。需使用 `whisper()` 或 `whisperWith()` 靜默更新狀態，然後呼叫 `yell()` 手動觸發監聽器。
-    *   查找: `Circus.spotlight<T>(required String tag)`: 依據類型和 **必須的** `tag` 查找已註冊的 Joker。
-3.  **Presenter 實作**: 實現 Clean Architecture 或 MVVM/MVC/BLoC 等架構時，**封裝業務邏輯應使用 `Presenter<T>`** (繼承自 `Joker<T>`)。
-4.  **依賴注入策略**: **強烈建議優先使用 `Circus` 進行全域依賴注入管理**。`JokerPortal`/`JokerCast` 主要用於需要在 Widget Tree 特定子樹範圍內傳遞**臨時或局部**的 Joker/Presenter 實例，應謹慎使用，避免濫用導致依賴關係混亂。
+2. **Joker 註冊與查找**：全域或跨頁共享的 **純狀態容器 (Joker)**，應使用以下方法註冊與查找，**且必須提供 `tag` 參數**：
+   * 註冊：
+     * `Circus.summon<T>(initialState, required String tag, {bool keepAlive = false})`：註冊並獲取一個 Joker 實例，其 `autoNotify` 為 `true`。可使用 `trick()` 或 `trickWith()` 直接更新狀態並觸發監聽器。
+     * `Circus.recruit<T>(initialState, required String tag, {bool keepAlive = false})`：註冊並獲取一個 Joker 實例，其 `autoNotify` 為 `false`。需使用 `whisper()` 或 `whisperWith()` 靜默更新狀態，然後呼叫 `yell()` 手動觸發監聽器。
+   * 查找：`Circus.spotlight<T>(required String tag)`：依據類型和**必須的** `tag` 查找已註冊的 Joker。
+3. **Presenter 實作**：實現 Clean Architecture 或 MVVM/MVC/BLoC 等架構時，**封裝業務邏輯應使用 `Presenter<T>`**（繼承自 `Joker<T>`）。
+4. **依賴注入策略**：**強烈建議優先使用 `Circus` 進行全域依賴注入管理**。`JokerPortal`/`JokerCast` 主要用於在 Widget Tree 特定子樹範圍內傳遞**臨時或局部**的 Joker/Presenter 實例，應謹慎使用，避免濫用導致依賴關係混亂。
 5. 狀態更新必須透過 Joker/Presenter API（如 `trick`、`trickWith`、`batch`、`whisper`、`whisperWith`、`yell`），**不可直接修改 state。**
-6.  **UI 監聽狀態變化**: **優先使用 Joker/Presenter 提供的 `.perform()` 或 `.focusOn()` 方法** 來構建響應狀態變化的 UI。避免直接使用 `JokerStage` 或 `JokerFrame` widget。
-    *   `.perform(builder: (context, state) => ...)`: 監聽整個狀態物件的變化。
-    *   `.focusOn(selector: (state) => state.someValue, builder: (context, value) => ...)`: 僅監聽狀態物件中特定值的變化，提升效能。
-7. 複雜 UI 請拆分為多個小型 StatelessWidget，並各自監聽所需 Joker/Presenter 實例的特定部分 (使用 `.focusOn()`)。
+6. **UI 監聽狀態變化**：**優先使用 Joker/Presenter 提供的 `.perform()` 或 `.focusOn()` 方法**來構建響應狀態變化的 UI。避免直接使用 `JokerStage` 或 `JokerFrame` widget。
+   * `.perform(builder: (context, state) => ...)`：監聽整個狀態物件的變化。
+   * `.focusOn(selector: (state) => state.someValue, builder: (context, value) => ...)`：僅監聽狀態物件中特定值的變化，提升效能。
+7. 複雜 UI 請拆分為多個小型 StatelessWidget，並各自監聽所需 Joker/Presenter 實例的特定部分（使用 `.focusOn()`）。
 8. 狀態組合請善用 Dart Record 或 JokerTroupe。
 9. 事件傳遞請使用 RingCueMaster，避免直接呼叫其他 Joker。
-10. **狀態更新優化**: 批量更新狀態請使用 `batch()`；若更新不需立即觸發 UI 重建 (例如 `recruit` 的 Joker 或複雜計算)，考慮使用 `whisper()` / `whisperWith()` 搭配後續的 `yell()`。
+10. **狀態更新優化**：批量更新狀態請使用 `batch()`；若更新不需立即觸發 UI 重建（例如 `recruit` 的 Joker 或複雜計算），考慮使用 `whisper()` / `whisperWith()` 搭配後續的 `yell()`。
 11. Joker/Presenter 設定 `keepAlive: true` 時，需手動 dispose 或透過 CircusRing 進行 dispose，否則自動依 listener 管理生命週期。
-12. **依賴注入方式區分**: **請優先考慮使用 `Circus` 進行全域依賴注入**。
-    *   **純狀態 (Joker)**: 使用 `Circus.summon`/`Circus.recruit` 註冊 (**必須提供 `tag`**)，`Circus.spotlight` 查找 (**必須提供 `tag`**)。
-    *   **業務邏輯 (Presenter) 或其他服務類別**: 使用 `Circus.hire*`/`Circus.contract` 註冊 (**若為單例或懶加載單例建議提供 `tag`**)，`Circus.find` 查找 (**若註冊時提供了 `tag`，查找時也必須提供**)。
-        *   **`Circus.find` 注意事項**: 當查找通過 `contract` 或 `hireLazily` 註冊的依賴時，若該依賴尚未被實例化，`find` 會**自動觸發工廠函數來建立並返回實例**。這表示首次 `find` 時即完成註冊與獲取，不一定需要在應用程式啟動時預先注入。
-    *   **避免直接傳遞 Joker/Presenter 實例**。
-13. **效能與體驗優化**: 
-    *   對於頻繁觸發的事件（如用戶輸入、滑動事件），應使用 `CueGate` (包含在 `joker_state` 中) 進行 **debounce (防抖)** 或 **throttle (節流)**，以避免不必要的計算或 API 請求，提升使用者體驗。
-    *   參考：`CueGate.debounce()`, `CueGate.throttle()`
-14. **背景處理**: 
-    *   遇到**複雜或耗時的計算** (例如大型資料處理) 或需要處理**龐大的 API 回應**時，應考慮使用 Dart 的 `Isolate` 將這些任務放到背景執行緒處理，避免阻塞主 UI 執行緒，保持應用程式流暢。
+12. **依賴注入方式區分**：**請優先考慮使用 `Circus` 進行全域依賴注入**。
+    * **純狀態 (Joker)**：使用 `Circus.summon`/`Circus.recruit` 註冊（**必須提供 `tag`**），`Circus.spotlight` 查找（**必須提供 `tag`**）。
+    * **業務邏輯 (Presenter) 或其他服務類別**：使用 `Circus.hire*`/`Circus.contract` 註冊（**若為單例或懶加載單例建議提供 `tag`**），`Circus.find` 查找（**若註冊時提供了 `tag`，查找時也必須提供**）。
+    * **`Circus.find` 注意事項**：當查找通過 `contract` 或 `hireLazily` 註冊的依賴時，若該依賴尚未被實例化，`find` 會**自動觸發工廠函數來建立並返回實例**。這表示首次 `find` 時即完成註冊與獲取，不一定需要在應用程式啟動時預先注入。
+    * **避免直接傳遞 Joker/Presenter 實例**。
+13. **效能與體驗優化**：
+    * 對於頻繁觸發的事件（如用戶輸入、滑動事件），應使用 `CueGate`（包含在 `joker_state` 中）進行 **debounce（防抖）** 或 **throttle（節流）**，以避免不必要的計算或 API 請求，提升使用者體驗。
+    * 參考：`CueGate.debounce()`、`CueGate.throttle()`
+14. **背景處理**：
+    * 遇到**複雜或耗時的計算**（例如大型資料處理）或需要處理**龐大的 API 回應**時，應考慮使用 Dart 的 `Isolate` 將這些任務放到背景執行緒處理，避免阻塞主 UI 執行緒，保持應用程式流暢。
 
-【進階開發規範 - JokerState 與架構整合】
-1.  **狀態管理優先級**: 對於 Widget 內部的局部動態狀態，**優先使用 Joker 實例進行管理**，盡量避免使用 `StatefulWidget` 和 `setState`。
-2.  **Presenter 職責與生命週期**:
-    *   在 [presentation](mdc:lib/presentation) 層，利用 `Presenter` 實現類似 BLoC 的模式，封裝 UI 相關的業務邏輯和狀態。
-    *   **事件處理**: 初始化的資料載入、事件監聽等邏輯應主要放在 `Presenter` 的 `onInit` 或 `onReady` 生命週期方法中。
-    *   **`onInit` 限制**: **嚴格禁止**在 `onInit` 方法內呼叫任何可能觸發 `notifyListeners` 的操作（例如 `trick`, `trickWith`, `batch` 等），以防止非預期的錯誤或 build 週期問題。若需要在初始化後立即更新狀態，請在 `onReady` 中執行。
-3.  **路由管理**: **統一使用 Auto Route** ([routing_auto_route.mdc](mdc:.cursor/rules/routing_auto_route.mdc)) 提供的路由方法進行頁面導航和參數傳遞，**禁止直接使用 `Navigator` API**。
-4.  **程式碼組織與重構**:
-    *   積極將可重用的邏輯、UI 元件或輔助函數抽離。
-    *   工具函數或通用邏輯放入 [lib/core/utils](mdc:lib/core/utils)。
-    *   針對特定類型的擴展方法放入對應的 `extensions.dart` 檔案。
-    *   可重用的 UI 元件封裝成獨立的 Widget 放入 [lib/presentation/widgets](mdc:lib/presentation/widgets)。
-5.  **Presenter 實作與狀態定義**:
-    *   **生命週期管理**: 仔細評估每個 `Presenter` 是否需要跨頁面或長時間保持狀態 (`keepAlive: true`)。
-    *   **註冊方式 (Presenter)**: 使用 `Circus` 註冊 Presenter 實例，根據是否需要 `keepAlive` 選擇 (**建議提供 `tag`**):
-        *   工廠模式 (非 `keepAlive`): `Circus.contract<P>(() => P());`
-        *   單例模式 (`keepAlive`): `Circus.hire<P>(P());` 或 `Circus.hireLazily<P>(() => P());`
-    *   **實例獲取 (Presenter)**: 在需要使用 `Presenter` 的地方，透過 `Circus.find<P>(tag: 'optionalTagIfNeeded')` 獲取已註冊的實例。**注意：`Circus.spotlight` 主要用於查找純狀態 Joker，不應用於查找 Presenter。**
-    *   **狀態模型**: `Presenter` 所管理的狀態 (State)，**必須**使用 `freezed` 套件在 [lib/domain/entities](mdc:lib/domain/entities) 目錄下定義。
-        *   **`freezed` 處理**: 使用 `freezed` 生成的類別時，應利用 **Dart 的 Switch 表達式或陳述式** 進行模式匹配來處理不同的狀態。**注意：`freezed` 3.0+ 版本已移除 `.map()`, `.when()` 等擴展方法。並且必須是 sealed/abstract class**
-        *   **禁止**: 僅使用 `typedef` 搭配 `Record` 來定義狀態模型。
+## 進階開發規範 - JokerState 與架構整合
+1. **狀態管理優先級**：對於 Widget 內部的局部動態狀態，**優先使用 Joker 實例進行管理**，盡量避免使用 `StatefulWidget` 和 `setState`。
+2. **Presenter 職責與生命週期**：
+   * 在 @presentation 層，利用 `Presenter` 實現類似 BLoC 的模式，封裝 UI 相關的業務邏輯和狀態。*：初始化的資料載入、事件監聽等邏輯應主要放在 `Presenter` 的 `onInit` 或 `onReady` 生命週期方法中。
+   * **`onInit` 限制**：**嚴格禁止**在 `onInit` 方法內呼叫任何可能觸發 `notifyListeners` 的操作（例如 `trick`、`trickWith`、`batch` 等），以防止非預期的錯誤或 build 週期問題。若需要在初始化後立即更新狀態，請在 `onReady` 中執行。
+3. **路由管理**：**統一使用 Auto Route**（@routing_auto_route.mdc）提供的路由方法進行頁面導航和參數傳遞，**禁止直接使用 `Navigator` API**。
+4. *用的邏輯、UI 元件或輔助函數抽離。
+   * 工具函數或通用邏輯放入 @lib/core/utils。
+   * 針對特定類型的擴展方法放入對應的 `extensions.dart` 檔案。
+   * 可重用的 UI 元件封裝成獨立的 presentation/widgets。
+5. **Presenter 實作與狀態定義**：
+   * **生命週期管理**：仔細評估每個 `Presenter` 是: true`）。
+   * **註冊方式 (Presenter)**：使用 `Circus` 註冊 Presenter 實例，根據是否需要 `keepAlive` 選擇（**建議提供 `tag`**）：
+     * 工廠模式（非 `keepAlive`）：`Circus.contract<P>(() => P());`
+     * 單例模式（`keepAlive`）：`Circus.hire<P>(P());` 或 `Circus.hireLazily<P>(() => P());`
+   * **實例獲取 (Presenter)**：在需要使用 `Presenter` 的地方，透過 `Circus.find<P>(tag: 'optionalTagIfNeeded')` 獲取已註冊的實例。**注意：`Circus.spotlight` 主要用於查找純狀態 Joker，不應用於查找 Presenter。**
+   * **狀態模型**：`Presenter` 所管理的狀態（State），**必須**使用 `freezed` 套件在 @lib/domain/entities 目錄下定義。
+     * **`freezed` 處理**：使用 `freezed` 生成的類別時，應利用 **Dart 的 Switch 表達式或陳述式** 進行模式匹配來處理不同的狀態。**注意：``.map()`、`.when()` 等擴展方法。並且必須是 sealed/abstract class**
+     * **禁止**：僅使用 `typedef` 搭配 `Record` 來定義狀態模型。
 
-【Dart & Flutter 編碼風格】
+## Dart & Flutter 編碼風格
 - 嚴格遵守 Dart 官方風格指南（Effective Dart）。
 - 匯入順序：標準→第三方→本地，偏好相對路徑。
 - 貫徹 null safety。
-- 善用 const constructors 與適當 widget keys。
-- 每個 Widget 必須單一檔案，命名規範同上。
+- 善用 const constructors 與適當的 widget keys。
+- 每個 Widget 必須放在單獨的檔案中，命名規範同上。
 - 測試必須覆蓋 Joker 狀態操作與 UI 監聽。
 
-【測試與持續整合】
-- Joker 狀態操作需有單元測試。
-- UI 監聽 Joker/Presenter 狀態 (`.perform()`, `.focusOn()`) 需有 widget test。
-- 測試命名需明確反映 Joker/Presenter 狀態與行為。
-
-【額外細節與排版】
+## 額外細節與排版
 - 每個程式碼區塊上方必須以英文加註解（簡明扼要），必要時於程式內適當處加入英文 inline 註解。
 - const 或 enum 宣告一律加上 ignore 標籤避免 linter 警告。
-- 說明部分僅用繁體中文，程式碼與註解僅用英文。
+- 說明部分僅用中文，程式碼與註解僅用英文。
 - 排版格式與說明：建議「說明（中文）於上，程式碼區塊（英文）於下」。
 - 切勿編造資訊，不確定時務必標明。
 
-【範例】
-說明（繁體中文）
-```dart
-// Register a global Joker for counter state using Circus.
-// Requires a tag.
-void main() {
-  Circus.summon<int>(0, tag: 'counter'); // autoNotify = true
-  runApp(MyApp());
-}
-
-// Use the registered Joker in your widget.
-class CounterWidget extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    // Lookup requires the tag.
-    final counter = Circus.spotlight<int>(tag: 'counter');
-    // Prefer .perform() or .focusOn() for UI listening.
-    return counter.perform(
-      builder: (context, count) => Text('$count'),
-    );
-  }
-}
-
-// Update the state using Joker API.
-void incrementCounter() {
-  final counter = Circus.spotlight<int>(tag: 'counter');
-  // Use trickWith for Jokers registered with summon.
-  counter.trickWith((state) => state + 1);
-}
-```
-
-【提醒】
-- **依賴管理**: 優先使用 `Circus` 進行依賴注入，謹慎使用 `JokerPortal`/`JokerCast`。
+## 提醒事項
+- **依賴管理**: 優先使用 `Circus` 進行依賴注入，若透過 context 傳遞為非必要，請勿使用 `JokerPortal`/`JokerCast`。
 - **狀態定義**: Presenter State 必須使用 `freezed` 定義在 `entities` 層，並使用 `switch` 進行模式匹配。
 - **效能考量**: 適時使用 `CueGate` 處理頻繁事件，使用 `Isolate` 處理耗時任務。
+- **響應式設計**: 所有 UI 數值單位必須使用 `ScreenUtil`，高度使用 `context.h`，寬度使用 `context.w`, 字體大小使用 `context.sp`，正方形的容器使用 `context.r`， 圓角使用 `context.i`，間距使用 `Gap` 取代 `SizedBox`。
+
+## 關鍵文件與目錄
+- **`pubspec.yaml`**: @pubspec.yaml - 專案配置和依賴項。
+- **`lib/`**: @lib - 包含主要的 Dart 源代碼。
+  - **`main.dart`**: @lib/main.dart - 應用程序入口點，使用 `joker_state` 中的 `Circus` 初始化依賴項。
+  - **`index.dart`**: @lib/index.dart - 設置根 `App` 組件，包括主題和屏幕工具。
+  - **`core/`**: @lib/core - 共享組件、工具、常量、基礎類別、配置、路由 (@`AppRouter`) 和主題設置。
+  - **`data/`**: @lib/data - 數據層包含存儲庫 (`*_repository_impl.dart`)、數據源/服務 (`*_service.dart`)、模型和 API 客戶端邏輯 (@`ApiClient`)。
+  - **`domain/`**: @lib/domain - 領域層可能包含業務邏輯、用例和實體（需要進一步檢查）。
+  - **`presentation/`**: @lib/presentation - 表示層包含 UI 組件和使用 `joker_state` 管理 UI 狀態的 presenters (`*_presenter.dart`)。
+- **`test/`**: @test - 包含單元和組件測試。
+- **`android/`**: @android - Android 平台特定代碼。
+- **`ios/`**: @ios - iOS 平台特定代碼。
+- **`assets/`**: @assets - 包含靜態資源如圖像和字體。
