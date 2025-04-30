@@ -29,7 +29,7 @@ dependencies:
   gap: ^3.0.1
   google_fonts: ^6.2.1
   flutter_animate: ^4.5.2
-  dropdown_button2: ^3.0.0-beta.22
+  dropdown_button2: ^2.3.9
   salomon_bottom_bar: ^3.3.2
   flutter_screenutil: ^6.0.0-alpha.1
   animated_flip_counter: ^0.3.4
@@ -53,6 +53,7 @@ dependencies:
   form_builder_validators: ^11.1.2
   flutter_local_notifications: ^19.1.0
   flutter_keyboard_visibility: ^6.0.0
+  file_picker: ^10.1.2
 
 dev_dependencies:
   flutter_test:
