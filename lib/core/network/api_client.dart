@@ -4,7 +4,7 @@ import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
-import '../../data/models/auth_session.dart';
+import '../../features/login/data/models/auth_session.dart';
 import '../config/api_config.dart';
 import 'content_type_transformer.dart';
 import 'login_interceptor.dart';

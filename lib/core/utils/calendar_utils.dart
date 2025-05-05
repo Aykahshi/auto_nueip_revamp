@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../data/models/attendance_details.dart'; // Import needed model
+import '../../features/calendar/data/models/attendance_details.dart'; // Import needed model
 
 sealed class CalendarUtils {
   const CalendarUtils._(); // Private constructor to prevent instantiation
