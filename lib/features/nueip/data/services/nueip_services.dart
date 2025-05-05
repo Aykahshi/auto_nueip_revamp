@@ -14,6 +14,7 @@ import '../../../form/data/models/form_type_enum.dart';
 import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
 import '../../../form/data/models/work_hours.dart';
+import '../../../form/domain/entities/leave_rule.dart';
 import '../models/user_sn.dart';
 
 final class NueipService {
@@ -165,13 +166,13 @@ final class NueipService {
     );
   }
 
-  TaskEither<Failure, Map<String, List<Employee>>> getEmployees() {
+  TaskEither<Failure, Map<String, (String?, List<Employee>)>> getEmployees() {
     return TaskEither.tryCatch(
       () async {
         final Map<String, dynamic> payload = {
-          'single_select': 1,
-          'all_user': 1,
-          'work_status': 1,
+          'single_select': "1",
+          'all_user': "1",
+          'work_status': "1",
         };
 
         final response = await _client.post(APIs.EMPLOYEE_LIST, data: payload);
@@ -186,20 +187,21 @@ final class NueipService {
 
         final deptList = firstCompany['dept_list'] as Map<String, dynamic>;
 
-        final Map<String, List<Employee>> departmentEmployees = {};
+        final Map<String, (String?, List<Employee>)> departmentEmployees = {};
 
         for (final deptEntry in deptList.entries) {
           final dept = Department.fromJson(
             deptEntry.value as Map<String, dynamic>,
           );
           final deptName = dept.title ?? '查無此部門';
+          final deptId = dept.id;
+          final filteredEmployees =
+              dept.userList?.where((employee) {
+                return employee.name == null ||
+                    !employee.name!.contains("Administrator");
+              }).toList();
 
-          if (dept.userList != null && dept.userList!.isNotEmpty) {
-            final employeesList = dept.userList!.values.toList();
-            departmentEmployees[deptName] = employeesList;
-          } else {
-            departmentEmployees[deptName] = [];
-          }
+          departmentEmployees[deptName] = (deptId, filteredEmployees ?? []);
         }
 
         return departmentEmployees;
@@ -211,7 +213,7 @@ final class NueipService {
     );
   }
 
-  TaskEither<Failure, List<String>> getLeaveRules() {
+  TaskEither<Failure, List<LeaveRule>> getLeaveRules() {
     return TaskEither.tryCatch(
       () async {
         final userNo = LocalStorage.get<String>(
@@ -223,25 +225,24 @@ final class NueipService {
 
         final response = await _client.get(
           APIs.LEAVE_RULES,
-          queryParameters: {'user_no': userNo},
+          queryParameters: {'applicant': userNo},
         );
 
         final responseData = response.data as Map<String, dynamic>;
         final data = responseData['data'] as Map<String, dynamic>;
 
-        final List<String> leaveTypes = [];
+        final List<LeaveRule> leaveRules = [];
 
-        data.forEach((_, outerValue) {
-          if (outerValue is Map<String, dynamic>) {
-            outerValue.forEach((_, innerValue) {
-              if (innerValue is String) {
-                leaveTypes.add(innerValue);
-              }
+        data.forEach((_, rules) {
+          if (rules is Map<String, dynamic>) {
+            rules.forEach((key, value) {
+              final rule = LeaveRule(id: key, ruleName: value);
+              leaveRules.add(rule);
             });
           }
         });
 
-        return leaveTypes;
+        return leaveRules;
       },
       (e, _) =>
           Failure(message: e.toString(), status: 'get_leave_types_failed'),
@@ -276,7 +277,7 @@ final class NueipService {
           request.fields.add(MapEntry('dates[]', date));
         }
 
-        final response = await _client.post(APIs.LEAVE, data: request);
+        final response = await _client.post(APIs.LEAVE_SYSTEM, data: request);
 
         final List<dynamic> data = response.data as List<dynamic>;
 
@@ -325,7 +326,7 @@ final class NueipService {
         };
 
         final response = await _client.post(
-          APIs.LEAVE,
+          APIs.LEAVE_SYSTEM,
           data: queryParams,
           options: Options(
             contentType: 'application/x-www-form-urlencoded',
@@ -481,7 +482,7 @@ final class NueipService {
         }
 
         final response = await _client.post(
-          APIs.LEAVE,
+          APIs.LEAVE_SYSTEM,
           data: formData,
           options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
         );
