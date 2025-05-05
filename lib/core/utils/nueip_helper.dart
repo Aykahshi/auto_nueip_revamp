@@ -3,8 +3,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../data/models/auth_session.dart';
-import '../../data/repositories/nueip_repository_impl.dart';
+import '../../features/login/data/models/auth_session.dart';
+import '../../features/nueip/data/repositories/nueip_repository_impl.dart';
 import '../config/api_config.dart';
 import '../extensions/cookie_parser.dart';
 import '../extensions/htmlx.dart';

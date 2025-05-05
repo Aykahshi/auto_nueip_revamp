@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../data/models/auth_session.dart';
-import '../../presentation/presenters/login_presenter.dart';
+import '../../features/login/data/models/auth_session.dart';
+import '../../features/login/presentation/presenters/login_presenter.dart';
 import '../config/storage_keys.dart';
 import '../network/api_client.dart';
 import 'local_storage.dart';

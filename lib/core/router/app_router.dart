@@ -1,17 +1,17 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
-import '../../data/models/leave_record.dart';
-import '../../presentation/screens/apply_form_screen.dart';
-import '../../presentation/screens/calendar_screen.dart';
-import '../../presentation/screens/developer_info_screen.dart';
-import '../../presentation/screens/form_detail_screen.dart';
-import '../../presentation/screens/form_screen.dart';
-import '../../presentation/screens/home_screen.dart';
-import '../../presentation/screens/login_screen.dart';
-import '../../presentation/screens/main_screen.dart';
-import '../../presentation/screens/profile_editing_screen.dart';
-import '../../presentation/screens/setting_screen.dart';
+import '../../features/calendar/presentation/screens/calendar_screen.dart';
+import '../../features/form/data/models/leave_record.dart';
+import '../../features/form/presentation/screens/apply_form_screen.dart';
+import '../../features/form/presentation/screens/form_detail_screen.dart';
+import '../../features/form/presentation/screens/form_screen.dart';
+import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/home/presentation/screens/main_screen.dart';
+import '../../features/login/presentation/screens/login_screen.dart';
+import '../../features/setting/presentation/screens/developer_info_screen.dart';
+import '../../features/setting/presentation/screens/profile_editing_screen.dart';
+import '../../features/setting/presentation/screens/setting_screen.dart';
 import 'auth_guard.dart';
 
 part 'app_router.gr.dart';

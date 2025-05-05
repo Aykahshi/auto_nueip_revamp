@@ -1,7 +1,7 @@
 // Adjust the import path to where your Holiday model is defined
 import 'package:flutter/foundation.dart';
 
-import '../../data/models/holiday.dart';
+import '../../features/holiday/data/models/holiday.dart';
 
 extension HolidayListValidation on List<Holiday> {
   /// Checks if the list contains holiday data for the previous and current year.
