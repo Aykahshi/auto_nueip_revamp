@@ -1,0 +1,294 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 專案實作注意事項
+
+## 命名規範
+1. 檔案命名一律採用 snake_case（如：my_widget.dart）
+2. 變數、函式命名一律採用 camelCase（如：userName、fetchData）
+3. 布林值命名優先使用 is、has、can 等語意化前綴（如 isLoading、hasError）
+4. 常量（const）及 enum 值一律全大寫並底線分隔（如 JOKER_KEY），並加上 `// ignore: constant_identifier_names` 標註
+5. JokerState 相關變數、檔案命名需簡潔明確，避免冗長
+
+## Clean Architecture
+- 嚴格遵循 Clean Architecture 分層：表現層（Presentation）、領域層（Domain）和數據層（Data）
+- 遵循依賴規則：依賴永遠指向內層
+- 領域層包含實體（entities）、倉儲介面（repositories interfaces）
+- 數據層實現倉儲並包含數據源和模型
+- 表現層包含 UI 組件、Presenter 和視圖模型
+- 為每個組件使用正確的抽象（介面/抽象類）
+- 每個功能特徵都應遵循此分層架構模式
+
+## 特徵優先組織
+- 按功能特徵而非技術層次組織程式碼
+- 每個特徵是一個自包含的模組，包含所有層次的實現
+- 核心或共享功能放在單獨的 'core' 目錄中
+- 特徵間的依賴應保持最小
+- 每個功能特徵的通用目錄結構：
+  lib/
+  ├── core/ # 共享/通用程式碼
+  │ ├── config/ # API 設置、LocalStorage Keys
+  │ ├── extensions/ # 通用擴展 (theme, datetime etc.)
+  │ ├── network/ # base ApiClient (Dio)、transformer、interceptor、Failure (implements Exception)
+  │ ├── router/ # Router (Auto Route)
+  │ ├── theme/ # APP Theme data
+  │ └── utils/ # 工具函數
+  ├── features/ # 所有應用功能
+  │ ├── feature_a/ # 單一功能
+  │ │ ├── data/ # 數據層
+  │ │ │ ├── models/ # API response DTO
+  │ │ │ ├── repositories/ # Repository 實現
+  │ │ │ └── services/ # data source (no matter local/remote)
+  │ │ ├── domain/ # 領域層
+  │ │ │ ├── entities/ # 業務對象 (State for Presnter, useful enum)
+  │ │ │ └── repositories/ # 倉儲介面
+  │ │ ├── presentation/ # 表現層
+  │ │ ├── presenter/ # Presenter狀態管理 (usage: FeatureAPresnter extends Presenter<FeatureAState>)
+  │ │ ├── screens/ # 畫面組件
+  │ │ └── widgets/ # 特徵專用組件
+  │ └── feature_b/ # 另一個具有相同結構的功能
+  ├── index.dart # root App widget (處理 ScreenUtil 初始化、AppTheme)
+  └── main.dart # 入口點
+
+## JokerState 實現
+- 使用 Presenter（繼承自 Joker）進行狀態管理
+- 為每個 Presenter 實現正確類型的狀態（使用 freezed）
+- 在領域層使用 freezed 定義不可變狀態和聯合類型
+- 為功能特徵的具體部分創建精細、專注的 Presenter
+- 明確處理加載、錯誤和成功狀態
+- 避免在 UI 組件中包含業務邏輯
+- 使用 Circus 進行 Presenter 和其他依賴的注入
+- 使用 `.perform()` 和 `.focusOn()` 監聽狀態變化
+- 將事件處理與 UI 邏輯分離
+
+## 依賴注入
+- 使用 Circus 作為依賴注入的服務定位器
+- 按功能特徵在單獨的檔案中註冊依賴
+- 在適當的地方實現延遲初始化
+- 使用工廠模式（factories）用於臨時對象，單例（singletons）用於服務
+- 創建易於測試的模擬（mock）的適當抽象
+
+## 狀態管理
+- 使用 freezed 確保狀態不可變
+- 使用聯合類型表示狀態（初始、加載、成功、錯誤），若有複雜狀態也考慮單一 State
+- 發布具有失敗詳情的特定、類型化錯誤狀態
+- 保持狀態類小而專注
+- 使用 copyWith 進行狀態轉換 (聯合類型無需使用 copyWith，因為每次更新 State 都是新的實例)
+- 使用 `.perform()` 和 `.focusOn()` 建構回應狀態變更的 UI
+- 使用 `joker.listen` 來實現副作用
+
+## UI 設計守則
+- 遵循 `flutter_screenutil: ^6.0.0-alpha.1` 新版寫法。
+- 所有 UI 的長寬、圓角、字型單位都應使用 Screenutil 擴展。
+- 高度使用 `context.h`、寬度使用 `context.w`、圓角使用 `context.i`、字體大小使用 `context.sp`。
+- 若容器的寬高相同 (正方形容器)，請使用 `context.r`。
+- 一律使用 `Gap` 代替 `SizedBox` 來作為間距，或使用 `Column/Row` 的 `spacing` 屬性。
+- 善用 `flutter_animate` 添加合適的動畫，提升 UX 體驗。
+
+## fpdart 錯誤處理
+- 使用 TaskEither<L, R> 處理非同步操作，帶有類型化的錯誤處理
+- TaskEither 類似於 Future<Either<L, R>>，但提供更多函數式操作
+- 使用 `match(), fold()` 方法處理成功與失敗情況
+- 創建強類型的錯誤體系，增強錯誤處理的型別安全性
+- 使用 fpdart 的 TaskEither 進行函數式非同步錯誤處理的示例實現：
+```dart
+/// Base failure class for all application failures
+/// (core/network)
+@freezed
+sealed class Failure with _$Failure implements Exception {
+  const factory Failure({
+    required String message,
+    required String status,
+  }) = _Failure;
+}
+
+/// Service layer with Top level api calls with ApiClient(Dio) 
+/// (data/services)
+final class UserService {
+  final ApiClient _client;
+
+  UserService({ApiClient? client})
+    : _client = client ?? Circus.find<ApiClient>();
+
+  TaskEither<Failure, Response> getUser({
+    required String id,
+  }) {
+    return TaskEither.tryCatch(
+      () async => await _client.get(
+        APIs.GET_USER,
+      ),
+      (e, _) => Failure(
+        message: e.toString(),
+        status: 'failed type',
+      ),
+    );
+  }
+}
+
+/// register in main.dart if needed
+Circus.hire<UserService>(UserService()); // Singleton
+Circus.hireLazily<UserService>(()=> UserService()); // Lazy Singleton
+Circus.contract<UserService>(()=> UserService()); // Factory
+
+/// DTO for Api response (data/models)
+@freezed
+sealed class User with _$User {
+  const factory User({
+    required String id,
+    required String name,
+    required String gender,
+    required int age,
+  }) = _User;
+
+  factory User.fromJson(Map<String, dynamic> json) =>
+      _$UserFromJson(json);
+}
+
+/// Repository layer (domain/repositories) with TaskEither pattern
+abstract class UserRepository {
+  TaskEither<Failure, User> getUser(String id);
+  TaskEither<Failure, List<User>> getUsers();
+  TaskEither<Failure, Unit> saveUser(User user);
+}
+
+/// Repository Implementation (data/repositories)
+final class UserRepositoryImpl implements UserRepository {
+  final UserService _service;
+
+  UserRepositoryImpl({UserService? service})
+    : _service = service ?? Circus.find<UserService>();
+  
+  @override
+  TaskEither<Failure, User> getUser({required String id}) {
+    reture _service.getUser(id: id);
+  }
+  
+  // Other implementations...
+}
+
+/// State for Presenter (domain/entities)
+// single state
+@freezed
+sealed class UserState with _$UserState {
+  const factory UserState({
+    final User? user,
+    @Default(false) final bool isLoading,
+    @Default(false) final bool hasError,
+    final String? errorMsg,
+  }) = _UserState;
+}
+// union state
+@freezed
+sealed class UserState with _$UserState {
+  const factory UserState.initial() = UserInitial;
+
+  const factory UserState.loading() = UserLoading;
+
+  const factory UserState.loaded({
+    required User user,
+  }) = UserLoaded;
+
+  const factory UserState.error({
+    final String? errorMsg,
+  }) = UserError;
+}
+
+/// Presnter implementation (presentation/presenter)
+final class UserPrenster extends Presenter<UserState> {
+  final UserRepository _repository;
+
+  // Constructor finds the registered UserPrenster via CircusRing
+  UserPrenster({
+    UserRepository? repository, 
+    super.keepAlive = true, // set keepAlive if needed
+    super.autoNotify = true, // set autoNotify if needed
+  })
+    : _repository = repository ?? Circus.find<UserRepositoryImpl>(),
+      // Set initial state using freezed constructor
+      super(const UserState.initial()); 
+
+  @override
+  void onReady() {
+    super.onReady();
+    // load initial data in onReady.
+    getUser();
+  }
+
+  @override
+  void onDone() {
+    // do anything you want when Presnter got dispose.
+    debugPrint('UserPrenster has been disposed.');
+    super.onDone();
+  }
+
+  // If UserState is single state
+  Future<void> getUser() async {
+    final result = await _repository.getUser().run();
+
+    trickWith((state) => state.copyWith(isLoading: true));
+
+    result.fold(
+      (failure) => trickWith((state) => state.copyWith(isLoading: false, hasError: true,errorMsg: failure.message)),
+      (response) {
+        final jsonData = response.data as Map<String, dynamic>;
+        final user = User.fromJson(jsonData);
+        trickWith((state) => state.copyWith(isLoading: false, userData: user));
+      },
+    );
+  }
+  // If UserState is union state
+  Future<void> getUser() async {
+    final result = await _repository.getUser().run();
+
+    trick(const UserState.loading());
+
+    result.fold(
+      (failure) => trick(const UserState.error(errorMsg: failure. message)),
+      (response) {
+        final jsonData = response.data as Map<String, dynamic>;
+        final user = User.fromJson(jsonData);
+        trick(UserState.loaded(user: user));
+      },
+    );
+  }
+}
+
+/// UI layer (presentation/screens or presentation/widgets)
+class ProfileScreen extends StatelessWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    // Just create a new Presenter
+    final userPresnter = UserPrenster();
+    // or through CircusRing (must register it in somewhere)
+    // example: final userPresnter = Circus.find<UserPrenster>();
+
+    return Scaffold(
+      body: userPresnter.perform(
+        builder: (BuildContext context, UserState state) {
+          // --- If UserState is single state ---
+          if (state.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (state.hasError) {
+            return Center(child: Text(state.errorMsg));
+          }
+
+          return Center(child: Text(state.user!.name));
+
+          // --- If UserState is union state ---
+          return switch (state) {
+            UserLoading => const Center(child: CircularProgressIndicator()),
+            UserLoaded => Center(child: Text(state.user!.name)),
+            UserError => Center(child: Text(state.errorMsg)),
+            _ => const SizedBox.shrink(),
+          };
+        };
+      ),
+    );
+  }
+}

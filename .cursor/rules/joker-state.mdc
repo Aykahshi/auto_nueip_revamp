@@ -3,20 +3,9 @@ description:
 globs: *.dart
 alwaysApply: false
 ---
-# Flutter/Dart 開發指南與 JokerState
+# Flutter/Dart 開發指南
 
-ter/Dart 開發 AI 助手，精通 @Joker State。請嚴格遵守以下規則：
-
-## 回覆語言規範
-- 所有說明、描述和步驟應當使用中文，條理分明。
-- 所有程式碼（含註解）僅能使用英文。
-
-## 命名規範
-1. 檔案命名一律採用 snake_case（如：my_widget.dart）
-2. 變數、函式命名一律採用 camelCase（如：userName、fetchData）
-3. 布林值命名優先使用 is、has、can 等語意化前綴（如 isLoading、hasError）
-4. 常量（const）及 enum 值一律全大寫並底線分隔（如 JOKER_KEY），並加上 `// ignore: constant_identifier_names` 標註
-5. JokerState 相關變數、檔案命名需簡潔明確，避免冗長
+您是一名專業的 Flutter 開發 AI 助手，精通以 JokerState 實現的 Clean Architecture 與特徵優先（Feature-first）架構。
 
 ## JokerState 使用規範
 1. Joker 實例**直接建立，不可繼承 Joker。**
@@ -47,10 +36,12 @@ ter/Dart 開發 AI 助手，精通 @Joker State。請嚴格遵守以下規則：
 14. **背景處理**：
     * 遇到**複雜或耗時的計算**（例如大型資料處理）或需要處理**龐大的 API 回應**時，應考慮使用 Dart 的 `Isolate` 將這些任務放到背景執行緒處理，避免阻塞主 UI 執行緒，保持應用程式流暢。
 
+
+
 ## 進階開發規範 - JokerState 與架構整合
 1. **狀態管理優先級**：對於 Widget 內部的局部動態狀態，**優先使用 Joker 實例進行管理**，盡量避免使用 `StatefulWidget` 和 `setState`。
 2. **Presenter 職責與生命週期**：
-   * 在 @presentation 層，利用 `Presenter` 實現類似 BLoC 的模式，封裝 UI 相關的業務邏輯和狀態。*：初始化的資料載入、事件監聽等邏輯應主要放在 `Presenter` 的 `onInit` 或 `onReady` 生命週期方法中。
+   * 在 @presentation 層，利用 `Presenter` 實現類似 BLoC 的模式，封裝 UI 相關的業務邏輯和狀態。*：初始化的資料載入、事件監聽等邏輯應主要放在 `Presenter` 的 `onInit (constructor)` 或 `onReady` 生命週期方法中。
    * **`onInit` 限制**：**嚴格禁止**在 `onInit` 方法內呼叫任何可能觸發 `notifyListeners` 的操作（例如 `trick`、`trickWith`、`batch` 等），以防止非預期的錯誤或 build 週期問題。若需要在初始化後立即更新狀態，請在 `onReady` 中執行。
 3. **路由管理**：**統一使用 Auto Route**（@routing_auto_route.mdc）提供的路由方法進行頁面導航和參數傳遞，**禁止直接使用 `Navigator` API**。
 4. *用的邏輯、UI 元件或輔助函數抽離。
@@ -86,18 +77,3 @@ ter/Dart 開發 AI 助手，精通 @Joker State。請嚴格遵守以下規則：
 - **依賴管理**: 優先使用 `Circus` 進行依賴注入，若透過 context 傳遞為非必要，請勿使用 `JokerPortal`/`JokerCast`。
 - **狀態定義**: Presenter State 必須使用 `freezed` 定義在 `entities` 層，並使用 `switch` 進行模式匹配。
 - **效能考量**: 適時使用 `CueGate` 處理頻繁事件，使用 `Isolate` 處理耗時任務。
-- **響應式設計**: 所有 UI 數值單位必須使用 `ScreenUtil`，高度使用 `context.h`，寬度使用 `context.w`, 字體大小使用 `context.sp`，正方形的容器使用 `context.r`， 圓角使用 `context.i`，間距使用 `Gap` 取代 `SizedBox`。
-
-## 關鍵文件與目錄
-- **`pubspec.yaml`**: @pubspec.yaml - 專案配置和依賴項。
-- **`lib/`**: @lib - 包含主要的 Dart 源代碼。
-  - **`main.dart`**: @lib/main.dart - 應用程序入口點，使用 `joker_state` 中的 `Circus` 初始化依賴項。
-  - **`index.dart`**: @lib/index.dart - 設置根 `App` 組件，包括主題和屏幕工具。
-  - **`core/`**: @lib/core - 共享組件、工具、常量、基礎類別、配置、路由 (@`AppRouter`) 和主題設置。
-  - **`data/`**: @lib/data - 數據層包含存儲庫 (`*_repository_impl.dart`)、數據源/服務 (`*_service.dart`)、模型和 API 客戶端邏輯 (@`ApiClient`)。
-  - **`domain/`**: @lib/domain - 領域層可能包含業務邏輯、用例和實體（需要進一步檢查）。
-  - **`presentation/`**: @lib/presentation - 表示層包含 UI 組件和使用 `joker_state` 管理 UI 狀態的 presenters (`*_presenter.dart`)。
-- **`test/`**: @test - 包含單元和組件測試。
-- **`android/`**: @android - Android 平台特定代碼。
-- **`ios/`**: @ios - iOS 平台特定代碼。
-- **`assets/`**: @assets - 包含靜態資源如圖像和字體。
