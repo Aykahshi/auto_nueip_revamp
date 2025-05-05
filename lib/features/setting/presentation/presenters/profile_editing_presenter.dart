@@ -9,7 +9,7 @@ import '../../../../core/utils/local_storage.dart';
 import '../../domain/entities/profile_editing_state.dart';
 
 // Presenter for profile editing logic and state management
-class ProfileEditingPresenter extends Presenter<ProfileEditingState> {
+final class ProfileEditingPresenter extends Presenter<ProfileEditingState> {
   ProfileEditingPresenter() : super(const ProfileEditingState());
 
   @override
