@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:joker_state/joker_state.dart';
@@ -7,6 +9,8 @@ import '../../../form/data/models/employee_list.dart';
 import '../../../form/data/models/form_type_enum.dart';
 import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
+import '../../../form/data/models/work_hours.dart';
+import '../../../form/domain/entities/leave_rule.dart';
 import '../../domain/repositories/nueip_repository.dart';
 import '../models/user_sn.dart';
 import '../services/nueip_services.dart';
@@ -83,12 +87,20 @@ final class NueipRepositoryImpl implements NueipRepository {
   }
 
   @override
-  TaskEither<Failure, Map<String, List<Employee>>> getEmployees() {
+  TaskEither<Failure, Map<String, (String?, List<Employee>)>> getEmployees() {
     return _service.getEmployees();
   }
 
   @override
-  TaskEither<Failure, List<String>> getLeaveRules() {
+  TaskEither<Failure, List<WorkHours>> getWorkHours({
+    required List<String> dates,
+    required String employeeId,
+  }) {
+    return _service.getWorkHours(dates: dates, employeeId: employeeId);
+  }
+
+  @override
+  TaskEither<Failure, List<LeaveRule>> getLeaveRules() {
     return _service.getLeaveRules();
   }
 
@@ -118,5 +130,34 @@ final class NueipRepositoryImpl implements NueipRepository {
     required String id,
   }) {
     return _service.getLeaveSignData(type: type, id: id);
+  }
+
+  @override
+  TaskEither<Failure, Response> sendLeaveForm({
+    required String ruleId,
+    required String startDate,
+    required String endDate,
+    required String startTime,
+    required String endTime,
+    required int hours,
+    required int minutes,
+    required String agentId,
+    required String remark,
+    List<File>? files,
+    required String cookie,
+  }) {
+    return _service.sendLeaveForm(
+      ruleId: ruleId,
+      startDate: startDate,
+      endDate: endDate,
+      startTime: startTime,
+      endTime: endTime,
+      hours: hours,
+      minutes: minutes,
+      agentId: agentId,
+      remark: remark,
+      files: files,
+      cookie: cookie,
+    );
   }
 }

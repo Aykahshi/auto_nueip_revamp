@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 
@@ -6,6 +8,8 @@ import '../../../form/data/models/employee_list.dart';
 import '../../../form/data/models/form_type_enum.dart';
 import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
+import '../../../form/data/models/work_hours.dart';
+import '../../../form/domain/entities/leave_rule.dart';
 import '../../data/models/user_sn.dart';
 
 abstract class NueipRepository {
@@ -43,9 +47,14 @@ abstract class NueipRepository {
 
   TaskEither<Failure, Response> getUserInfo();
 
-  TaskEither<Failure, Map<String, List<Employee>>> getEmployees();
+  TaskEither<Failure, Map<String, (String?, List<Employee>)>> getEmployees();
 
-  TaskEither<Failure, List<String>> getLeaveRules();
+  TaskEither<Failure, List<WorkHours>> getWorkHours({
+    required List<String> dates,
+    required String employeeId,
+  });
+
+  TaskEither<Failure, List<LeaveRule>> getLeaveRules();
 
   TaskEither<Failure, List<LeaveRecord>> getLeaveRecords({
     required String employee,
@@ -59,5 +68,19 @@ abstract class NueipRepository {
   TaskEither<Failure, LeaveSignData> getLeaveSignData({
     required FormType type,
     required String id,
+  });
+
+  TaskEither<Failure, Response> sendLeaveForm({
+    required String ruleId,
+    required String startDate,
+    required String endDate,
+    required String startTime,
+    required String endTime,
+    required int hours,
+    required int minutes,
+    required String agentId,
+    required String remark,
+    List<File>? files,
+    required String cookie,
   });
 }

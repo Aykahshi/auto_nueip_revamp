@@ -16,9 +16,9 @@ sealed class APIs {
       '${ApiConfig.BASE_URL}/widget/deptChain/getUserDeptMap';
   static const String EMPLOYEE_LIST =
       '${ApiConfig.BASE_URL}/shared/org3layermenu_ajax';
-  static const String LEAVE =
+  static const String LEAVE_SYSTEM =
       '${ApiConfig.BASE_URL}/leave_application/personal_leave_application_user';
-  static const String LEAVE_RULES = '$LEAVE/getLeaveList';
+  static const String LEAVE_RULES = '$LEAVE_SYSTEM/getLeaveList';
   static const String UNREAD =
       'https://rd2-api.nueip.com/center/notice/get-unread';
   static const String ANNOUNCEMENT = 'https://rd2-api.nueip.com/center/notice';
