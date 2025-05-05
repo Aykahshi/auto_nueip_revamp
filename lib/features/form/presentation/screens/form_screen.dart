@@ -14,6 +14,7 @@ import '../../../calendar/presentation/widgets/filter_area.dart';
 import '../../data/models/leave_record.dart'; // Import LeaveRecord model
 import '../../domain/entities/form_history_query.dart';
 import '../../domain/entities/leave_record_state.dart';
+import '../presenters/date_range_presenter.dart';
 import '../presenters/leave_record_presenter.dart'; // Import LeaveRecordPresenter
 import '../widgets/leave_record_list_tile.dart'; // Import List Tile
 
@@ -133,10 +134,8 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
   late final Joker<FormHistoryQuery> _historyJoker;
   // Joker Presenter for leave records state
   late final LeaveRecordPresenter _leaveRecordPresenter;
-
-  // Temporary state for date selection
-  DateTime? _tempStartDate;
-  DateTime? _tempEndDate;
+  // Presenter for date range state management
+  late final DateRangePresenter _dateRangePresenter;
 
   @override
   void initState() {
@@ -147,21 +146,25 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
     // Directly create the presenter instance
     _leaveRecordPresenter = LeaveRecordPresenter();
 
-    // Optional: Register with Circus if needed globally (using summon on the instance)
-    // Circus.summon<LeaveRecordPresenter>(_leaveRecordPresenter, tag: 'leaveRecord');
-
-    // Fetch initial data if needed (e.g., for the current month?)
-    // Or wait for the first query by the user.
-    // Let's wait for the user query for now.
+    // 初始化日期範圍 presenter
+    _dateRangePresenter = DateRangePresenter();
   }
 
   void _showDateRangePickerInSheet() {
-    // Use temp dates for initial selection
+    // 使用 DateRangePresenter 的狀態作為初始選擇
     PickerDateRange? initialRange;
-    if (_tempStartDate != null && _tempEndDate != null) {
-      initialRange = PickerDateRange(_tempStartDate!, _tempEndDate!);
-    } else if (_tempStartDate != null) {
-      initialRange = PickerDateRange(_tempStartDate!, _tempStartDate!);
+    final dateState = _dateRangePresenter.state;
+
+    if (dateState.tempStartDate != null && dateState.tempEndDate != null) {
+      initialRange = PickerDateRange(
+        dateState.tempStartDate!,
+        dateState.tempEndDate!,
+      );
+    } else if (dateState.tempStartDate != null) {
+      initialRange = PickerDateRange(
+        dateState.tempStartDate!,
+        dateState.tempStartDate!,
+      );
     }
 
     PickerDateRange? currentSheetSelection = initialRange;
@@ -321,22 +324,10 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                         ),
                         child: const Text('確定'),
                         onPressed: () {
-                          if (currentSheetSelection?.startDate != null) {
-                            final newStartDate = DateUtils.dateOnly(
-                              currentSheetSelection!.startDate!,
-                            );
-                            final newEndDate =
-                                currentSheetSelection!.endDate != null
-                                    ? DateUtils.dateOnly(
-                                      currentSheetSelection!.endDate!,
-                                    )
-                                    : newStartDate;
-                            // Update temp dates using setState
-                            setState(() {
-                              _tempStartDate = newStartDate;
-                              _tempEndDate = newEndDate;
-                            });
-                          }
+                          // 使用 DateRangePresenter 設置日期範圍
+                          _dateRangePresenter.setDateRange(
+                            currentSheetSelection,
+                          );
                           sheetContext.router.pop();
                         },
                       ),
@@ -352,68 +343,55 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
     );
   }
 
-  // Helper to set temporary date range
-  void _setTempRange(DateTime start, DateTime end) {
-    final normStart = DateUtils.dateOnly(start);
-    final normEnd = DateUtils.dateOnly(end);
-    setState(() {
-      _tempStartDate = normStart;
-      _tempEndDate = normEnd;
-    });
-  }
-
   void _setRangeToYesterday() {
-    final y = DateTime.now().subtract(const Duration(days: 1));
-    _setTempRange(y, y);
+    _dateRangePresenter.setYesterday();
   }
 
   void _setRangeToToday() {
-    final n = DateTime.now();
-    _setTempRange(n, n);
+    _dateRangePresenter.setToday();
   }
 
   void _setRangeToThisWeek() {
-    final n = DateTime.now();
-    final startOfWeek = n.subtract(Duration(days: n.weekday - 1));
-    final endOfWeek = startOfWeek.add(const Duration(days: 6));
-    _setTempRange(startOfWeek, endOfWeek);
+    _dateRangePresenter.setThisWeek();
   }
 
   void _setRangeToThisMonth() {
-    final n = DateTime.now();
-    final firstDay = DateTime(n.year, n.month, 1);
-    final lastDay = DateTime(n.year, n.month + 1, 0);
-    _setTempRange(firstDay, lastDay);
+    _dateRangePresenter.setThisMonth();
   }
 
   void _clearQuery() {
-    // Clear temporary dates
-    setState(() {
-      _tempStartDate = null;
-      _tempEndDate = null;
-    });
+    // 使用 DateRangePresenter 清除日期範圍
+    _dateRangePresenter.clearDateRange();
+
     // Clear applied dates in Joker state
     _historyJoker.trickWith(
       (state) => state.copyWith(startDate: null, endDate: null),
     );
+
     // Reset leave record presenter state
     _leaveRecordPresenter.reset();
   }
 
-  // Modified to trigger fetch from presenter
+  // 修改查詢方法，使用 DateRangePresenter 的狀態
   void _performQuery() {
+    final dateState = _dateRangePresenter.state;
+
     // Apply the temporary dates to the Joker state for FilterArea display
     _historyJoker.trickWith(
-      (state) =>
-          state.copyWith(startDate: _tempStartDate, endDate: _tempEndDate),
+      (state) => state.copyWith(
+        startDate: dateState.tempStartDate,
+        endDate: dateState.tempEndDate,
+      ),
     );
+
     // Trigger fetch in the presenter using the temporary dates
     _leaveRecordPresenter.fetchLeaveRecords(
-      startDate: _tempStartDate,
-      endDate: _tempEndDate,
+      startDate: dateState.tempStartDate,
+      endDate: dateState.tempEndDate,
     );
+
     debugPrint(
-      'Triggering leave record fetch for: $_tempStartDate to $_tempEndDate',
+      'Triggering leave record fetch for: ${dateState.tempStartDate} to ${dateState.tempEndDate}',
     );
   }
 
@@ -447,11 +425,10 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                       historyState.historyType == FormHistoryType.leave
                           ? FormHistoryType.expense
                           : FormHistoryType.leave;
-                  // Clear temporary dates
-                  setState(() {
-                    _tempStartDate = null;
-                    _tempEndDate = null;
-                  });
+
+                  // 使用 DateRangePresenter 清除日期範圍
+                  _dateRangePresenter.clearDateRange();
+
                   // Update Joker state: change type and clear applied dates
                   _historyJoker.trickWith(
                     (state) => state.copyWith(
@@ -460,6 +437,7 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                       endDate: null,
                     ),
                   );
+
                   // Reset presenter when switching tabs
                   _leaveRecordPresenter.reset();
                 },
@@ -468,17 +446,22 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
           ),
           body: Column(
             children: [
-              FilterArea(
-                // Pass temporary dates to FilterArea for display
-                selectedStartDate: _tempStartDate,
-                selectedEndDate: _tempEndDate,
-                onSelectRange: _showDateRangePickerInSheet,
-                onSetYesterday: _setRangeToYesterday,
-                onSetToday: _setRangeToToday,
-                onSetThisWeek: _setRangeToThisWeek,
-                onSetThisMonth: _setRangeToThisMonth,
-                onClear: _clearQuery,
-                onQuery: _performQuery, // Trigger query application & fetch
+              // 使用 jokers.assemble 同時監聽兩個 presenter 的狀態
+              _dateRangePresenter.perform(
+                builder: (context, dateState) {
+                  return FilterArea(
+                    // 使用 DateRangePresenter 的狀態代替臨時變數
+                    selectedStartDate: dateState.tempStartDate,
+                    selectedEndDate: dateState.tempEndDate,
+                    onSelectRange: _showDateRangePickerInSheet,
+                    onSetYesterday: _setRangeToYesterday,
+                    onSetToday: _setRangeToToday,
+                    onSetThisWeek: _setRangeToThisWeek,
+                    onSetThisMonth: _setRangeToThisMonth,
+                    onClear: _clearQuery,
+                    onQuery: _performQuery, // Trigger query application & fetch
+                  );
+                },
               ),
               Expanded(
                 child: AnimatedSwitcher(

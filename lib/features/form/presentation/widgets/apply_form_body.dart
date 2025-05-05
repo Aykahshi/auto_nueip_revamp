@@ -131,48 +131,6 @@ class ApplyFormBody extends StatelessWidget {
                   onTap: onShowEndTimePicker,
                   isSelected: selectedEndTime != null,
                 ).animate().fadeIn(delay: 250.ms).slideX(begin: -0.1),
-                Divider(height: context.h(16), thickness: 0.5),
-                // --- Calculated Duration Display ---
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: context.h(10),
-                    horizontal: context.w(4),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.hourglass_bottom_outlined,
-                        color:
-                            calculatedDuration != null &&
-                                    calculatedDuration! > Duration.zero
-                                ? context.colorScheme.tertiary
-                                : context.colorScheme.outline.withValues(
-                                  alpha: 0.7,
-                                ),
-                        size: context.r(22),
-                      ),
-                      Gap(context.w(12)),
-                      Expanded(
-                        child: Text(
-                          displayDuration,
-                          style: context.textTheme.bodyLarge?.copyWith(
-                            fontSize: context.sp(16),
-                            color:
-                                calculatedDuration != null &&
-                                        calculatedDuration! > Duration.zero
-                                    ? context.colorScheme.tertiary
-                                    : context.colorScheme.outline,
-                            fontWeight:
-                                calculatedDuration != null &&
-                                        calculatedDuration! > Duration.zero
-                                    ? FontWeight.w600
-                                    : FontWeight.normal,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ).animate().fadeIn(delay: 300.ms),
               ],
             ),
             Gap(context.h(16)),

@@ -13,7 +13,6 @@ import '../../../form/data/models/employee_list.dart';
 import '../../../form/data/models/form_type_enum.dart';
 import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
-import '../../../form/data/models/work_hours.dart';
 import '../../../form/domain/entities/leave_rule.dart';
 import '../models/user_sn.dart';
 
@@ -246,49 +245,6 @@ final class NueipService {
       },
       (e, _) =>
           Failure(message: e.toString(), status: 'get_leave_types_failed'),
-    );
-  }
-
-  TaskEither<Failure, List<WorkHours>> getWorkHours({
-    required List<String> dates,
-    required String employeeId,
-  }) {
-    return TaskEither.tryCatch(
-      () async {
-        final userNo = LocalStorage.get<String>(
-          StorageKeys.userNo,
-          defaultValue: '',
-        );
-
-        if (userNo.isEmpty) return [];
-
-        final formData = {
-          'action': 'getWorksHours',
-          'employee': userNo,
-          'printeveryday': '1',
-        };
-
-        final request = FormData();
-        for (final entry in formData.entries) {
-          request.fields.add(MapEntry(entry.key, entry.value));
-        }
-
-        for (final date in dates) {
-          request.fields.add(MapEntry('dates[]', date));
-        }
-
-        final response = await _client.post(APIs.LEAVE_SYSTEM, data: request);
-
-        final List<dynamic> data = response.data as List<dynamic>;
-
-        final workHoursList =
-            data
-                .map((item) => WorkHours.fromJson(item as Map<String, dynamic>))
-                .toList();
-
-        return workHoursList;
-      },
-      (e, _) => Failure(message: e.toString(), status: 'get_work_hours_failed'),
     );
   }
 

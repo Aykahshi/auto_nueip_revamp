@@ -9,7 +9,6 @@ import '../../../form/data/models/employee_list.dart';
 import '../../../form/data/models/form_type_enum.dart';
 import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
-import '../../../form/data/models/work_hours.dart';
 import '../../../form/domain/entities/leave_rule.dart';
 import '../../domain/repositories/nueip_repository.dart';
 import '../models/user_sn.dart';
@@ -89,14 +88,6 @@ final class NueipRepositoryImpl implements NueipRepository {
   @override
   TaskEither<Failure, Map<String, (String?, List<Employee>)>> getEmployees() {
     return _service.getEmployees();
-  }
-
-  @override
-  TaskEither<Failure, List<WorkHours>> getWorkHours({
-    required List<String> dates,
-    required String employeeId,
-  }) {
-    return _service.getWorkHours(dates: dates, employeeId: employeeId);
   }
 
   @override

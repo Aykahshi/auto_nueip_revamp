@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 
 import '../../data/models/employee_list.dart';
-import '../../data/models/work_hours.dart';
 import '../../presentation/screens/form_screen.dart';
 import 'leave_rule.dart';
 
@@ -17,7 +16,6 @@ sealed class ApplyFormState with _$ApplyFormState {
 
     // Status Flags
     @Default(false) bool isLoadingInitialData,
-    @Default(false) bool isLoadingWorkHours,
     @Default(false) bool isSubmitting,
     @Default(false) bool hasError,
     String? errorMessage,
@@ -26,6 +24,5 @@ sealed class ApplyFormState with _$ApplyFormState {
     // Data
     @Default({}) Map<String, (String?, List<Employee>)> departmentEmployees,
     @Default([]) List<LeaveRule> leaveRules,
-    @Default({}) Map<String, WorkHours> workHours,
   }) = _ApplyFormState;
 }
