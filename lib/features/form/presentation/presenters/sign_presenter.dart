@@ -6,7 +6,7 @@ import '../../data/models/form_type_enum.dart';
 import '../../domain/entities/sign_state.dart'; // Import the new SignState entity
 
 /// Presenter for fetching and managing leave form sign data.
-class SignPresenter extends Presenter<SignState> {
+final class SignPresenter extends Presenter<SignState> {
   // Use the SignState entity
   final NueipRepository _repository;
 

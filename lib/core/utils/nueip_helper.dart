@@ -5,7 +5,7 @@ import 'package:joker_state/joker_state.dart';
 
 import '../../features/login/data/models/auth_session.dart';
 import '../../features/nueip/data/repositories/nueip_repository_impl.dart';
-import '../config/api_config.dart';
+import '../config/apis.dart';
 import '../extensions/cookie_parser.dart';
 import '../extensions/htmlx.dart';
 import '../network/api_client.dart';
@@ -61,7 +61,7 @@ final class NueipHelper {
     try {
       final cookieJar = Circus.find<ApiClient>().cookieJar;
       final List<Cookie> cookies = await cookieJar.loadForRequest(
-        Uri.parse(ApiConfig.LOGIN_URL),
+        Uri.parse(APIs.LOGIN),
       );
       final String cookie = cookies.parse();
 

@@ -5,7 +5,7 @@ import '../../data/repositories/holiday_repository_impl.dart';
 import '../../domain/entities/holiday_state.dart';
 import '../../domain/repositories/holiday_repository.dart';
 
-class HolidayPresenter extends Presenter<HolidayState> {
+final class HolidayPresenter extends Presenter<HolidayState> {
   final HolidayRepository _repository;
 
   // Constructor finds the registered HolidayRepository via CircusRing

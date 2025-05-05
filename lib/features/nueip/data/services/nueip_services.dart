@@ -4,7 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../../../core/config/api_config.dart';
+import '../../../../core/config/apis.dart';
 import '../../../../core/config/storage_keys.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/network/failure.dart';
@@ -16,7 +16,7 @@ import '../../../form/data/models/leave_sign_data.dart';
 import '../../../form/data/models/work_hours.dart';
 import '../models/user_sn.dart';
 
-class NueipService {
+final class NueipService {
   final ApiClient _client;
 
   NueipService({ApiClient? client})
@@ -33,7 +33,7 @@ class NueipService {
       'inputPassword': password,
     };
     return TaskEither.tryCatch(
-      () async => await _client.post(ApiConfig.LOGIN_URL, data: body),
+      () async => await _client.post(APIs.LOGIN, data: body),
       (e, _) => Failure(message: e.toString(), status: 'login_failed'),
     );
   }
@@ -56,7 +56,7 @@ class NueipService {
     };
     return TaskEither.tryCatch(
       () async => await _client.post(
-        ApiConfig.CLOCK_URL,
+        APIs.CLOCK,
         data: formData,
         options: Options(headers: {'Cookie': cookie}),
       ),
@@ -70,7 +70,7 @@ class NueipService {
   TaskEither<Failure, Response> getOauthToken({required String cookie}) {
     return TaskEither.tryCatch(
       () async => await _client.get(
-        ApiConfig.TOKEN_URL,
+        APIs.TOKEN,
         options: Options(headers: {'Cookie': cookie}),
       ),
       (e, _) => Failure(
@@ -86,7 +86,7 @@ class NueipService {
   }) {
     return TaskEither.tryCatch(
       () async => await _client.get(
-        ApiConfig.RECORD_URL,
+        APIs.RECORD,
         options: Options(
           headers: {'Authorization': 'Bearer $accessToken', 'Cookie': cookie},
         ),
@@ -112,7 +112,7 @@ class NueipService {
     };
     return TaskEither.tryCatch(
       () async => await _client.post(
-        ApiConfig.ATTENDANCE_URL,
+        APIs.ATTENDANCE,
         data: formData,
         options: Options(
           headers: {
@@ -142,7 +142,7 @@ class NueipService {
     };
     return TaskEither.tryCatch(
       () async => await _client.post(
-        ApiConfig.ATTENDANCE_URL,
+        APIs.ATTENDANCE,
         data: formData,
         options: Options(
           headers: {
@@ -160,7 +160,7 @@ class NueipService {
 
   TaskEither<Failure, Response> getUserInfo() {
     return TaskEither.tryCatch(
-      () async => await _client.get(ApiConfig.INFO_URL),
+      () async => await _client.get(APIs.INFO),
       (e, _) => Failure(message: e.toString(), status: 'info_failed'),
     );
   }
@@ -174,10 +174,7 @@ class NueipService {
           'work_status': 1,
         };
 
-        final response = await _client.post(
-          ApiConfig.EMPLOYEE_LIST_URL,
-          data: payload,
-        );
+        final response = await _client.post(APIs.EMPLOYEE_LIST, data: payload);
 
         final responseData = response.data as Map<String, dynamic>;
         final companyList =
@@ -225,7 +222,7 @@ class NueipService {
         if (userNo.isEmpty) return [];
 
         final response = await _client.get(
-          ApiConfig.LEAVE_RULES_URL,
+          APIs.LEAVE_RULES,
           queryParameters: {'user_no': userNo},
         );
 
@@ -279,7 +276,7 @@ class NueipService {
           request.fields.add(MapEntry('dates[]', date));
         }
 
-        final response = await _client.post(ApiConfig.LEAVE_URL, data: request);
+        final response = await _client.post(APIs.LEAVE, data: request);
 
         final List<dynamic> data = response.data as List<dynamic>;
 
@@ -328,7 +325,7 @@ class NueipService {
         };
 
         final response = await _client.post(
-          ApiConfig.LEAVE_URL,
+          APIs.LEAVE,
           data: queryParams,
           options: Options(
             contentType: 'application/x-www-form-urlencoded',
@@ -362,7 +359,7 @@ class NueipService {
 
   TaskEither<Failure, UserSn> getUserSn() {
     return TaskEither.tryCatch(() async {
-      final response = await _client.post(ApiConfig.USER_SN_URL);
+      final response = await _client.post(APIs.USER_SN);
 
       final userNo = LocalStorage.get<String>(
         StorageKeys.userNo,
@@ -402,7 +399,7 @@ class NueipService {
         };
 
         final response = await _client.post(
-          ApiConfig.SIGN_DATA_URL,
+          APIs.SIGN_DATA,
           data: formData,
           options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
         );
@@ -484,7 +481,7 @@ class NueipService {
         }
 
         final response = await _client.post(
-          ApiConfig.LEAVE_URL,
+          APIs.LEAVE,
           data: formData,
           options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
         );

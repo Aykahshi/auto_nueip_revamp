@@ -8,7 +8,7 @@ import '../../../nueip/data/repositories/nueip_repository_impl.dart';
 import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../domain/entities/login_status_enum.dart';
 
-class LoginPresenter extends Presenter<LoginStatus> {
+final class LoginPresenter extends Presenter<LoginStatus> {
   final NueipRepository _repository;
   final NueipHelper _helper;
 

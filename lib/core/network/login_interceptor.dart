@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 
-import '../config/api_config.dart';
+import '../config/apis.dart';
 
 /// Interceptor to handle the specific behavior of the login API.
 /// - Treats 200 OK with "status: fail" in the body as an error.
@@ -11,7 +11,7 @@ class LoginInterceptor extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     // Check if it's the login API response with status code 200
-    if (response.requestOptions.path == ApiConfig.LOGIN_URL &&
+    if (response.requestOptions.path == APIs.LOGIN &&
         response.statusCode == 200) {
       try {
         // Attempt to parse the response data
@@ -87,7 +87,7 @@ class LoginInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     // Check if the error is for the login API, is a bad response type,
     // and specifically has the status code 303.
-    if (err.requestOptions.path == ApiConfig.LOGIN_URL &&
+    if (err.requestOptions.path == APIs.LOGIN &&
         err.response?.statusCode == 303 &&
         err.type == DioExceptionType.badResponse) {
       // If it's the expected 303 redirect for a successful login,

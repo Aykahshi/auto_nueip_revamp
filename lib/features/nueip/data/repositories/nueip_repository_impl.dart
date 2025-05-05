@@ -11,7 +11,7 @@ import '../../domain/repositories/nueip_repository.dart';
 import '../models/user_sn.dart';
 import '../services/nueip_services.dart';
 
-class NueipRepositoryImpl implements NueipRepository {
+final class NueipRepositoryImpl implements NueipRepository {
   final NueipService _service;
 
   NueipRepositoryImpl({NueipService? service})

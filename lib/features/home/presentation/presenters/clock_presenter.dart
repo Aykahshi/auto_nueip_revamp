@@ -13,7 +13,7 @@ import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../domain/entities/clock_action_enum.dart';
 import '../../domain/entities/clock_state.dart';
 
-class ClockPresenter extends Presenter<ClockState> {
+final class ClockPresenter extends Presenter<ClockState> {
   final NueipRepository _repository;
 
   ClockPresenter({NueipRepository? repository, super.keepAlive = true})

@@ -6,7 +6,7 @@ import '../../domain/repositories/holiday_repository.dart';
 import '../models/holiday.dart';
 import '../services/holiday_service.dart';
 
-class HolidayRepositoryImpl implements HolidayRepository {
+final class HolidayRepositoryImpl implements HolidayRepository {
   final HolidayService _holidayService;
 
   HolidayRepositoryImpl({HolidayService? holidayService})

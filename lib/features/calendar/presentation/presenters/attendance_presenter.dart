@@ -9,7 +9,7 @@ import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../data/models/attendance_details.dart';
 import '../../domain/entities/attendance_state.dart';
 
-class AttendancePresenter extends Presenter<AttendanceState> {
+final class AttendancePresenter extends Presenter<AttendanceState> {
   final NueipRepository _repository;
   late final String _userNo;
 

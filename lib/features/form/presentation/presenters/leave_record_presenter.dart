@@ -11,7 +11,7 @@ import '../../../nueip/data/repositories/nueip_repository_impl.dart';
 import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../domain/entities/leave_record_state.dart';
 
-class LeaveRecordPresenter extends Presenter<LeaveRecordState> {
+final class LeaveRecordPresenter extends Presenter<LeaveRecordState> {
   final NueipRepository _repository;
 
   LeaveRecordPresenter({NueipRepository? repository, super.keepAlive = true})

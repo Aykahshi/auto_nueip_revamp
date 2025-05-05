@@ -8,7 +8,7 @@ import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../data/models/user_info.dart';
 import '../../domain/entities/setting_state.dart';
 
-class SettingPresenter extends Presenter<SettingState> {
+final class SettingPresenter extends Presenter<SettingState> {
   final NueipRepository _repository;
 
   SettingPresenter({super.keepAlive = true})

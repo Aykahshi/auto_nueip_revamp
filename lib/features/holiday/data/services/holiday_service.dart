@@ -5,7 +5,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../../../../core/config/api_config.dart';
+import '../../../../core/config/apis.dart';
 import '../../../../core/config/storage_keys.dart';
 import '../../../../core/network/failure.dart';
 import '../../../../core/utils/local_storage.dart';
@@ -17,9 +17,7 @@ Future<List<Holiday>> _fetchAndParseHolidaysForYear(int year) async {
   final dio = Dio();
   try {
     debugPrint('[Isolate] Fetching holidays for $year...');
-    final response = await dio.get<List<dynamic>>(
-      "${ApiConfig.HOLIDAY_URL}/$year.json",
-    );
+    final response = await dio.get<List<dynamic>>("${APIs.HOLIDAY}/$year.json");
     // Ensure response.data is not null before proceeding
     final responseData = response.data;
     if (responseData == null) {
@@ -44,7 +42,7 @@ Future<List<Holiday>> _fetchAndParseHolidaysForYear(int year) async {
 }
 // --- End of Isolate function ---
 
-class HolidayService {
+final class HolidayService {
   TaskEither<Failure, List<Holiday>> getHolidays() {
     return TaskEither.tryCatch(
       () async {
