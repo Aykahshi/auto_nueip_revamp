@@ -33,6 +33,7 @@ sealed class AuditItem with _$AuditItem {
     @JsonKey(name: 'c_date') String? createTime,
     @JsonKey(name: 'rec_status', fromJson: _parseIntFromJson)
     required num recStatus,
+    @JsonKey(name: 'manager_name') String? managerName,
     @JsonKey(name: 'sign_manager_name') String? signManagerName,
     @Default(false) final bool isManagerSign,
   }) = _AuditItem;

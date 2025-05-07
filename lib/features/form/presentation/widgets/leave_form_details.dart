@@ -164,7 +164,19 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
       bool isActive;
       List<Widget> detailRows = [];
 
-      final signerName = item.signManagerName ?? '簽核人 ${item.roundNo ?? i + 1}';
+      String signerName;
+
+      signerName = '簽核人 ${item.roundNo ?? i + 1}';
+
+      if (item.managerName != null && item.managerName!.isNotEmpty) {
+        print('managerName: ${item.managerName}');
+        signerName = item.managerName!;
+      }
+
+      if (item.signManagerName != null && item.signManagerName!.isNotEmpty) {
+        signerName = item.signManagerName!;
+      }
+
       final signTimeFormatted = _formatLeaveTimestamp(item.signTime);
 
       if (item.replyStatus == 3) {
@@ -491,8 +503,7 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
                         steps: steps,
                         currentStep: currentProcessStepIndex,
                         type: StepperType.vertical,
-                        controlsBuilder:
-                            (context, details) => const SizedBox.shrink(),
+                        controlsBuilder: (context, details) => Container(),
                         physics: const NeverScrollableScrollPhysics(),
                         margin: EdgeInsets.zero,
                         stepIconBuilder: (stepIndex, stepState) {
@@ -544,29 +555,6 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
                     .slideY(begin: 0.05, curve: Curves.easeInOut),
 
               Gap(context.h(20)),
-              // if (record.isCancelable)
-              //   Center(
-              //     child: ElevatedButton.icon(
-              //       icon: const Icon(Icons.cancel_outlined),
-              //       label: const Text('撤銷申請 (待實作)'),
-              //       style: ElevatedButton.styleFrom(
-              //         foregroundColor: colorScheme.error,
-              //         backgroundColor: colorScheme.errorContainer.withValues(
-              //           alpha: 0.4,
-              //         ),
-              //         elevation: 0,
-              //         padding: EdgeInsets.symmetric(
-              //           horizontal: context.w(16),
-              //           vertical: context.h(10),
-              //         ),
-              //       ),
-              //       onPressed: () {
-              //         ScaffoldMessenger.of(
-              //           context,
-              //         ).showSnackBar(const SnackBar(content: Text('撤銷功能尚未實作')));
-              //       },
-              //     ),
-              //   ),
             ],
           ),
         ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1);
