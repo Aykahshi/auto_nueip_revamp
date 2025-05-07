@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,6 +8,7 @@ import 'package:joker_state/joker_state.dart';
 
 import '../../../../core/config/api_config.dart';
 import '../../../../core/extensions/theme_extensions.dart';
+import '../../../../core/network/failure.dart';
 import '../../../calendar/presentation/widgets/detail_info_row.dart';
 import '../../data/models/form_type_enum.dart';
 import '../../data/models/leave_record.dart';
@@ -27,6 +29,10 @@ class LeaveFormDetails extends StatefulWidget {
 class _LeaveFormDetailsState extends State<LeaveFormDetails> {
   // Create and hold the SignPresenter instance
   late final SignPresenter _signPresenter;
+  // Debouncer for the delete action
+  final _deleteDebouncer = CueGate.debounce(
+    delay: const Duration(milliseconds: 1000),
+  );
 
   @override
   void initState() {
@@ -169,10 +175,9 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
       signerName = '簽核人 ${item.roundNo ?? i + 1}';
 
       if (item.managerName != null && item.managerName!.isNotEmpty) {
-        print('managerName: ${item.managerName}');
         signerName = item.managerName!;
-      }
-
+      } else
+      // If signManagerName is available, replace signManagerName
       if (item.signManagerName != null && item.signManagerName!.isNotEmpty) {
         signerName = item.signManagerName!;
       }
@@ -555,6 +560,96 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
                     .slideY(begin: 0.05, curve: Curves.easeInOut),
 
               Gap(context.h(20)),
+
+              if (record.isCancelable)
+                Center(
+                  child: ElevatedButton.icon(
+                    icon: const Icon(Icons.cancel_outlined),
+                    label: const Text('撤銷申請'),
+                    style: ElevatedButton.styleFrom(
+                      foregroundColor: colorScheme.error,
+                      backgroundColor: colorScheme.errorContainer.withValues(
+                        alpha: 0.4,
+                      ),
+                      elevation: 0,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: context.w(16),
+                        vertical: context.h(10),
+                      ),
+                    ),
+                    onPressed: () {
+                      showDialog<bool>(
+                        context: context,
+                        builder: (BuildContext dialogContext) {
+                          return AlertDialog(
+                            title: const Center(child: Text('確認撤銷申請')),
+                            content: const Text(
+                              '您確定要撤銷此假單申請嗎？\n此操作無法復原。',
+                              textAlign: TextAlign.center,
+                            ),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('取消'),
+                                onPressed: () {
+                                  dialogContext.router.pop(false);
+                                },
+                              ),
+                              TextButton(
+                                style: TextButton.styleFrom(
+                                  foregroundColor:
+                                      dialogContext.colorScheme.error,
+                                ),
+                                child: const Text('確定撤銷'),
+                                onPressed: () {
+                                  dialogContext.router.pop(true);
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      ).then((confirmed) {
+                        if (mounted && confirmed == true) {
+                          _deleteDebouncer.trigger(() {
+                            // Use the instance's trigger method
+                            if (!mounted) return;
+                            _signPresenter.deleteLeaveForm(
+                              id: record.id,
+                              onSuccess: () {
+                                if (mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('假單已成功撤銷')),
+                                  );
+                                  context.router.pop();
+                                }
+                              },
+                              onFailed: () {
+                                if (mounted) {
+                                  String errorMessage = '撤銷失敗，請稍後再試';
+                                  final dynamic errorValue =
+                                      _signPresenter.state.error;
+                                  if (errorValue is Failure) {
+                                    errorMessage = errorValue.message;
+                                  } else if (errorValue is String &&
+                                      errorValue.isNotEmpty) {
+                                    errorMessage = errorValue;
+                                  }
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(errorMessage),
+                                      backgroundColor:
+                                          context.colorScheme.error,
+                                    ),
+                                  );
+                                }
+                              },
+                            );
+                          });
+                        }
+                      });
+                    },
+                  ),
+                ),
             ],
           ),
         ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1);

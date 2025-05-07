@@ -9,6 +9,7 @@ import '../../../form/data/models/employee_list.dart';
 import '../../../form/data/models/form_type_enum.dart';
 import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
+import '../../../form/data/models/work_hour.dart';
 import '../../../form/domain/entities/leave_rule.dart';
 import '../../domain/repositories/nueip_repository.dart';
 import '../models/user_sn.dart';
@@ -150,5 +151,17 @@ final class NueipRepositoryImpl implements NueipRepository {
       files: files,
       cookie: cookie,
     );
+  }
+
+  @override
+  TaskEither<Failure, Response> deleteLeaveForm({required String id}) {
+    return _service.deleteLeaveForm(id: id);
+  }
+
+  @override
+  TaskEither<Failure, List<WorkHour>> getWorkHour({
+    required List<String> dates,
+  }) {
+    return _service.getWorkHour(dates: dates);
   }
 }

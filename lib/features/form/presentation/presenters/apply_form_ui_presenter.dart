@@ -12,8 +12,19 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
   final DateFormat _dateFormatter = DateFormat('yyyy / MM / dd');
 
   /// 建構子
-  ApplyFormUiPresenter({super.keepAlive = true})
-    : super(const ApplyFormUiState());
+  ApplyFormUiPresenter() : super(const ApplyFormUiState());
+
+  @override
+  onInit() {
+    debugPrint('ApplyFormUiPresenter.onInit()');
+    super.onInit();
+  }
+
+  @override
+  onDone() {
+    debugPrint('ApplyFormUiPresenter.onDone()');
+    super.onDone();
+  }
 
   /// 取得合併開始日期時間
   DateTime? get startDateTime {

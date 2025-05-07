@@ -39,13 +39,16 @@ class PickerRow extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
-              icon,
-              color:
-                  isSelected
-                      ? context.colorScheme.primary
-                      : context.colorScheme.secondary,
-              size: context.r(22),
+            Padding(
+              padding: EdgeInsets.only(left: context.w(14)),
+              child: Icon(
+                icon,
+                color:
+                    isSelected
+                        ? context.colorScheme.primary
+                        : context.colorScheme.secondary,
+                size: context.r(22),
+              ),
             ),
             Gap(context.w(16)), // Increased gap
             Expanded(

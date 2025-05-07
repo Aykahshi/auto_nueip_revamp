@@ -53,12 +53,16 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
     // 初始化 UI Presenter
     _uiPresenter = ApplyFormUiPresenter();
 
+    // ! TOFIX: need to fix JokerState dispose issue
+    // ! this is a temporary fix
+    _uiPresenter.addListener(() {});
+
     // 監聽備註欄位變化以更新表單驗證
     _remarkController.addListener(_validateForm);
   }
 
   // --- Date and Time formatters ---
-  final DateFormat _dateFormatter = DateFormat('yyyy / MM / dd');
+  final DateFormat _dateFormatter = DateFormat('yyyy-MM-dd');
   // Time formatter handled by TimeOfDay.format
 
   // --- Date Picker Logic (Modified for Start/End) ---
@@ -85,6 +89,7 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
               } else {
                 _uiPresenter.setEndDate(selectedDate);
               }
+              _checkAndTriggerWorkHourCalculation();
             }
           },
         );
@@ -113,6 +118,53 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
       } else {
         _uiPresenter.setEndTime(picked);
       }
+      _checkAndTriggerWorkHourCalculation();
+    }
+  }
+
+  // 新增：檢查並觸發工時計算的方法
+  void _checkAndTriggerWorkHourCalculation() {
+    final uiState = _uiPresenter.state;
+
+    // 檢查是否所有日期時間都已選擇
+    if (uiState.selectedStartDate != null &&
+        uiState.selectedEndDate != null &&
+        uiState.selectedStartTime != null &&
+        uiState.selectedEndTime != null) {
+      // 生成日期列表
+      final List<String> datesToFetch = [];
+      DateTime currentDate = uiState.selectedStartDate!;
+
+      while (!currentDate.isAfter(uiState.selectedEndDate!)) {
+        datesToFetch.add(DateFormat('yyyy-MM-dd').format(currentDate));
+        currentDate = currentDate.add(const Duration(days: 1));
+      }
+
+      // 創建完整的 DateTime 對象
+      final startDateTime = DateTime(
+        uiState.selectedStartDate!.year,
+        uiState.selectedStartDate!.month,
+        uiState.selectedStartDate!.day,
+        uiState.selectedStartTime!.hour,
+        uiState.selectedStartTime!.minute,
+      );
+
+      final endDateTime = DateTime(
+        uiState.selectedEndDate!.year,
+        uiState.selectedEndDate!.month,
+        uiState.selectedEndDate!.day,
+        uiState.selectedEndTime!.hour,
+        uiState.selectedEndTime!.minute,
+      );
+
+      // 呼叫 Presenter 方法計算工時
+      if (datesToFetch.isNotEmpty) {
+        _dataPresenter.cauculateWorkHour(
+          dates: datesToFetch,
+          startDateTime: startDateTime,
+          endDateTime: endDateTime,
+        );
+      }
     }
   }
 
@@ -121,7 +173,7 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         allowMultiple: true,
-        type: FileType.any,
+        type: FileType.media,
       );
 
       if (result != null) {

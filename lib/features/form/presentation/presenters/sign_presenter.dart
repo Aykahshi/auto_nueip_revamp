@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../../nueip/data/repositories/nueip_repository_impl.dart';
@@ -39,6 +40,36 @@ final class SignPresenter extends Presenter<SignState> {
           signData: data, // Store fetched data
         ),
       ),
+    );
+  }
+
+  Future<void> cauculateWorkHour() async {}
+
+  Future<void> deleteLeaveForm({
+    required String id,
+    required VoidCallback onSuccess,
+    required VoidCallback onFailed,
+  }) async {
+    trick(state.copyWith(isLoading: true, error: null));
+
+    final result = await _repository.deleteLeaveForm(id: id).run();
+
+    // Update state based on result using copyWith - Provide current state to trick
+    result.fold(
+      (failure) {
+        trick(
+          state.copyWith(
+            isLoading: false,
+            error: failure.message, // Store error message
+            signData: null, // Clear data on error
+          ),
+        );
+        onFailed.call();
+      },
+      (_) {
+        trick(state.copyWith(isLoading: false, error: null));
+        onSuccess.call();
+      },
     );
   }
 }

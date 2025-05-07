@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io' show File;
 
 import 'package:dio/dio.dart';
@@ -13,6 +14,7 @@ import '../../../form/data/models/employee_list.dart';
 import '../../../form/data/models/form_type_enum.dart';
 import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
+import '../../../form/data/models/work_hour.dart';
 import '../../../form/domain/entities/leave_rule.dart';
 import '../models/user_sn.dart';
 
@@ -448,6 +450,71 @@ final class NueipService {
         message: 'Failed to send form request: ${e.toString()}',
         status: 'send_form_failed',
       ),
+    );
+  }
+
+  TaskEither<Failure, Response> deleteLeaveForm({required String id}) {
+    return TaskEither.tryCatch(
+      () async {
+        final response = await _client.post(
+          APIs.LEAVE_DELETE,
+          data: FormData.fromMap({'s_sn[]': id}),
+          options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
+        );
+        return response;
+      },
+      (e, s) => Failure(
+        message: 'Failed to delete form request: ${e.toString()}',
+        status: 'delete_form_failed',
+      ),
+    );
+  }
+
+  TaskEither<Failure, List<WorkHour>> getWorkHour({
+    required List<String> dates,
+  }) {
+    return TaskEither.tryCatch(
+      () async {
+        final userSn = LocalStorage.get<List<String>>(
+          StorageKeys.userSn,
+          defaultValue: [],
+        );
+
+        if (userSn.isEmpty) return [];
+
+        final sn = UserSn(
+          company: userSn[0],
+          department: userSn[1],
+          system: userSn[2],
+        );
+
+        final formData = FormData.fromMap({
+          'action': 'getWorksHours',
+          'employee': sn.system,
+          'printeveryday': '1',
+          'dates': dates,
+        }, ListFormat.multiCompatible);
+
+        final response = await _client.post(
+          APIs.LEAVE_SYSTEM,
+          data: formData,
+          options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
+        );
+
+        final res = response.data as String;
+
+        final jsonList = jsonDecode(res);
+
+        final data = jsonList as List<dynamic>;
+
+        final workHoursList =
+            data
+                .map((item) => WorkHour.fromJson(item as Map<String, dynamic>))
+                .toList();
+
+        return workHoursList;
+      },
+      (e, _) => Failure(message: e.toString(), status: 'get_work_hours_failed'),
     );
   }
 }

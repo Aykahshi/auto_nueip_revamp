@@ -8,6 +8,7 @@ import '../../../form/data/models/employee_list.dart';
 import '../../../form/data/models/form_type_enum.dart';
 import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
+import '../../../form/data/models/work_hour.dart';
 import '../../../form/domain/entities/leave_rule.dart';
 import '../../data/models/user_sn.dart';
 
@@ -76,5 +77,11 @@ abstract class NueipRepository {
     required String remark,
     List<File>? files,
     required String cookie,
+  });
+
+  TaskEither<Failure, Response> deleteLeaveForm({required String id});
+
+  TaskEither<Failure, List<WorkHour>> getWorkHour({
+    required List<String> dates,
   });
 }

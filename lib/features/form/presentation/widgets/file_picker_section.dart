@@ -33,12 +33,14 @@ class FilePickerSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.attach_file_outlined,
-                  size: context.r(20),
-                  color: context.colorScheme.secondary,
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: context.w(14)),
+                  child: Icon(
+                    Icons.attach_file_outlined,
+                    size: context.r(20),
+                    color: context.colorScheme.secondary,
+                  ),
                 ),
-                Gap(context.w(16)),
                 Expanded(
                   child: Text(
                     '附件 (${selectedFiles.length})', // Show file count
@@ -67,7 +69,6 @@ class FilePickerSection extends StatelessWidget {
             ),
             // Display selected file names (optional)
             if (selectedFiles.isNotEmpty) ...[
-              Gap(context.h(8)),
               Wrap(
                 // Use Wrap for multiple files
                 spacing: context.w(8),
@@ -87,7 +88,7 @@ class FilePickerSection extends StatelessWidget {
                             .onSecondaryContainer
                             .withValues(alpha: 0.7),
                         backgroundColor: context.colorScheme.secondaryContainer
-                            .withValues(alpha: 0.5),
+                            .withValues(alpha: 0.3),
                         labelPadding: EdgeInsets.symmetric(
                           horizontal: context.w(8),
                         ),
@@ -97,6 +98,30 @@ class FilePickerSection extends StatelessWidget {
                     }).toList(),
               ),
             ],
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: context.h(8)),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.warning_outlined,
+                    size: context.r(20),
+                    color: context.colorScheme.error,
+                  ),
+                  Gap(context.w(10)),
+                  Center(
+                    child: Text(
+                      '目前僅支援圖片檔案\n需使用表單/文件請至網站申請',
+                      style: context.textTheme.displaySmall?.copyWith(
+                        fontSize: context.sp(14),
+                        color: context.colorScheme.error,
+                      ),
+                      textAlign: TextAlign.left,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         )
         .animate()

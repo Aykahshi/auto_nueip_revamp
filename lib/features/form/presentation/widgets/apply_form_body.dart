@@ -134,6 +134,87 @@ class ApplyFormBody extends StatelessWidget {
               ],
             ),
             Gap(context.h(16)),
+
+            // --- 工時顯示區塊 ---
+            if (selectedStartDate != null &&
+                selectedEndDate != null &&
+                selectedStartTime != null &&
+                selectedEndTime != null) // 只有在所有日期時間都選好時顯示
+              SectionCard(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: context.h(12)),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.only(left: context.w(14)),
+                              child: Icon(
+                                Icons.timer_outlined,
+                                size: context.r(22),
+                                color: context.colorScheme.primary,
+                              ),
+                            ),
+                            Gap(context.w(16)),
+                            Text(
+                              '預估總工時：',
+                              style: context.textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(right: context.w(14)),
+                          child:
+                              formState.isLoadingWorkHours
+                                  ? SizedBox(
+                                    height: context.r(16),
+                                    width: context.r(16),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: context.colorScheme.tertiary,
+                                    ),
+                                  )
+                                  : Text(
+                                    formState.displayTotalWorkHours,
+                                    style: context.textTheme.bodyMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: context.colorScheme.primary,
+                                        ),
+                                  ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  if (formState.hasError &&
+                      formState.errorMessage != null &&
+                      (formState.errorMessage!.contains('工時') ||
+                          formState.errorMessage!.contains('排班') ||
+                          formState.errorMessage!.contains('工作日')))
+                    Padding(
+                      padding: EdgeInsets.only(
+                        top: context.h(4),
+                        left: context.w(14),
+                        right: context.w(14),
+                        bottom: context.h(8),
+                      ),
+                      child: Text(
+                        formState.errorMessage!,
+                        style: context.textTheme.bodySmall?.copyWith(
+                          color: context.colorScheme.error,
+                          fontSize: context.sp(12),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
+              ).animate().fadeIn(delay: 280.ms).slideX(begin: -0.1),
+            Gap(context.h(16)),
+
             // --- Leave Type, Agent, Remark, Files ---
             SectionCard(
               children: [
@@ -162,7 +243,7 @@ class ApplyFormBody extends StatelessWidget {
                   icon: Icons.person_search_outlined,
                   items: allEmployees, // Use data passed from parent
                   selectedItem: selectedAgent,
-                  itemAsString: (emp) => emp.name ?? '未知員工',
+                  itemAsString: (emp) => emp.name ?? '查無此員工',
                   onChanged: onAgentChanged,
                   searchController: agentSearchController,
                   emptyBuilder:
@@ -179,9 +260,6 @@ class ApplyFormBody extends StatelessWidget {
                   maxLines: 3,
                   isRemarkField: true,
                   delay: 450.ms,
-                  onChanged: (_) {
-                    /* Parent handles state check */
-                  },
                 ),
                 Divider(height: context.h(16), thickness: 0.5),
                 // --- File Picker ---

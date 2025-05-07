@@ -164,7 +164,7 @@ class LeaveRecordListTile extends StatelessWidget {
                       _buildInfoRow(
                         context,
                         icon: Icons.hourglass_empty_outlined,
-                        text: '請假時數： $totalTime',
+                        text: '請假時數：$totalTime',
                       ),
                   ],
                 ),
