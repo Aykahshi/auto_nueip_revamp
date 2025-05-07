@@ -382,10 +382,8 @@ final class NueipService {
     required String ruleId,
     required String startDate,
     required String endDate,
-    required String startTime,
-    required String endTime,
-    required int hours,
-    required int minutes,
+    required List<(String date, String start, String end, int hour, int min)>
+    leaveEntries,
     required String agentId,
     required String remark,
     List<File>? files,
@@ -408,13 +406,9 @@ final class NueipService {
 
         final String employee = '${sn.company}_${sn.department}_${sn.system}';
 
+        // Add common form fields
         formData.fields.addAll([
           MapEntry('myFLayer', ruleId),
-          MapEntry('leave[0][start]', startTime),
-          MapEntry('leave[0][end]', endTime),
-          MapEntry('leave[0][hour]', hours.toString()),
-          MapEntry('leave[0][min]', minutes.toString()),
-          MapEntry('leave[0][date]', startDate),
           MapEntry('s_date', startDate),
           MapEntry('d_date', endDate),
           MapEntry('FLayer2', sn.company),
@@ -425,6 +419,18 @@ final class NueipService {
           const MapEntry('action', 'add'),
           const MapEntry('pageType', 'leave'),
         ]);
+
+        // Add multiple leave entries
+        for (var i = 0; i < leaveEntries.length; i++) {
+          final entry = leaveEntries[i];
+          formData.fields.addAll([
+            MapEntry('leave[$i][start]', entry.$2),
+            MapEntry('leave[$i][end]', entry.$3),
+            MapEntry('leave[$i][hour]', entry.$4.toString()),
+            MapEntry('leave[$i][min]', entry.$5.toString()),
+            MapEntry('leave[$i][date]', entry.$1),
+          ]);
+        }
 
         if (files != null && files.isNotEmpty) {
           for (var i = 0; i < files.length; i++) {
@@ -439,17 +445,58 @@ final class NueipService {
           }
         }
 
-        final response = await _client.post(
-          APIs.LEAVE_SYSTEM,
-          data: formData,
-          options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
-        );
-        return response;
+        try {
+          final response = await _client.post(
+            APIs.LEAVE_SYSTEM,
+            data: formData,
+            options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
+          );
+          return response;
+        } on DioException catch (e) {
+          // 處理 DioException，例如 400 Bad Request
+          if (e.response != null) {
+            // 嘗試解析錯誤響應中的 message
+            try {
+              final errorData = e.response!.data;
+              String errorMessage = '提交請假表單失敗';
+
+              if (errorData is Map<String, dynamic>) {
+                // 直接從 Map 中獲取 message
+                errorMessage = errorData['message'] ?? errorMessage;
+              } else if (errorData is String) {
+                // 嘗試將字符串解析為 JSON
+                try {
+                  final errorJson = jsonDecode(errorData);
+                  if (errorJson is Map<String, dynamic>) {
+                    errorMessage = errorJson['message'] ?? errorMessage;
+                  }
+                } catch (_) {
+                  // 解析失敗，使用原始字符串
+                  errorMessage = errorData;
+                }
+              }
+
+              throw Failure(message: errorMessage, status: 'send_form_failed');
+            } catch (parseError) {
+              // 解析錯誤響應失敗，使用原始錯誤訊息
+              rethrow;
+            }
+          }
+          // 如果沒有響應或解析失敗，重新拋出原始異常
+          rethrow;
+        }
       },
-      (e, s) => Failure(
-        message: 'Failed to send form request: ${e.toString()}',
-        status: 'send_form_failed',
-      ),
+      (e, s) {
+        // 如果錯誤已經是 Failure 類型，則直接返回
+        if (e is Failure) {
+          return e;
+        }
+        // 否則創建新的 Failure
+        return Failure(
+          message: 'Failed to send form request: ${e.toString()}',
+          status: 'send_form_failed',
+        );
+      },
     );
   }
 

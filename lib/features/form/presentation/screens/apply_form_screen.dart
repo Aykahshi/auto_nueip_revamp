@@ -8,6 +8,7 @@ import 'package:intl/intl.dart'; // Import intl for formatting
 import 'package:joker_state/joker_state.dart'; // Import JokerState
 
 import '../../../../core/extensions/theme_extensions.dart';
+import '../../../../core/utils/auth_utils.dart';
 import '../../data/models/employee_list.dart'; // Import new Employee model
 import '../presenters/apply_form_presenter.dart'; // Import Presenter
 import '../presenters/apply_form_ui_presenter.dart'; // Import UI Presenter
@@ -47,18 +48,21 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
   void initState() {
     super.initState();
 
-    // 初始化數據 Presenter
+    // Initialize data presenter
     _dataPresenter = ApplyFormPresenter(formType: widget.formType);
 
-    // 初始化 UI Presenter
+    // Initialize UI presenter
     _uiPresenter = ApplyFormUiPresenter();
 
     // ! TOFIX: need to fix JokerState dispose issue
     // ! this is a temporary fix
     _uiPresenter.addListener(() {});
 
-    // 監聽備註欄位變化以更新表單驗證
+    // Listen to remark field changes to update form validation
     _remarkController.addListener(_validateForm);
+
+    // Initial validation (in case there's a default value)
+    _validateForm();
   }
 
   // --- Date and Time formatters ---
@@ -208,47 +212,154 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
   }
 
   // --- Submit Logic (Placeholder) ---
+  // Submit form button click handler with debounce
+  final _submitFormDebouncer = CueGate.debounce(
+    delay: const Duration(milliseconds: 500),
+  );
+
   void _submitForm() {
-    final uiState = _uiPresenter.state;
+    // Use CueGate to prevent multiple rapid clicks
+    _submitFormDebouncer.trigger(() {
+      final uiState = _uiPresenter.state;
+      final dataState = _dataPresenter.state;
 
-    // 從 UI 狀態中獲取表單資料
-    final String startDateStr = _dateFormatter.format(
-      uiState.selectedStartDate!,
-    );
-    final String endDateStr = _dateFormatter.format(uiState.selectedEndDate!);
+      // Set UI to submitting state
+      _uiPresenter.setSubmitting(true);
+      _uiPresenter.setErrorMessage(null);
 
-    final String startTimeStr =
-        '${uiState.selectedStartTime!.hour.toString().padLeft(2, '0')}:${uiState.selectedStartTime!.minute.toString().padLeft(2, '0')}';
+      // Get form data from UI state
+      final String startDateStr = _dateFormatter.format(
+        uiState.selectedStartDate!,
+      );
+      final String endDateStr = _dateFormatter.format(uiState.selectedEndDate!);
 
-    final String endTimeStr =
-        '${uiState.selectedEndTime!.hour.toString().padLeft(2, '0')}:${uiState.selectedEndTime!.minute.toString().padLeft(2, '0')}';
+      // Create complete DateTime objects for generating leave entries
+      final startDateTime = DateTime(
+        uiState.selectedStartDate!.year,
+        uiState.selectedStartDate!.month,
+        uiState.selectedStartDate!.day,
+        uiState.selectedStartTime!.hour,
+        uiState.selectedStartTime!.minute,
+      );
 
-    final int hours = uiState.calculatedDuration!.inHours;
-    final int minutes = uiState.calculatedDuration!.inMinutes.remainder(60);
+      final endDateTime = DateTime(
+        uiState.selectedEndDate!.year,
+        uiState.selectedEndDate!.month,
+        uiState.selectedEndDate!.day,
+        uiState.selectedEndTime!.hour,
+        uiState.selectedEndTime!.minute,
+      );
 
-    debugPrint('Form Data:');
-    debugPrint('  Rule ID: ${uiState.selectedLeaveRuleId}');
-    debugPrint('  Start Date: $startDateStr');
-    debugPrint('  End Date: $endDateStr');
-    debugPrint('  Start Time: $startTimeStr');
-    debugPrint('  End Time: $endTimeStr');
-    debugPrint('  Hours: $hours');
-    debugPrint('  Minutes: $minutes');
-    debugPrint(
-      '  Agent ID: ${uiState.selectedAgent?.id} (${uiState.selectedAgent?.name})',
-    );
-    debugPrint('  Remark: ${_remarkController.text}');
-    debugPrint('  Files: ${uiState.selectedFiles.map((f) => f.path).toList()}');
+      // Check if work hours data is available
+      if (dataState.workHours == null || dataState.workHours!.isEmpty) {
+        _uiPresenter.setSubmitting(false);
+        _uiPresenter.setErrorMessage('無法提交：缺少工時資料。請確保已選擇有效的日期和時間。');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('無法提交：缺少工時資料。請確保已選擇有效的日期和時間。')),
+        );
+        return;
+      }
 
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('提交功能開發中 (資料已打印至控制台)')));
-    // TODO: Call presenter.submitLeaveForm(...);
+      // Generate multi-day leave entries
+      final leaveEntries = _dataPresenter.generateLeaveEntries(
+        workHoursList: dataState.workHours!,
+        startDateTime: startDateTime,
+        endDateTime: endDateTime,
+      );
+
+      // Check if there are valid leave entries
+      if (leaveEntries.isEmpty) {
+        _uiPresenter.setSubmitting(false);
+        _uiPresenter.setErrorMessage('無法提交：所選時間範圍內沒有有效的工作時間。');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('無法提交：所選時間範圍內沒有有效的工作時間。')));
+        return;
+      }
+
+      // Debug log generated leave entries
+      debugPrint('Generated Leave Entries:');
+      for (var i = 0; i < leaveEntries.length; i++) {
+        final entry = leaveEntries[i];
+        debugPrint('  Entry $i:');
+        debugPrint('    Date: ${entry.$1}');
+        debugPrint('    Start: ${entry.$2}');
+        debugPrint('    End: ${entry.$3}');
+        debugPrint('    Hours: ${entry.$4}');
+        debugPrint('    Minutes: ${entry.$5}');
+      }
+
+      debugPrint('Form Data:');
+      debugPrint('  Rule ID: ${uiState.selectedLeaveRuleId}');
+      debugPrint('  Start Date: $startDateStr');
+      debugPrint('  End Date: $endDateStr');
+      debugPrint(
+        '  Agent ID: ${uiState.selectedAgent?.id} (${uiState.selectedAgent?.name})',
+      );
+      debugPrint('  Remark: ${_remarkController.text}');
+      debugPrint(
+        '  Files: ${uiState.selectedFiles.map((f) => f.path).toList()}',
+      );
+
+      // Check if leave type is selected
+      if (uiState.selectedLeaveRuleId == null) {
+        _uiPresenter.setSubmitting(false);
+        _uiPresenter.setErrorMessage('請選擇假別類型');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('請選擇假別類型')));
+        return;
+      }
+
+      // Check if agent is selected
+      if (uiState.selectedAgent == null) {
+        _uiPresenter.setSubmitting(false);
+        _uiPresenter.setErrorMessage('請選擇代理人');
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('請選擇代理人')));
+        return;
+      }
+
+      // Get auth session
+      final session = AuthUtils.getAuthSession();
+
+      // Submit leave form with callbacks
+      _dataPresenter.submitLeaveForm(
+        ruleId: uiState.selectedLeaveRuleId!,
+        startDate: startDateStr,
+        endDate: endDateStr,
+        leaveEntries: leaveEntries,
+        agentId: uiState.selectedAgent!.id!,
+        remark: _remarkController.text,
+        files: uiState.selectedFiles,
+        cookie: session.cookie!,
+        onSuccess: () {
+          // Reset UI submitting state
+          _uiPresenter.setSubmitting(false);
+
+          // Show success message and navigate back
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('申請已提交成功！')));
+          // Use Auto Route to navigate back
+          context.router.pop();
+        },
+        onFailed: (errorMessage) {
+          // Reset UI submitting state
+          _uiPresenter.setSubmitting(false);
+
+          // Show error message (只設置錯誤訊息，不顯示 Snackbar)
+          _uiPresenter.setErrorMessage(errorMessage);
+        },
+      );
+    });
   }
 
-  // --- 驗證表單
+  // --- Form validation
   void _validateForm() {
-    _uiPresenter.validateForm(remark: _remarkController.text);
+    // Update remark in UI presenter and validate form
+    _uiPresenter.setRemark(_remarkController.text);
   }
 
   @override

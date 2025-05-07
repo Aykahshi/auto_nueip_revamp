@@ -24,7 +24,7 @@ sealed class LeaveRecord with _$LeaveRecord {
     @JsonKey(name: 'total_hours') String? totalHours,
     @JsonKey(name: 'c_user_name') String? username,
     final String? file,
-    final FileInfo? fileInfo,
+    @JsonKey(fromJson: _fileInfoFromJson) final FileInfo? fileInfo,
     @JsonKey(name: 'attachment_status') String? attachmentStatus,
     @Default(true) final bool isCancelable,
   }) = _LeaveRecord;
@@ -55,6 +55,7 @@ sealed class LeaveRecord with _$LeaveRecord {
   bool get isSigned => signStatus == 2;
   bool get isRejected => signStatus == 3;
   bool get isPending => signStatus != 1 && signStatus < 2;
+  bool get canCancel => isCancelable && !isSigned && !isRejected;
 }
 
 @freezed
@@ -87,4 +88,33 @@ num _parseIntFromJson(dynamic value) {
   if (value is int) return value;
   if (value is String) return num.tryParse(value) ?? 0;
   return 0;
+}
+
+/// Custom fromJson function for FileInfo to handle both map and list cases
+FileInfo? _fileInfoFromJson(dynamic json) {
+  if (json == null) return null;
+
+  // Case 1: json is already a Map<String, dynamic>
+  if (json is Map<String, dynamic>) {
+    return FileInfo.fromJson(json);
+  }
+
+  // Case 2: json is a List
+  if (json is List) {
+    if (json.isEmpty) return null;
+
+    // Create a storage list from the array
+    final storageFiles = <StorageFile>[];
+
+    for (var item in json) {
+      if (item is Map<String, dynamic>) {
+        storageFiles.add(StorageFile.fromJson(item));
+      }
+    }
+
+    return FileInfo(storage: storageFiles);
+  }
+
+  // If json is neither a map nor a list, return null
+  return null;
 }

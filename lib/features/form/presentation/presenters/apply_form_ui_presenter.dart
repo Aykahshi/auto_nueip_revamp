@@ -56,7 +56,7 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
     );
   }
 
-  /// 計算並設定請假時間
+  /// Calculate and set leave duration
   void calculateDuration() {
     if (startDateTime != null && endDateTime != null) {
       if (endDateTime!.isAfter(startDateTime!)) {
@@ -70,7 +70,7 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
           ),
         );
 
-        // 檢查表單有效性
+        // Always validate form after changing any field
         validateForm();
       } else {
         trickWith(
@@ -80,24 +80,27 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
           ),
         );
 
-        // 檢查表單有效性
+        // Always validate form after changing any field
         validateForm();
       }
     } else {
       trickWith(
         (s) => s.copyWith(calculatedDuration: null, displayDuration: '請選擇起始時間'),
       );
+      
+      // Always validate form after changing any field
+      validateForm();
     }
   }
 
-  /// 設置開始日期
+  /// Set start date
   void setStartDate(DateTime? date) {
     if (date == null) return;
 
     final confirmedDate = DateUtils.dateOnly(date);
     final String displayDate = _dateFormatter.format(confirmedDate);
 
-    // 如果結束日期在開始日期之前，清除結束日期
+    // If end date is before start date, clear end date
     final endDate = state.selectedEndDate;
 
     if (endDate != null && endDate.isBefore(confirmedDate)) {
@@ -120,19 +123,20 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
       );
     }
 
+    // Calculate duration will also validate the form
     calculateDuration();
   }
 
-  /// 設置結束日期
+  /// Set end date
   void setEndDate(DateTime? date) {
     if (date == null) return;
 
     final confirmedDate = DateUtils.dateOnly(date);
     final startDate = state.selectedStartDate;
 
-    // 檢查結束日期是否在開始日期之前
+    // Check if end date is before start date
     if (startDate != null && confirmedDate.isBefore(startDate)) {
-      // 結束日期不能早於開始日期，不進行設定
+      // End date cannot be before start date, do not set
       return;
     }
 
@@ -145,10 +149,11 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
       ),
     );
 
+    // Calculate duration will also validate the form
     calculateDuration();
   }
 
-  /// 設置開始時間
+  /// Set start time
   void setStartTime(TimeOfDay? time) {
     if (time == null) return;
 
@@ -159,10 +164,11 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
       (s) => s.copyWith(selectedStartTime: time, displayStartTime: timeString),
     );
 
+    // Calculate duration will also validate the form
     calculateDuration();
   }
 
-  /// 設置結束時間
+  /// Set end time
   void setEndTime(TimeOfDay? time) {
     if (time == null) return;
 
@@ -173,33 +179,40 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
       (s) => s.copyWith(selectedEndTime: time, displayEndTime: timeString),
     );
 
+    // Calculate duration will also validate the form
     calculateDuration();
   }
 
-  /// 設置假別規則 ID
+  /// Set leave rule ID
   void setLeaveRuleId(String? id) {
     trickWith((s) => s.copyWith(selectedLeaveRuleId: id));
+    // Always validate form after changing any field
     validateForm();
   }
 
-  /// 設置代理人
+  /// Set agent
   void setAgent(Employee? employee) {
     trickWith((s) => s.copyWith(selectedAgent: employee));
+    // Always validate form after changing any field
     validateForm();
   }
 
-  /// 設置選擇的檔案
+  /// Set selected files
   void setFiles(List<File> files) {
     trickWith((s) => s.copyWith(selectedFiles: files));
+    // Always validate form after changing any field
+    validateForm();
   }
 
-  /// 移除檔案
+  /// Remove file
   void removeFile(File file) {
     final newFiles = [...state.selectedFiles]..remove(file);
     trickWith((s) => s.copyWith(selectedFiles: newFiles));
+    // Always validate form after changing any field
+    validateForm();
   }
 
-  /// 格式化顯示時間
+  /// Format duration for display
   String formatDuration(Duration? duration) {
     if (duration == null) return '請選擇起始時間';
     if (duration == Duration.zero) return '0 小時 0 分鐘';
@@ -208,9 +221,31 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
     final minutes = duration.inMinutes.remainder(60);
     return '$hours 小時 $minutes 分鐘';
   }
+  
+  /// Set submitting state
+  void setSubmitting(bool isSubmitting) {
+    trickWith((s) => s.copyWith(isSubmitting: isSubmitting));
+  }
+  
+  /// Set error message
+  void setErrorMessage(String? errorMessage) {
+    trickWith((s) => s.copyWith(errorMessage: errorMessage));
+  }
 
-  /// 驗證表單是否有效
+  // Current remark value for form validation
+  String _currentRemark = '';
+  
+  /// Set current remark value
+  void setRemark(String value) {
+    _currentRemark = value;
+    validateForm();
+  }
+
+  /// Validate if the form is valid
   void validateForm({String? remark}) {
+    // Use provided remark or current stored remark
+    final remarkToCheck = remark ?? _currentRemark;
+    
     final isValid =
         state.selectedStartDate != null &&
         state.selectedStartTime != null &&
@@ -220,7 +255,7 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
         state.calculatedDuration! > Duration.zero &&
         state.selectedLeaveRuleId != null &&
         state.selectedAgent != null &&
-        (remark?.isNotEmpty ?? false);
+        remarkToCheck.isNotEmpty;
 
     trickWith((s) => s.copyWith(isFormValid: isValid));
   }

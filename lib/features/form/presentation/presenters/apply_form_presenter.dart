@@ -77,14 +77,13 @@ class ApplyFormPresenter extends Presenter<ApplyFormState> {
     required String ruleId,
     required String startDate,
     required String endDate,
-    required String startTime,
-    required String endTime,
-    required int hours,
-    required int minutes,
+    required List<(String date, String start, String end, int hour, int min)> leaveEntries,
     required String agentId,
     required String remark,
     List<File>? files,
     required String cookie,
+    VoidCallback? onSuccess,
+    Function(String message)? onFailed,
   }) async {
     // 更新狀態為提交中
     trickWith((s) => s.copyWith(isSubmitting: true, hasError: false));
@@ -96,10 +95,7 @@ class ApplyFormPresenter extends Presenter<ApplyFormState> {
               ruleId: ruleId,
               startDate: startDate,
               endDate: endDate,
-              startTime: startTime,
-              endTime: endTime,
-              hours: hours,
-              minutes: minutes,
+              leaveEntries: leaveEntries,
               agentId: agentId,
               remark: remark,
               files: files,
@@ -109,23 +105,36 @@ class ApplyFormPresenter extends Presenter<ApplyFormState> {
 
     result.fold(
       // 處理失敗
-      (failure) => trickWith(
-        (s) => s.copyWith(
-          isSubmitting: false,
-          hasError: true,
-          errorMessage: '提交請假表單失敗: ${failure.message}',
-          errorStatus: failure.status,
-        ),
-      ),
+      (failure) {
+        final errorMessage = '提交請假表單失敗: ${failure.message}';
+        trickWith(
+          (s) => s.copyWith(
+            isSubmitting: false,
+            hasError: true,
+            errorMessage: errorMessage,
+            errorStatus: failure.status,
+          ),
+        );
+        // 呼叫失敗回調
+        if (onFailed != null) {
+          onFailed(errorMessage);
+        }
+      },
       // 處理成功
-      (response) => trickWith(
-        (s) => s.copyWith(
-          isSubmitting: false,
-          hasError: false,
-          errorMessage: null,
-          errorStatus: null,
-        ),
-      ),
+      (response) {
+        trickWith(
+          (s) => s.copyWith(
+            isSubmitting: false,
+            hasError: false,
+            errorMessage: null,
+            errorStatus: null,
+          ),
+        );
+        // 呼叫成功回調
+        if (onSuccess != null) {
+          onSuccess();
+        }
+      },
     );
   }
 
@@ -205,6 +214,150 @@ class ApplyFormPresenter extends Presenter<ApplyFormState> {
         );
       },
     );
+  }
+
+  /// Generates a list of leave entries for multiple days based on work hours data
+  /// Each entry contains date, start time, end time, hours, and minutes
+  List<(String date, String start, String end, int hour, int min)> generateLeaveEntries({
+    required List<WorkHour> workHoursList,
+    required DateTime startDateTime,
+    required DateTime endDateTime,
+  }) {
+    final List<(String date, String start, String end, int hour, int min)> entries = [];
+    final bool isSameDay =
+        startDateTime.year == endDateTime.year &&
+        startDateTime.month == endDateTime.month &&
+        startDateTime.day == endDateTime.day;
+
+    // Format for time display in form submission
+    final timeFormat = DateFormat('HH:mm');
+    final dateFormat = DateFormat('yyyy-MM-dd');
+
+    for (final workHour in workHoursList) {
+      // Parse the work date
+      final DateTime workDate = DateTime.parse('${workHour.date} 00:00:00');
+      
+      // Work start and end time for this day
+      final workStartDateTime = DateTime(
+        workDate.year,
+        workDate.month,
+        workDate.day,
+        int.parse(workHour.startHour),
+        int.parse(workHour.startMinute),
+      );
+
+      final workEndDateTime = DateTime(
+        workDate.year,
+        workDate.month,
+        workDate.day,
+        int.parse(workHour.endHour),
+        int.parse(workHour.endMinute),
+      );
+
+      // Adjust effective start and end times based on user selection
+      DateTime effectiveStartTime;
+      DateTime effectiveEndTime;
+
+      // If this is the first day, use the later of form start time and work start time
+      if (workDate.year == startDateTime.year &&
+          workDate.month == startDateTime.month &&
+          workDate.day == startDateTime.day) {
+        effectiveStartTime =
+            startDateTime.isAfter(workStartDateTime)
+                ? startDateTime
+                : workStartDateTime;
+      } else {
+        effectiveStartTime = workStartDateTime;
+      }
+
+      // If this is the last day, use the earlier of form end time and work end time
+      if (workDate.year == endDateTime.year &&
+          workDate.month == endDateTime.month &&
+          workDate.day == endDateTime.day) {
+        effectiveEndTime =
+            endDateTime.isBefore(workEndDateTime)
+                ? endDateTime
+                : workEndDateTime;
+      } else {
+        effectiveEndTime = workEndDateTime;
+      }
+
+      // Skip if end time is before start time
+      if (effectiveEndTime.isBefore(effectiveStartTime)) {
+        continue;
+      }
+
+      // Calculate basic duration for this day
+      final basicDuration = effectiveEndTime.difference(effectiveStartTime);
+
+      // Handle rest time
+      Duration restToSubtract = Duration.zero;
+
+      for (var restInterval in workHour.rest) {
+        if (restInterval.length < 2) continue;
+
+        // Parse rest start and end times
+        final restStart = DateTime.tryParse(restInterval[0]);
+        final restEnd = DateTime.tryParse(restInterval[1]);
+
+        if (restStart == null || restEnd == null) continue;
+
+        // Adjust for same day scenario
+        if (isSameDay &&
+            workDate.year == startDateTime.year &&
+            workDate.month == startDateTime.month &&
+            workDate.day == startDateTime.day) {
+          // Case 1: If both start and end times are before rest start, don't subtract
+          if (effectiveStartTime.isBefore(restStart) &&
+              effectiveEndTime.isBefore(restStart)) {
+            continue;
+          }
+
+          // Case 2: If both start and end times are after rest end, don't subtract
+          if (effectiveStartTime.isAfter(restEnd) &&
+              effectiveEndTime.isAfter(restEnd)) {
+            continue;
+          }
+        }
+
+        // Calculate overlap between rest time and effective work time
+        DateTime overlapStart =
+            effectiveStartTime.isAfter(restStart)
+                ? effectiveStartTime
+                : restStart;
+        DateTime overlapEnd =
+            effectiveEndTime.isBefore(restEnd) ? effectiveEndTime : restEnd;
+
+        // If there's overlap, calculate and add rest time to subtract
+        if (!overlapEnd.isBefore(overlapStart)) {
+          restToSubtract += overlapEnd.difference(overlapStart);
+        }
+      }
+
+      // Calculate actual duration after subtracting rest time
+      final actualDuration =
+          basicDuration > restToSubtract
+              ? basicDuration - restToSubtract
+              : Duration.zero;
+      
+      // Skip days with zero work hours
+      if (actualDuration == Duration.zero) {
+        continue;
+      }
+      
+      // Create entry for this day
+      final entry = (
+        dateFormat.format(workDate),                     // date
+        timeFormat.format(effectiveStartTime),           // start time
+        timeFormat.format(effectiveEndTime),             // end time
+        actualDuration.inHours,                          // hours
+        actualDuration.inMinutes.remainder(60)           // minutes
+      );
+      
+      entries.add(entry);
+    }
+
+    return entries;
   }
 
   /// 計算實際工時，考慮用戶選擇的時間區間與休息時間的關係

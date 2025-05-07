@@ -559,9 +559,8 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
                     .fadeIn(duration: 400.ms)
                     .slideY(begin: 0.05, curve: Curves.easeInOut),
 
-              Gap(context.h(20)),
-
-              if (record.isCancelable)
+              if (record.canCancel) ...[
+                Gap(context.h(20)),
                 Center(
                   child: ElevatedButton.icon(
                     icon: const Icon(Icons.cancel_outlined),
@@ -650,6 +649,7 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
                     },
                   ),
                 ),
+              ],
             ],
           ),
         ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1);

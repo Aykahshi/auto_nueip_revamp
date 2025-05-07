@@ -30,7 +30,9 @@ sealed class ApplyFormUiState with _$ApplyFormUiState {
     @Default('選擇結束時間') String displayEndTime,
     @Default('請選擇起始時間') String displayDuration,
 
-    // 表單狀態
+    // Form state
     @Default(false) bool isFormValid,
+    @Default(false) bool isSubmitting,
+    String? errorMessage,
   }) = _ApplyFormUiState;
 }
