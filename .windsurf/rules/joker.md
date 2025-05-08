@@ -24,7 +24,7 @@ Joker State 是一套為 Flutter 應用程式設計的全方位狀態管理解�
 final counterJoker = Joker<int>(0);
 
 // 更新狀態 (自動通知)
-counterJoker.trick(42);                      // 直接賦值
+counterJoker.trick(42);                       // 直接賦值
 counterJoker.trickWith((state) => state + 1); // 用函數轉換
 await counterJoker.trickAsync(fetchValue);    // 非同步更新
 
@@ -36,14 +36,28 @@ counterJoker.yell();                          // 需要時再通知
 
 #### Presenter
 
-建立在 Joker 之上，加入了生命週期管理，適合 BLoC、MVC 或 MVVM 架構：
+建立在 Joker 之上，加入了生命週期管理，適合 BLoC 等架構：
 
 ```dart
 class CounterPresenter extends Presenter<int> {
   CounterPresenter() : super(0);
+
   void increment() => trickWith((s) => s + 1);
-  @override void onInit() { print('Presenter initialized!'); }
-  @override void onDone() { print('Presenter cleaned up!'); }
+
+  // 若為帶有 `copyWith` 的 State
+  void update() => trick(state.copyWith(...));
+
+  @override 
+  void onInit() { 
+    super.onInit();
+    print('Presenter initialized!'); 
+  }
+
+  @override 
+  void onDone() {
+    print('Presenter cleaned up!'); 
+    super.onDone();
+  }
 }
 ```
 
@@ -61,6 +75,8 @@ userPresenter.focusOn<String>(
 );
 
 // 組合多個狀態
+typedef UserProfile = (String name,
+
 JokerTroupe<UserProfile>(
   jokers: [nameJoker, ageJoker, activeJoker],
   converter: (values) => (values[0] as String, values[1] as int, values[2] as bool),
@@ -265,7 +281,7 @@ class _MyScreenState extends State<MyScreen> with CueGateMixin {
   - 使用 bindDependency 清楚標示依賴關係
 - 合理設定 keepAlive：
   - 長壽命元件設為 true
-  - 雙時元件預設 false
+  - 平時元件預設 false
 - 優先使用懶加載：
   - 高成本資源用 hireLazily 延遲初始化
 - 適時釋放資源：
@@ -274,8 +290,6 @@ class _MyScreenState extends State<MyScreen> with CueGateMixin {
 #### 事件總線
 - 事件定義明確：
   - 每個事件類別專注一個領域或功能
-- 記得取消訂閱：
-  - 組件銷毀時取消監聽，避免記憶體洩漏
 - 使用命名空間：
   - 不同領域用不同事件總線，避免混亂
 - 避免循環觸發：
