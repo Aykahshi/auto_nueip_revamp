@@ -11,6 +11,7 @@ import 'core/utils/nueip_helper.dart';
 import 'features/calendar/presentation/presenters/attendance_presenter.dart';
 import 'features/form/presentation/presenters/leave_record_presenter.dart';
 import 'features/form/presentation/presenters/sign_presenter.dart';
+import 'features/hidden/presenter/background_service_presenter.dart';
 import 'features/holiday/data/repositories/holiday_repository_impl.dart';
 import 'features/holiday/data/services/holiday_service.dart';
 import 'features/holiday/presentation/presenters/holiday_presenter.dart';
@@ -67,13 +68,17 @@ Future<void> _initDependencies() async {
     ..bindDependency<HolidayRepositoryImpl, HolidayService>();
 
   // Add Presenters registration
-  Circus.hireLazily<HolidayPresenter>(() => HolidayPresenter());
-  Circus.hireLazily<AttendancePresenter>(() => AttendancePresenter());
-  Circus.hireLazily<LoginPresenter>(() => LoginPresenter());
-  Circus.hireLazily<SettingPresenter>(() => SettingPresenter());
-  Circus.hireLazily<ClockPresenter>(() => ClockPresenter());
-  Circus.hireLazily<LeaveRecordPresenter>(() => LeaveRecordPresenter());
-  Circus.contract<SignPresenter>(() => SignPresenter());
+  Circus
+    ..hireLazily<HolidayPresenter>(() => HolidayPresenter())
+    ..hireLazily<AttendancePresenter>(() => AttendancePresenter())
+    ..hireLazily<LoginPresenter>(() => LoginPresenter())
+    ..hireLazily<SettingPresenter>(() => SettingPresenter())
+    ..hireLazily<ClockPresenter>(() => ClockPresenter())
+    ..hireLazily<LeaveRecordPresenter>(() => LeaveRecordPresenter())
+    ..contract<SignPresenter>(() => SignPresenter())
+    ..hireLazily<BackgroundServicePresenter>(
+      () => BackgroundServicePresenter(),
+    );
 
   // Add theme mode Joker registration
   Circus.summon<AppThemeMode>(

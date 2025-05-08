@@ -131,6 +131,16 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                       );
                     },
                   ),
+
+                  // Background Service Test
+                  _buildSettingTile(
+                    context,
+                    title: '背景服務測試',
+                    icon: Icons.schedule_outlined,
+                    onTap: () {
+                      context.router.push(const BackgroundServiceRoute());
+                    },
+                  ),
                 ])
                 .animate()
                 .fadeIn(duration: 800.ms)

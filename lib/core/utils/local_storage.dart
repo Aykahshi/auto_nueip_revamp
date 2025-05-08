@@ -8,6 +8,8 @@ sealed class LocalStorage {
     _prefs = await SharedPreferences.getInstance();
   }
 
+  static bool isInitialized() => _prefs != null;
+
   static Future<bool> set<T>(String key, T value) async {
     if (_prefs == null) throw Exception("SharedPreferences is not initialized");
 
