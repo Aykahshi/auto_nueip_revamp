@@ -69,8 +69,9 @@ abstract class NueipRepository {
     required String ruleId,
     required String startDate,
     required String endDate,
-    required List<(String date, String start, String end, int hour, int min)> leaveEntries,
-    required String agentId,
+    required List<(String date, String start, String end, int hour, int min)>
+    leaveEntries,
+    required (String id, String sn) agent,
     required String remark,
     List<File>? files,
     required String cookie,

@@ -77,8 +77,9 @@ class ApplyFormPresenter extends Presenter<ApplyFormState> {
     required String ruleId,
     required String startDate,
     required String endDate,
-    required List<(String date, String start, String end, int hour, int min)> leaveEntries,
-    required String agentId,
+    required List<(String date, String start, String end, int hour, int min)>
+    leaveEntries,
+    required (String id, String sn) agent,
     required String remark,
     List<File>? files,
     required String cookie,
@@ -96,7 +97,7 @@ class ApplyFormPresenter extends Presenter<ApplyFormState> {
               startDate: startDate,
               endDate: endDate,
               leaveEntries: leaveEntries,
-              agentId: agentId,
+              agent: agent,
               remark: remark,
               files: files,
               cookie: cookie,
@@ -218,12 +219,14 @@ class ApplyFormPresenter extends Presenter<ApplyFormState> {
 
   /// Generates a list of leave entries for multiple days based on work hours data
   /// Each entry contains date, start time, end time, hours, and minutes
-  List<(String date, String start, String end, int hour, int min)> generateLeaveEntries({
+  List<(String date, String start, String end, int hour, int min)>
+  generateLeaveEntries({
     required List<WorkHour> workHoursList,
     required DateTime startDateTime,
     required DateTime endDateTime,
   }) {
-    final List<(String date, String start, String end, int hour, int min)> entries = [];
+    final List<(String date, String start, String end, int hour, int min)>
+    entries = [];
     final bool isSameDay =
         startDateTime.year == endDateTime.year &&
         startDateTime.month == endDateTime.month &&
@@ -236,7 +239,7 @@ class ApplyFormPresenter extends Presenter<ApplyFormState> {
     for (final workHour in workHoursList) {
       // Parse the work date
       final DateTime workDate = DateTime.parse('${workHour.date} 00:00:00');
-      
+
       // Work start and end time for this day
       final workStartDateTime = DateTime(
         workDate.year,
@@ -339,21 +342,21 @@ class ApplyFormPresenter extends Presenter<ApplyFormState> {
           basicDuration > restToSubtract
               ? basicDuration - restToSubtract
               : Duration.zero;
-      
+
       // Skip days with zero work hours
       if (actualDuration == Duration.zero) {
         continue;
       }
-      
+
       // Create entry for this day
       final entry = (
-        dateFormat.format(workDate),                     // date
-        timeFormat.format(effectiveStartTime),           // start time
-        timeFormat.format(effectiveEndTime),             // end time
-        actualDuration.inHours,                          // hours
-        actualDuration.inMinutes.remainder(60)           // minutes
+        dateFormat.format(workDate), // date
+        timeFormat.format(effectiveStartTime), // start time
+        timeFormat.format(effectiveEndTime), // end time
+        actualDuration.inHours, // hours
+        actualDuration.inMinutes.remainder(60), // minutes
       );
-      
+
       entries.add(entry);
     }
 

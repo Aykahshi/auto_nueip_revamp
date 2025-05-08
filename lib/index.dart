@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:joker_state/joker_state.dart';
@@ -36,11 +35,9 @@ class App extends StatelessWidget {
         joker: themeJoker,
         child: JokerCast<AppThemeMode>(
           builder: (context, currentThemeMode) {
-            return KeyboardVisibilityProvider(
-              child: _AnimatedThemeApp(
-                themeMode: _getThemeMode(currentThemeMode),
-                router: router,
-              ),
+            return _AnimatedThemeApp(
+              themeMode: _getThemeMode(currentThemeMode),
+              router: router,
             );
           },
         ),

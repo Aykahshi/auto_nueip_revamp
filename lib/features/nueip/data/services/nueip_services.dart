@@ -384,7 +384,7 @@ final class NueipService {
     required String endDate,
     required List<(String date, String start, String end, int hour, int min)>
     leaveEntries,
-    required String agentId,
+    required (String id, String sn) agent,
     required String remark,
     List<File>? files,
     required String cookie,
@@ -404,7 +404,7 @@ final class NueipService {
           system: userSn[2],
         );
 
-        final String employee = '${sn.company}_${sn.department}_${sn.system}';
+        final String employee = '${sn.company}_${sn.department}_${agent.$2}';
 
         // Add common form fields
         formData.fields.addAll([
@@ -413,7 +413,7 @@ final class NueipService {
           MapEntry('d_date', endDate),
           MapEntry('FLayer2', sn.company),
           MapEntry('SLayer2', sn.department),
-          MapEntry('sub_usn', agentId),
+          MapEntry('sub_usn', agent.$1),
           MapEntry('TLayer2', employee),
           MapEntry('remark', remark),
           const MapEntry('action', 'add'),
@@ -504,8 +504,12 @@ final class NueipService {
     return TaskEither.tryCatch(
       () async {
         final response = await _client.post(
-          APIs.LEAVE_DELETE,
-          data: FormData.fromMap({'s_sn[]': id}),
+          APIs.LEAVE_SYSTEM,
+          data: FormData.fromMap({
+            'action': 'delete',
+            's_sn[]': id,
+            'reconfirm': false,
+          }),
           options: Options(headers: {'X-Requested-With': 'XMLHttpRequest'}),
         );
         return response;

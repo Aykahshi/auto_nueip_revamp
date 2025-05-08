@@ -330,7 +330,7 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
         startDate: startDateStr,
         endDate: endDateStr,
         leaveEntries: leaveEntries,
-        agentId: uiState.selectedAgent!.id!,
+        agent: (uiState.selectedAgent!.id!, uiState.selectedAgent!.sn!),
         remark: _remarkController.text,
         files: uiState.selectedFiles,
         cookie: session.cookie!,

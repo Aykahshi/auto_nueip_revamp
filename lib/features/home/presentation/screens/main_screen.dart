@@ -84,7 +84,7 @@ class MainScreen extends StatelessWidget {
                 padding: EdgeInsets.only(
                   bottom: context.h(Platform.isAndroid ? 2 : 0),
                 ),
-                child: const Text("表單"),
+                child: const Text("請假"),
               ),
               selectedColor:
                   context.isDarkMode

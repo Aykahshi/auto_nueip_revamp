@@ -389,10 +389,6 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
       startDate: dateState.tempStartDate,
       endDate: dateState.tempEndDate,
     );
-
-    debugPrint(
-      'Triggering leave record fetch for: ${dateState.tempStartDate} to ${dateState.tempEndDate}',
-    );
   }
 
   @override
@@ -409,40 +405,40 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
             ),
             centerTitle: true,
             elevation: 1,
-            actions: [
-              IconButton(
-                icon: Icon(
-                  historyState.historyType == FormHistoryType.leave
-                      ? Icons.receipt_long_outlined
-                      : Icons.edit_calendar_outlined,
-                ),
-                tooltip:
-                    historyState.historyType == FormHistoryType.leave
-                        ? '切換至請款紀錄'
-                        : '切換至請假紀錄',
-                onPressed: () {
-                  final nextType =
-                      historyState.historyType == FormHistoryType.leave
-                          ? FormHistoryType.expense
-                          : FormHistoryType.leave;
+            // actions: [
+            //   IconButton(
+            //     icon: Icon(
+            //       historyState.historyType == FormHistoryType.leave
+            //           ? Icons.receipt_long_outlined
+            //           : Icons.edit_calendar_outlined,
+            //     ),
+            //     tooltip:
+            //         historyState.historyType == FormHistoryType.leave
+            //             ? '切換至請款紀錄'
+            //             : '切換至請假紀錄',
+            //     onPressed: () {
+            //       final nextType =
+            //           historyState.historyType == FormHistoryType.leave
+            //               ? FormHistoryType.expense
+            //               : FormHistoryType.leave;
 
-                  // 使用 DateRangePresenter 清除日期範圍
-                  _dateRangePresenter.clearDateRange();
+            //       // 使用 DateRangePresenter 清除日期範圍
+            //       _dateRangePresenter.clearDateRange();
 
-                  // Update Joker state: change type and clear applied dates
-                  _historyJoker.trickWith(
-                    (state) => state.copyWith(
-                      historyType: nextType,
-                      startDate: null,
-                      endDate: null,
-                    ),
-                  );
+            //       // Update Joker state: change type and clear applied dates
+            //       _historyJoker.trickWith(
+            //         (state) => state.copyWith(
+            //           historyType: nextType,
+            //           startDate: null,
+            //           endDate: null,
+            //         ),
+            //       );
 
-                  // Reset presenter when switching tabs
-                  _leaveRecordPresenter.reset();
-                },
-              ),
-            ],
+            //       // Reset presenter when switching tabs
+            //       _leaveRecordPresenter.reset();
+            //     },
+            //   ),
+            // ],
           ),
           body: Column(
             children: [

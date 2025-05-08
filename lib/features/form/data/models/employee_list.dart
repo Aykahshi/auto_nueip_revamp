@@ -21,6 +21,7 @@ sealed class Department with _$Department {
 sealed class Employee with _$Employee {
   const factory Employee({
     @JsonKey(name: 'sn') final String? id,
+    @JsonKey(name: 'ud_sn') final String? sn,
     @JsonKey(name: 'title') final String? name,
   }) = _Employee;
 
