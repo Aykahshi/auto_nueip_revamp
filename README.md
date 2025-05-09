@@ -1,8 +1,9 @@
 # Auto Nueip
 
+**⚠️免責聲明： 本 APP 僅供學習與研究用途，未涉及任何商業利益與法律行為，請注意。**
+
 一個基於 Flutter、利用 Joker State 實現 Clean Architecture 的 APP 版 NUEIP。
 目前功能尚未完善，請以 NUEIP 官方網站為主要使用途徑，本 APP 為輔助工具。
-**免責聲明： 本 APP 僅供學習與研究用途，未涉及任何商業利益與法律行為，請注意。**
 
 ---
 
