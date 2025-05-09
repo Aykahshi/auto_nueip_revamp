@@ -33,8 +33,12 @@ mindmap
           --> nueip
       holiday
         presenter
-          (獨立，不依賴 nueip)
-    pubspec.yaml
+          (獨立，不依賴 nueip)    
+```
+
+```mermaid
+mindmap
+  pubspec.yaml
       state
         joker_state
       network
