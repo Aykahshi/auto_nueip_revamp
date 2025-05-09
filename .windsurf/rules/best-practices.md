@@ -56,7 +56,7 @@ lib/
 - 用 `joker.listen` 處理副作用，保持 Presenter 精簡聚焦。
 
 ## UI 設計
-- 參考 (flutter_screenutil)[https://pub.dev/packages/flutter_screenutil/versions/6.0.0-alpha.1] 官方文件寫法。
+- 參考 [flutter_screenutil](https://pub.dev/packages/flutter_screenutil/versions/6.0.0-alpha.1) 官方文件寫法。
 - 長、寬、字、角用 `context.w/h/i/sp`，正方形用 `context.r`。
 - 間距用 `Gap` 或 `spacing`，動畫用 `flutter_animate` 增強 UX。
 
