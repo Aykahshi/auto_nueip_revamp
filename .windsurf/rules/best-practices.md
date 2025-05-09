@@ -15,6 +15,7 @@ globs: *.dart
 - 每個特徵模組應包含所有三層實作，使用正確抽象（abstract class）。
 
 ## 專案結構（特徵優先）
+```
 lib/
 ├── core/ # 共享/通用程式碼
 │ ├── config/ # API 設置、LocalStorage Keys
@@ -39,6 +40,7 @@ lib/
 │ └── feature_b/ # 另一個具有相同結構的功能
 ├── index.dart # root App widget (處理 ScreenUtil 初始化、AppTheme)
 └── main.dart # 入口點
+```
 
 ## 依賴注入（使用 Circus）
 - 各特徵用獨立檔案註冊依賴，服務用 singleton、臨時對象用 factory。
