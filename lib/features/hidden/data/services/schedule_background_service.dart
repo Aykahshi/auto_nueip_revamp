@@ -7,12 +7,14 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../../../core/config/storage_keys.dart';
+import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/auth_utils.dart';
 import '../../../../core/utils/local_storage.dart';
 import '../../../../core/utils/notification.dart';
 import '../../../../core/utils/nueip_helper.dart';
 import '../../../login/data/models/auth_session.dart';
 import '../../../nueip/data/repositories/nueip_repository_impl.dart';
+import '../../../nueip/data/services/nueip_services.dart';
 
 /// 背景服務管理類，用於處理自動打卡的背景任務
 class ScheduleBackgroundService {
@@ -339,17 +341,29 @@ class ScheduleBackgroundService {
 /// 背景服務啟動時的回調函數
 @pragma('vm:entry-point')
 Future<void> onStart(ServiceInstance service) async {
+  // 初始化本地存儲
   if (!LocalStorage.isInitialized()) {
     await LocalStorage.init();
+  }
+
+  if (!Circus.isHired<NueipRepositoryImpl>()) {
+    Circus
+      ..hire<ApiClient>(ApiClient())
+      ..hire<NueipHelper>(NueipHelper())
+      ..contract<NueipService>(() => NueipService())
+      ..hireLazily<NueipRepositoryImpl>(() => NueipRepositoryImpl())
+      ..bindDependency<NueipRepositoryImpl, NueipService>();
   }
 
   // 設置前台服務通知（僅 Android）
   if (service is AndroidServiceInstance) {
     // 設置前台服務通知，避免 ForegroundServiceDidNotStartInTimeException 錯誤
-    await service.setForegroundNotificationInfo(
-      title: "Nueip 自動打卡",
-      content: "正在背景運行...",
-    );
+    if (await service.isForegroundService()) {
+      await service.setForegroundNotificationInfo(
+        title: "Nueip 自動打卡",
+        content: "正在背景運行...",
+      );
+    }
 
     // 定義一個變數來追蹤定時器
     Timer? periodicTimer;
@@ -495,6 +509,9 @@ Future<void> onStart(ServiceInstance service) async {
 
     // 設置服務停止標記
     await LocalStorage.set('service_stopping', true);
+
+    // 釋放依賴資源
+    await Circus.fireAll();
 
     // 停止服務
     service.stopSelf();
