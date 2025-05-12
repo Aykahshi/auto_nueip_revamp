@@ -65,4 +65,7 @@ sealed class StorageKeys {
 
   /// Key for storing the stop flag.
   static const String stopFlag = 'service_stopping';
+
+  /// Key for storing whether the user has triggered the secret feature.
+  static const String secretFeatureTriggered = 'secret_feature_triggered';
 }
