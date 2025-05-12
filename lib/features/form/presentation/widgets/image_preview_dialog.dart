@@ -5,6 +5,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:photo_view/photo_view.dart';
 
+import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/utils/auth_utils.dart';
 
@@ -43,8 +44,8 @@ class ImagePreviewDialog extends StatelessWidget {
       content: ClipRRect(
         borderRadius: BorderRadius.circular(context.r(16)),
         child: SizedBox(
-          width: MediaQuery.sizeOf(context).width * 0.9,
-          height: MediaQuery.sizeOf(context).height * 0.75,
+          width: context.vw * 0.9,
+          height: context.vh * 0.75,
           child: Stack(
             alignment: Alignment.center,
             children: [

@@ -118,11 +118,7 @@ class _AnimatedThemeAppState extends State<_AnimatedThemeApp>
                   ? AppTheme.darkTheme
                   : AppTheme.lightTheme,
           duration: const Duration(milliseconds: 600),
-          child: MediaQuery(
-            data: MediaQuery.of(context).copyWith(
-              textScaler: TextScaler.noScaling,
-              alwaysUse24HourFormat: true,
-            ),
+          child: MediaQuery.withNoTextScaling(
             child: MaterialApp.router(
               title: 'Auto NUEIP',
               theme: AppTheme.lightTheme,

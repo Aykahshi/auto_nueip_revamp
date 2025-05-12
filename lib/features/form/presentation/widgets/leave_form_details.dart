@@ -14,6 +14,7 @@ import '../../data/models/form_type_enum.dart';
 import '../../data/models/leave_record.dart';
 import '../../data/models/leave_sign_data.dart';
 import '../presenters/sign_presenter.dart';
+import 'document_preview_dialog.dart';
 import 'image_preview_dialog.dart';
 
 /// Displays the detailed view for a leave form, including sign process.
@@ -445,24 +446,61 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
                   record.fileInfo!.storage!.isNotEmpty) ...[
                 _buildSectionTitle(context, '附件'),
                 ...record.fileInfo!.storage!.map((file) {
-                  final imageUrl =
+                  final fileUrl =
                       (file.link != null && file.link!.startsWith('/'))
                           ? '${ApiConfig.BASE_URL}${file.link}'
                           : file.link;
+                  final fileName = file.name ?? '未命名檔案';
+
+                  // 判斷檔案類型
+                  final fileExt =
+                      fileName.split('.').lastOrNull?.toLowerCase() ?? '';
+                  final isImage = [
+                    'jpg',
+                    'jpeg',
+                    'png',
+                    'gif',
+                    'bmp',
+                    'webp',
+                  ].contains(fileExt);
+
+                  // 根據檔案類型選擇適當的圖示
+                  IconData fileIcon = switch (fileExt) {
+                    _ when isImage => Icons.image_outlined,
+                    'pdf' => Icons.picture_as_pdf_outlined,
+                    'doc' || 'docx' => Icons.description_outlined,
+                    'xls' || 'xlsx' || 'csv' => Icons.table_chart_outlined,
+                    'ppt' || 'pptx' => Icons.slideshow_outlined,
+                    _ => Icons.insert_drive_file_outlined,
+                  };
+
                   return DetailInfoRow(
-                    icon: Icons.attach_file,
-                    label: file.name ?? '未命名檔案',
+                    icon: fileIcon,
+                    label: fileName,
                     value: '點擊預覽',
                     isLink: true,
                     onTap:
-                        imageUrl != null
+                        fileUrl != null
                             ? () {
-                              showDialog(
-                                context: context,
-                                builder:
-                                    (_) =>
-                                        ImagePreviewDialog(imageUrl: imageUrl),
-                              );
+                              if (isImage) {
+                                // 圖片使用 ImagePreviewDialog
+                                showDialog(
+                                  context: context,
+                                  builder:
+                                      (_) =>
+                                          ImagePreviewDialog(imageUrl: fileUrl),
+                                );
+                              } else {
+                                // 其他文件類型使用 DocumentPreviewDialog
+                                showDialog(
+                                  context: context,
+                                  builder:
+                                      (_) => DocumentPreviewDialog(
+                                        fileUrl: fileUrl,
+                                        fileName: fileName,
+                                      ),
+                                );
+                              }
                             }
                             : null,
                   );

@@ -12,6 +12,7 @@ import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
 import '../../../../core/config/storage_keys.dart';
+import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/extensions/list_holiday_extensions.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/utils/calendar_utils.dart';
@@ -490,9 +491,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
         return Padding(
           padding: EdgeInsets.only(bottom: safeAreaBottom),
           child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.5,
-            ),
+            constraints: BoxConstraints(maxHeight: context.vh * 0.5),
             decoration: BoxDecoration(
               color: sheetColorScheme.surfaceContainer,
               borderRadius: BorderRadius.vertical(

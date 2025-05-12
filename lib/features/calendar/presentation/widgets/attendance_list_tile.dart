@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/utils/calendar_utils.dart';
 import '../../data/models/attendance_details.dart';
@@ -78,9 +79,7 @@ class AttendanceListTile extends StatelessWidget {
           ),
           content: Container(
             width: double.maxFinite,
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.6,
-            ),
+            constraints: BoxConstraints(maxHeight: context.vh * 0.6),
             child: SingleChildScrollView(
               padding: EdgeInsets.fromLTRB(context.w(20), 0, context.w(20), 0),
               child: Column(

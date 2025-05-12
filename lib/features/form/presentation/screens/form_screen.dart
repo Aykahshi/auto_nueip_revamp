@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:joker_state/joker_state.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
+import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../calendar/presentation/widgets/filter_area.dart';
@@ -181,9 +182,7 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
         return Padding(
           padding: EdgeInsets.only(bottom: safeAreaBottom),
           child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.5,
-            ),
+            constraints: BoxConstraints(maxHeight: context.vh * 0.5),
             decoration: BoxDecoration(
               color: sheetColorScheme.surfaceContainer,
               borderRadius: BorderRadius.vertical(

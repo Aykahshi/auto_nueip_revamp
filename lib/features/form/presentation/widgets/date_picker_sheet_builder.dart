@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 
+import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 
 /// Builds the content for the date picker modal bottom sheet.
@@ -25,9 +26,7 @@ Widget buildDatePickerSheetContent({
       return Padding(
         padding: EdgeInsets.only(bottom: safeAreaBottom),
         child: Container(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.sizeOf(context).height * 0.5,
-          ),
+          constraints: BoxConstraints(maxHeight: context.vh * 0.5),
           decoration: BoxDecoration(
             color: sheetColorScheme.surfaceContainer,
             borderRadius: BorderRadius.vertical(
