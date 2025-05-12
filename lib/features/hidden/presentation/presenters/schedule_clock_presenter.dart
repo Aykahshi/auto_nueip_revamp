@@ -3,16 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../../core/config/storage_keys.dart';
-import '../../../core/utils/local_storage.dart';
-import '../data/services/background_service.dart';
-import '../domain/entities/background_service_state.dart';
+import '../../../../core/config/storage_keys.dart';
+import '../../../../core/utils/local_storage.dart';
+import '../../data/services/schedule_background_service.dart';
+import '../../domain/entities/background_service_state.dart';
 
 /// Presenter for Background Service, manages all state and business logic.
-class BackgroundServicePresenter extends Presenter<BackgroundServiceState> {
+class ScheduleClockPresenter extends Presenter<BackgroundServiceState> {
   StreamSubscription<bool?>? _serviceStatusSubscription;
 
-  BackgroundServicePresenter() : super(BackgroundServiceState.initial());
+  ScheduleClockPresenter({super.keepAlive = true})
+    : super(BackgroundServiceState.initial());
 
   @override
   void onInit() {
@@ -28,10 +29,10 @@ class BackgroundServicePresenter extends Presenter<BackgroundServiceState> {
 
   Future<void> _initializeService() async {
     trick(state.copyWith(isLoading: true));
-    await BackgroundService.initialize();
+    await ScheduleBackgroundService.initialize();
 
     // Listen to service status changes
-    _serviceStatusSubscription = BackgroundService.serviceStatus.listen((
+    _serviceStatusSubscription = ScheduleBackgroundService.serviceStatus.listen((
       isRunning,
     ) {
       if (isRunning == null) return;
@@ -45,7 +46,7 @@ class BackgroundServicePresenter extends Presenter<BackgroundServiceState> {
     });
 
     // Check current status
-    final isRunning = await BackgroundService.isRunning();
+    final isRunning = await ScheduleBackgroundService.isRunning();
     // Load saved settings
     final workHoursStartMs = LocalStorage.get<int>(
       StorageKeys.workHoursStart,
@@ -167,8 +168,8 @@ class BackgroundServicePresenter extends Presenter<BackgroundServiceState> {
   Future<void> startService() async {
     CueGate.debounce(delay: const Duration(seconds: 1)).trigger(() async {
       trick(state.copyWith(isLoading: true));
-      await BackgroundService.startService();
-      await BackgroundService.scheduleClockInOut(
+      await ScheduleBackgroundService.startService();
+      await ScheduleBackgroundService.scheduleClockInOut(
         clockInTime: state.clockInTime,
         clockOutTime: state.clockOutTime,
         flexibleDuration: Duration(minutes: state.flexibleMinutes),
@@ -181,7 +182,7 @@ class BackgroundServicePresenter extends Presenter<BackgroundServiceState> {
   Future<void> stopService() async {
     CueGate.debounce(delay: const Duration(seconds: 1)).trigger(() async {
       trick(state.copyWith(isLoading: true));
-      await BackgroundService.stopService();
+      await ScheduleBackgroundService.stopService();
       trick(state.copyWith(isLoading: false));
     });
   }

@@ -91,8 +91,13 @@ sealed class AuthUtils {
     return !isExpired;
   }
 
-  static Future<void> updateAuthSession(AuthSession session) async {
-    Circus.spotlight<AuthSession>(tag: 'auth').whisper(session);
+  static Future<void> updateAuthSession(
+    AuthSession session, {
+    bool isBackground = false,
+  }) async {
+    if (!isBackground) {
+      Circus.spotlight<AuthSession>(tag: 'auth').whisper(session);
+    }
 
     Circus.find<ApiClient>().updateAuthSession(session);
 
@@ -104,7 +109,23 @@ sealed class AuthUtils {
     ]);
   }
 
-  static AuthSession getAuthSession() {
+  static AuthSession getAuthSession({bool isBackground = false}) {
+    if (isBackground) {
+      final sessionStr = LocalStorage.get<List<String>>(
+        StorageKeys.authSession,
+        defaultValue: [],
+      );
+
+      final session = AuthSession(
+        accessToken: sessionStr[0],
+        cookie: sessionStr[1],
+        csrfToken: sessionStr[2],
+        expiryTime: DateTime.parse(sessionStr[3]),
+      );
+
+      return session;
+    }
+
     final session = Circus.spotlight<AuthSession>(tag: 'auth').state;
 
     return AuthSession(

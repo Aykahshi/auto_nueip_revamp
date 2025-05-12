@@ -628,7 +628,7 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
                               TextButton(
                                 child: const Text('取消'),
                                 onPressed: () {
-                                  dialogContext.router.pop(false);
+                                  dialogContext.pop(false);
                                 },
                               ),
                               TextButton(
@@ -638,7 +638,7 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
                                 ),
                                 child: const Text('確定撤銷'),
                                 onPressed: () {
-                                  dialogContext.router.pop(true);
+                                  dialogContext.pop(true);
                                 },
                               ),
                             ],
@@ -656,7 +656,7 @@ class _LeaveFormDetailsState extends State<LeaveFormDetails> {
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(content: Text('假單已成功撤銷')),
                                   );
-                                  context.router.pop();
+                                  context.pop();
                                 }
                               },
                               onFailed: () {

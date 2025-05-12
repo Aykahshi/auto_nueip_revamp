@@ -6,7 +6,7 @@ import '../../features/form/data/models/leave_record.dart';
 import '../../features/form/presentation/screens/apply_form_screen.dart';
 import '../../features/form/presentation/screens/form_detail_screen.dart';
 import '../../features/form/presentation/screens/form_screen.dart';
-import '../../features/hidden/presentation/screens/background_service_screen.dart';
+import '../../features/hidden/presentation/screens/schedule_clock_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/screens/main_screen.dart';
 import '../../features/login/presentation/screens/login_screen.dart';
@@ -37,7 +37,7 @@ class AppRouter extends RootStackRouter {
             AutoRoute(page: SettingMainRoute.page, initial: true),
             AutoRoute(page: DeveloperInfoRoute.page),
             AutoRoute(page: ProfileEditingRoute.page),
-            AutoRoute(page: BackgroundServiceRoute.page),
+            AutoRoute(page: ScheduleClockRoute.page),
           ],
         ),
         AutoRoute(

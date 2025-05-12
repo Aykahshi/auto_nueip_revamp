@@ -43,7 +43,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
     _presenter.getUserInfo();
 
     // 初始化秘密計數器
-    _secretCounter = Joker<int>(0);
+    _secretCounter = Joker<int>(0, keepAlive: true);
 
     // 檢查使用者是否已觸發過秘密功能
     _secretFeatureEnabled = LocalStorage.get<bool>(
@@ -197,7 +197,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                   icon: const Icon(Icons.settings_applications),
                   tooltip: '背景服務設定',
                   onPressed: () {
-                    context.router.push(const BackgroundServiceRoute());
+                    context.pushRoute(const ScheduleClockRoute());
                   },
                 );
               }
@@ -228,9 +228,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                     icon: Icons.person_outline,
                     onTap: () {
                       // Navigate to account editing screen
-                      context.router.push(const ProfileEditingRoute()).then((
-                        _,
-                      ) {
+                      context.pushRoute(const ProfileEditingRoute()).then((_) {
                         _presenter.getUserInfo();
                       });
                     },
@@ -306,7 +304,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                     title: '開發者資訊',
                     icon: Icons.info_outline,
                     onTap: () {
-                      context.router.push(const DeveloperInfoRoute());
+                      context.pushRoute(const DeveloperInfoRoute());
                     },
                   ),
                   _buildSettingTile(
@@ -465,7 +463,7 @@ void _showClearDataDialog(BuildContext context, SettingPresenter presenter) {
         ),
         actions: [
           TextButton(
-            onPressed: () => context.router.pop(),
+            onPressed: () => context.pop(),
             child: Text('取消', style: TextStyle(fontSize: context.sp(14))),
           ),
           TextButton(
@@ -474,7 +472,7 @@ void _showClearDataDialog(BuildContext context, SettingPresenter presenter) {
               await presenter.clearProflie();
 
               if (context.mounted) {
-                context.router.pop();
+                context.pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(

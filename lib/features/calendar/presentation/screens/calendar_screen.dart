@@ -619,7 +619,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                             fontSize: context.sp(14),
                           ),
                         ),
-                        onPressed: () => sheetContext.router.pop(),
+                        onPressed: () => sheetContext.pop(),
                       ),
                       Gap(context.w(8)),
                       ElevatedButton(
@@ -643,7 +643,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                             _startDateJoker.trick(newStartDate);
                             _endDateJoker.trick(newEndDate);
                           }
-                          sheetContext.router.pop();
+                          sheetContext.pop();
                         },
                       ),
                     ],

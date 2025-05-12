@@ -313,7 +313,7 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                             fontSize: context.sp(14),
                           ),
                         ),
-                        onPressed: () => sheetContext.router.pop(),
+                        onPressed: () => sheetContext.pop(),
                       ),
                       Gap(context.w(8)),
                       ElevatedButton(
@@ -327,7 +327,7 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                           _dateRangePresenter.setDateRange(
                             currentSheetSelection,
                           );
-                          sheetContext.router.pop();
+                          sheetContext.pop();
                         },
                       ),
                     ],
@@ -509,7 +509,7 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () {
-              context.router.push(
+              context.pushRoute(
                 ApplyFormRoute(formType: historyState.historyType),
               );
             },
@@ -567,7 +567,7 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                   record: request,
                   onTap: () {
                     // Navigate to FormDetailScreen with LeaveRecord object and qryNo as formId
-                    context.router.push(
+                    context.pushRoute(
                       FormDetailRoute(
                         formId: request.qryNo, // Pass qryNo as formId
                         leaveRecord: request,
@@ -684,7 +684,7 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                     ),
                     onTap: () {
                       // Navigate to detail screen with id (assuming it's qryNo for mock) and type
-                      context.router.push(
+                      context.pushRoute(
                         FormDetailRoute(
                           formId: request.id,
                           formType: currentType,

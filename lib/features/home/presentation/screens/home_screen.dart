@@ -181,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   tooltip: '前往設定',
                                   onPressed: () {
-                                    context.router.push(
+                                    context.pushRoute(
                                       const ProfileEditingRoute(),
                                     );
                                   },

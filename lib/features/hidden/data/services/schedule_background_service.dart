@@ -4,13 +4,18 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:joker_state/joker_state.dart';
 
 import '../../../../core/config/storage_keys.dart';
+import '../../../../core/utils/auth_utils.dart';
 import '../../../../core/utils/local_storage.dart';
 import '../../../../core/utils/notification.dart';
+import '../../../../core/utils/nueip_helper.dart';
+import '../../../login/data/models/auth_session.dart';
+import '../../../nueip/data/repositories/nueip_repository_impl.dart';
 
 /// 背景服務管理類，用於處理自動打卡的背景任務
-class BackgroundService {
+class ScheduleBackgroundService {
   // 服務狀態流
   static final _serviceStatusController = StreamController<bool>.broadcast();
 
@@ -201,22 +206,6 @@ class BackgroundService {
       StorageKeys.flexibleDuration: flexibleDuration.inMinutes,
       StorageKeys.randomTimeRange: randomDuration.inMinutes,
     });
-  }
-
-  /// 向後兼容的設定打卡任務方法
-  static Future<void> scheduleClockIn({
-    required DateTime workStartTime,
-    required Duration flexibleDuration,
-  }) async {
-    // 將舊的方法轉換為新的方法
-    await scheduleClockInOut(
-      clockInTime: workStartTime,
-      clockOutTime: workStartTime.add(
-        const Duration(hours: 9),
-      ), // 預設下班時間為上班後9小時
-      flexibleDuration: flexibleDuration,
-      randomDuration: const Duration(minutes: 5), // 預設隨機時間為5分鐘
-    );
   }
 
   /// 保存上下班打卡設置到 LocalStorage
@@ -417,7 +406,7 @@ Future<void> onStart(ServiceInstance service) async {
         // 檢查是否在上班打卡時間範圍內
         if (_isWithinClockInTime(now, clockInTime, flexibleDuration)) {
           // 執行上班打卡選擇
-          final success = await _performCheckIn();
+          final success = await _performClockIn();
           if (success) {
             final notification = FlutterLocalNotificationsPlugin();
 
@@ -458,7 +447,7 @@ Future<void> onStart(ServiceInstance service) async {
         // 檢查是否在下班打卡時間範圍內
         if (_isWithinClockOutTime(now, clockOutTime, flexibleDuration)) {
           // 執行下班打卡選擇
-          final success = await _performCheckIn();
+          final success = await _performClockIn();
           if (success) {
             final notification = FlutterLocalNotificationsPlugin();
 
@@ -574,9 +563,175 @@ DateTime _getRandomizedTime(DateTime baseTime, Duration randomDuration) {
 }
 
 /// 執行打卡選擇
-Future<bool> _performCheckIn() async {
-  // TODO: 實現實際的打卡選擇，例如呼叫 API
-  // 這裡只是模擬成功打卡
-  await Future.delayed(const Duration(seconds: 2));
-  return true;
+Future<bool> _performClockIn() async {
+  try {
+    // 從 LocalStorage 獲取必要的資訊
+    final authSessionStrs = LocalStorage.get<List<String>>(
+      StorageKeys.authSession,
+      defaultValue: [],
+    );
+
+    if (authSessionStrs.isEmpty) {
+      debugPrint('打卡失敗：找不到授權資訊');
+      return false;
+    }
+
+    // 建立 AuthSession 物件
+    AuthSession authSession = AuthSession(
+      accessToken: authSessionStrs[0],
+      cookie: authSessionStrs[1],
+      csrfToken: authSessionStrs[2],
+      expiryTime: DateTime.parse(authSessionStrs[3]),
+    );
+
+    // 檢查 Token 是否過期
+    if (authSession.isTokenExpired()) {
+      debugPrint('授權已過期，嘗試重新登入');
+
+      // 獲取登入憑證
+      final companyCode = LocalStorage.get<String>(
+        StorageKeys.companyCode,
+        defaultValue: '',
+      );
+      final employeeId = LocalStorage.get<String>(
+        StorageKeys.employeeId,
+        defaultValue: '',
+      );
+      final password = LocalStorage.get<String>(
+        StorageKeys.password,
+        defaultValue: '',
+      );
+
+      if (companyCode.isEmpty || employeeId.isEmpty || password.isEmpty) {
+        debugPrint('重新登入失敗：登入憑證不完整');
+        return false;
+      }
+
+      // 重新登入
+      final repository = Circus.find<NueipRepositoryImpl>();
+      final helper = Circus.find<NueipHelper>();
+
+      final loginResult =
+          await repository
+              .login(company: companyCode, id: employeeId, password: password)
+              .run();
+
+      final success = await loginResult.fold<Future<bool>>(
+        (failure) async {
+          debugPrint('重新登入失敗：${failure.message}');
+          return false;
+        },
+        (response) async {
+          if (response.statusCode != 303) {
+            debugPrint('重新登入失敗：非預期的狀態碼 ${response.statusCode}');
+            return false;
+          }
+
+          helper.redirectUrl = response.headers['location']?.first ?? '';
+
+          if (helper.redirectUrl.isEmpty) {
+            debugPrint('重新登入失敗：無法取得重定向 URL');
+            return false;
+          }
+
+          if (helper.redirectUrl.contains('/home')) {
+            try {
+              await helper.getCookieAndToken();
+
+              // 重新獲取更新後的 AuthSession
+              authSession = AuthUtils.getAuthSession(isBackground: true);
+              debugPrint('重新登入成功，已更新授權資訊');
+              return true;
+            } catch (e) {
+              debugPrint('重新登入過程中發生錯誤：$e');
+              return false;
+            }
+          } else {
+            debugPrint('重新登入失敗：重定向 URL 不包含 /home');
+            return false;
+          }
+        },
+      );
+
+      if (!success) {
+        debugPrint('重新登入失敗，無法繼續打卡');
+        return false;
+      }
+    }
+
+    // 獲取公司位置
+    final latitude = LocalStorage.get<double>(
+      StorageKeys.companyLatitude,
+      defaultValue: 0.0,
+    );
+    final longitude = LocalStorage.get<double>(
+      StorageKeys.companyLongitude,
+      defaultValue: 0.0,
+    );
+
+    if (authSession.accessToken == null ||
+        authSession.cookie == null ||
+        authSession.csrfToken == null) {
+      debugPrint('打卡失敗：授權資訊不完整');
+      return false;
+    }
+
+    if (latitude == 0.0 || longitude == 0.0) {
+      debugPrint('打卡失敗：公司位置資訊不完整');
+      return false;
+    }
+
+    // 從 Circus 獲取 NueipRepository 實例
+    final repository = Circus.find<NueipRepositoryImpl>();
+
+    // 判斷是上班還是下班打卡
+    final now = DateTime.now();
+    final clockInTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      LocalStorage.get<int>(StorageKeys.clockInTime, defaultValue: 9) ~/ 60,
+      LocalStorage.get<int>(StorageKeys.clockInTime, defaultValue: 9) % 60,
+    );
+    final clockOutTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      LocalStorage.get<int>(StorageKeys.clockOutTime, defaultValue: 18) ~/ 60,
+      LocalStorage.get<int>(StorageKeys.clockOutTime, defaultValue: 18) % 60,
+    );
+
+    // 判斷現在時間接近上班時間還是下班時間
+    final diffFromClockIn = now.difference(clockInTime).abs();
+    final diffFromClockOut = now.difference(clockOutTime).abs();
+
+    // 選擇打卡類型（1 為上班，2 為下班）
+    final method = diffFromClockIn < diffFromClockOut ? '1' : '2';
+
+    // 執行打卡操作
+    final result =
+        await repository
+            .clockAction(
+              method: method,
+              cookie: authSession.cookie!,
+              csrfToken: authSession.csrfToken!,
+              latitude: latitude,
+              longitude: longitude,
+            )
+            .run();
+
+    return result.fold(
+      (failure) {
+        debugPrint('打卡失敗：${failure.message}');
+        return false;
+      },
+      (response) {
+        debugPrint('打卡成功：${response.statusCode}');
+        return true;
+      },
+    );
+  } catch (e) {
+    debugPrint('打卡過程中發生錯誤：$e');
+    return false;
+  }
 }

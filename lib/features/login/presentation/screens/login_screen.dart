@@ -39,7 +39,7 @@ class _LoginScreenState extends State<LoginScreen> {
     _cancel = _presenter.listen((previous, current) {
       // Check current state status
       if (current.isSuccess) {
-        context.router.push(const HomeRoute());
+        context.pushRoute(const HomeRoute());
       } else if (current.isError) {
         // Use error message from LoginState if available
         showErrorMessage('登入失敗，請稍後再試');

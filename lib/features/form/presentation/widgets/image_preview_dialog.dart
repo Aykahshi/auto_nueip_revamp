@@ -118,7 +118,7 @@ class ImagePreviewDialog extends StatelessWidget {
                     color: colorScheme.onSurfaceVariant,
                     size: context.r(22),
                   ),
-                  onPressed: () => context.router.pop(),
+                  onPressed: () => context.pop(),
                   tooltip: '關閉預覽',
                 ),
               ),

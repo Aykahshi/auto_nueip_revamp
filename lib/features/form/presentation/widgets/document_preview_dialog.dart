@@ -69,7 +69,7 @@ class DocumentPreviewDialog extends StatelessWidget {
   /// 下載檔案到本地
   Future<void> _downloadFile(BuildContext context) async {
     // 關閉當前對話框
-    context.router.pop();
+    context.pop();
 
     // 顯示下載進度對話框
     showDialog(
@@ -112,7 +112,7 @@ class DocumentPreviewDialog extends StatelessWidget {
               color: colorScheme.onSurfaceVariant,
               size: context.sp(22),
             ),
-            onPressed: () => context.router.pop(),
+            onPressed: () => context.pop(),
             tooltip: '關閉預覽',
           ),
         ],
@@ -228,7 +228,7 @@ class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
   Future<void> _openDownloadedFile() async {
     final success = await _presenter.openDownloadedFile(context);
     if (success && mounted) {
-      context.router.pop();
+      context.pop();
     } else if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -299,13 +299,13 @@ class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
             return switch (state) {
               DownloadError() => _buildActionButtons(
                 context,
-                onClose: () => context.router.pop(),
+                onClose: () => context.pop(),
                 onRetry: () => _presenter.retryDownload(),
                 showRetry: true,
               ),
               DownloadCompleted() => _buildActionButtons(
                 context,
-                onClose: () => context.router.pop(),
+                onClose: () => context.pop(),
                 onOpen: _openDownloadedFile,
                 showOpen: true,
               ),
@@ -382,7 +382,7 @@ class _DownloadProgressDialogState extends State<_DownloadProgressDialog> {
               ),
               onPressed: () {
                 _presenter.cancelDownload();
-                context.router.pop();
+                context.pop();
               },
               tooltip: '取消下載',
             ),

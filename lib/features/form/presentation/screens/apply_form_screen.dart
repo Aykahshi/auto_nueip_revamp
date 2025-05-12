@@ -343,7 +343,7 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
             context,
           ).showSnackBar(const SnackBar(content: Text('申請已提交成功！')));
           // Use Auto Route to navigate back
-          context.router.pop();
+          context.pop();
         },
         onFailed: (errorMessage) {
           // Reset UI submitting state

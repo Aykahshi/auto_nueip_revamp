@@ -142,7 +142,7 @@ Widget buildDatePickerSheetContent({
                           fontSize: context.sp(14),
                         ),
                       ),
-                      onPressed: () => sheetContext.router.pop(),
+                      onPressed: () => sheetContext.pop(),
                     ),
                     Gap(context.w(8)),
                     ElevatedButton(
@@ -154,7 +154,7 @@ Widget buildDatePickerSheetContent({
                       onPressed: () {
                         // Pass the final selection back via callback
                         onSelectionConfirmed(currentSheetSelection);
-                        sheetContext.router.pop();
+                        sheetContext.pop();
                       },
                     ),
                   ],

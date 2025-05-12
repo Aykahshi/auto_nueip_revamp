@@ -6,27 +6,26 @@ import 'package:gap/gap.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../../../core/extensions/theme_extensions.dart';
-import '../../presenter/background_service_presenter.dart';
+import '../presenters/schedule_clock_presenter.dart';
 
 @RoutePage()
-class BackgroundServiceScreen extends StatelessWidget {
-  const BackgroundServiceScreen({super.key});
+class ScheduleClockScreen extends StatelessWidget {
+  const ScheduleClockScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final presenter = Circus.find<BackgroundServicePresenter>();
+    final presenter = Circus.find<ScheduleClockPresenter>();
 
     return presenter.perform(
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(title: const Text('背景服務測試')),
+          appBar: AppBar(title: const Text('排程打卡功能')),
           body: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: EdgeInsets.all(context.r(16)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                    // 使用 Animate 為整個頁面添加淡入效果
                     Card(
                       elevation: 4,
                       shadowColor: context.colorScheme.shadow.withValues(

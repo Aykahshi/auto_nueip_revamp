@@ -11,7 +11,7 @@ import 'core/utils/nueip_helper.dart';
 import 'features/calendar/presentation/presenters/attendance_presenter.dart';
 import 'features/form/presentation/presenters/leave_record_presenter.dart';
 import 'features/form/presentation/presenters/sign_presenter.dart';
-import 'features/hidden/presenter/background_service_presenter.dart';
+import 'features/hidden/presentation/presenters/schedule_clock_presenter.dart';
 import 'features/holiday/data/repositories/holiday_repository_impl.dart';
 import 'features/holiday/data/services/holiday_service.dart';
 import 'features/holiday/presentation/presenters/holiday_presenter.dart';
@@ -76,9 +76,7 @@ Future<void> _initDependencies() async {
     ..hireLazily<ClockPresenter>(() => ClockPresenter())
     ..hireLazily<LeaveRecordPresenter>(() => LeaveRecordPresenter())
     ..contract<SignPresenter>(() => SignPresenter())
-    ..hireLazily<BackgroundServicePresenter>(
-      () => BackgroundServicePresenter(),
-    );
+    ..hireLazily<ScheduleClockPresenter>(() => ScheduleClockPresenter());
 
   // Add theme mode Joker registration
   Circus.summon<AppThemeMode>(
