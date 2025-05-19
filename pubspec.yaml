@@ -24,7 +24,7 @@ dependencies:
   cached_network_image: ^3.4.1
 
   # state
-  joker_state: ^3.1.1
+  joker_state: ^4.0.0
 
   # UI
   gap: ^3.0.1

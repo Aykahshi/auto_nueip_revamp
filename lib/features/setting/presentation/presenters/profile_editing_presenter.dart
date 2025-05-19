@@ -96,7 +96,7 @@ final class ProfileEditingPresenter extends Presenter<ProfileEditingState> {
           debugPrint('Geocoding successful: ($latitude, $longitude)');
 
           // Update the global company address Joker
-          Circus.spotlight<String>(tag: 'companyAddress').trick(companyAddress);
+          Circus.find<Joker<String>>('companyAddress').trick(companyAddress);
         } else {
           debugPrint('Geocoding failed: No locations found for address.');
         }

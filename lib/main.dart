@@ -40,18 +40,15 @@ Future<void> _initDependencies() async {
   Circus.hire<AppRouter>(AppRouter());
 
   // Add AuthSession Joker registration
-  Circus.recruit<AuthSession>(
-    const AuthSession(),
-    tag: 'auth',
-    keepAlive: true,
-  );
+  Circus.hire(Joker<AuthSession>(const AuthSession()), tag: 'auth');
 
   // Add Company Address Joker registration
   final initialAddress = LocalStorage.get<String>(
     StorageKeys.companyAddress,
     defaultValue: '',
   );
-  Circus.summon<String>(initialAddress, tag: 'companyAddress', keepAlive: true);
+
+  Circus.hire(Joker<String>(initialAddress), tag: 'companyAddress');
 
   // Add API features registration
   Circus
@@ -79,9 +76,5 @@ Future<void> _initDependencies() async {
     ..hireLazily<ScheduleClockPresenter>(() => ScheduleClockPresenter());
 
   // Add theme mode Joker registration
-  Circus.summon<AppThemeMode>(
-    AppThemeMode.light,
-    tag: 'themeMode',
-    keepAlive: true,
-  );
+  Circus.hire(Joker<AppThemeMode>(AppThemeMode.light), tag: 'themeMode');
 }

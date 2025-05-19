@@ -13,7 +13,7 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeJoker = Circus.spotlight<AppThemeMode>(tag: 'themeMode');
+    final themeJoker = Circus.find<Joker<AppThemeMode>>('themeMode');
 
     final isDarkMode = LocalStorage.get<bool>(
       StorageKeys.darkModeEnabled,
@@ -31,16 +31,13 @@ class App extends StatelessWidget {
         designSize: Size(393, 852),
         paddingScaleStrategy: ScreenUtilScaleStrategy.both,
       ),
-      child: JokerPortal<AppThemeMode>(
-        joker: themeJoker,
-        child: JokerCast<AppThemeMode>(
-          builder: (context, currentThemeMode) {
-            return _AnimatedThemeApp(
-              themeMode: _getThemeMode(currentThemeMode),
-              router: router,
-            );
-          },
-        ),
+      child: themeJoker.perform(
+        builder: (context, currentThemeMode) {
+          return _AnimatedThemeApp(
+            themeMode: _getThemeMode(currentThemeMode),
+            router: router,
+          );
+        },
       ),
     );
   }

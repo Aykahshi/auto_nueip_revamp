@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
-import 'package:joker_state/joker_state.dart';
 
 import '../../../../core/extensions/theme_extensions.dart';
 
@@ -81,27 +80,21 @@ class TimeCard extends StatelessWidget {
               ],
             ),
             Gap(context.h(8)),
-            isLoading.reveal(
-              whenTrue: SizedBox(
-                height: context.h(40),
-                child: Center(
-                  child: SizedBox(
-                    width: context.r(20),
-                    height: context.r(20),
-                    child: CircularProgressIndicator(
-                      strokeWidth: context.w(2),
-                      color: context.colorScheme.primary,
+            isLoading
+                ? SizedBox(
+                  height: context.h(40),
+                  child: Center(
+                    child: SizedBox(
+                      width: context.r(20),
+                      height: context.r(20),
+                      child: CircularProgressIndicator(
+                        strokeWidth: context.w(2),
+                        color: context.colorScheme.primary,
+                      ),
                     ),
                   ),
-                ),
-              ),
-              whenFalse: _buildTimeDisplay(
-                context,
-                time,
-                timeStyle,
-                placeholderStyle,
-              ),
-            ),
+                )
+                : _buildTimeDisplay(context, time, timeStyle, placeholderStyle),
           ],
         ),
       ),

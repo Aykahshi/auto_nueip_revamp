@@ -85,7 +85,7 @@ sealed class AuthUtils {
     final bool isExpired = session.isTokenExpired();
 
     if (!isExpired) {
-      Circus.spotlight<AuthSession>(tag: 'auth').whisper(session);
+      Circus.find<Joker<AuthSession>>('auth').trick(session);
     }
 
     return !isExpired;
@@ -95,9 +95,7 @@ sealed class AuthUtils {
     AuthSession session, {
     bool isBackground = false,
   }) async {
-    if (!isBackground) {
-      Circus.spotlight<AuthSession>(tag: 'auth').whisper(session);
-    }
+    Circus.find<Joker<AuthSession>>('auth').trick(session);
 
     Circus.find<ApiClient>().updateAuthSession(session);
 
@@ -126,7 +124,7 @@ sealed class AuthUtils {
       return session;
     }
 
-    final session = Circus.spotlight<AuthSession>(tag: 'auth').state;
+    final session = Circus.find<Joker<AuthSession>>('auth').state;
 
     return AuthSession(
       accessToken: session.accessToken,

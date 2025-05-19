@@ -43,7 +43,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
     _presenter.getUserInfo();
 
     // 初始化秘密計數器
-    _secretCounter = Joker<int>(0, keepAlive: true);
+    _secretCounter = Joker<int>(0);
 
     // 檢查使用者是否已觸發過秘密功能
     _secretFeatureEnabled = LocalStorage.get<bool>(
@@ -109,7 +109,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                   child: Row(
                     children: [
                       // Profile Image (using asset based on theme)
-                      JokerCast<AppThemeMode>(
+                      Circus.find<Joker<AppThemeMode>>('themeMode').perform(
                         builder: (context, themeMode) {
                           final isDarkMode = themeMode == AppThemeMode.dark;
                           return CircleAvatar(
@@ -175,7 +175,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeJoker = context.joker<AppThemeMode>();
+    final themeJoker = Circus.find<Joker<AppThemeMode>>('themeMode');
 
     return Scaffold(
       appBar: AppBar(
