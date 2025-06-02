@@ -110,7 +110,7 @@ final class NueipService {
       'loadInBatch': '1',
       'loadBatchGroupNum': '1000',
       'loadBatchNumber': '1',
-      'work_status': '1,4',
+      'work_status': '1',
     };
     return TaskEither.tryCatch(
       () async => await _client.post(
@@ -119,7 +119,7 @@ final class NueipService {
         options: Options(
           headers: {
             'Cookie':
-                'Search_42_date_start=$date; Search_42_date_end=$date; $cookie',
+                'Search_124_date_start=$date; Search_124_date_end=$date; $cookie',
           },
         ),
       ),
@@ -140,7 +140,7 @@ final class NueipService {
       'loadInBatch': '1',
       'loadBatchGroupNum': '1000',
       'loadBatchNumber': '1',
-      'work_status': '1,4',
+      'work_status': '1',
     };
     return TaskEither.tryCatch(
       () async => await _client.post(
@@ -149,7 +149,7 @@ final class NueipService {
         options: Options(
           headers: {
             'Cookie':
-                'Search_42_date_start=$startDate; Search_42_date_end=$endDate; $cookie',
+                'Search_124_date_start=$startDate; Search_124_date_end=$endDate; $cookie',
           },
         ),
       ),
