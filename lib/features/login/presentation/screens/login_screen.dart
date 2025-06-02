@@ -5,7 +5,6 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:gap/gap.dart';
-import 'package:joker_state/cue_gate.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../../../core/extensions/theme_extensions.dart';

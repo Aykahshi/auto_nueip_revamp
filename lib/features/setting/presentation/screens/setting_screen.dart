@@ -5,11 +5,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../../../core/config/storage_keys.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/utils/local_storage.dart';
 import '../../../../core/utils/notification.dart';
 import '../presenters/setting_presenter.dart';
 
@@ -34,22 +32,12 @@ class SettingMainScreen extends StatefulWidget {
 class _SettingMainScreenState extends State<SettingMainScreen> {
   late SettingPresenter _presenter;
   late final Joker<int> _secretCounter;
-  late bool _secretFeatureEnabled;
 
   @override
   void initState() {
     super.initState();
     _presenter = Circus.find<SettingPresenter>();
     _presenter.getUserInfo();
-
-    // 初始化秘密計數器
-    _secretCounter = Joker<int>(0);
-
-    // 檢查使用者是否已觸發過秘密功能
-    _secretFeatureEnabled = LocalStorage.get<bool>(
-      StorageKeys.secretFeatureTriggered,
-      defaultValue: false,
-    );
   }
 
   // 防抖動點擊處理函數
@@ -68,12 +56,6 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
           duration: const Duration(seconds: 2),
         ),
       );
-    }
-
-    // 當計數達到 7 時記錄狀態
-    if (_secretCounter.state >= 7 && !_secretFeatureEnabled) {
-      _secretFeatureEnabled = true;
-      LocalStorage.set(StorageKeys.secretFeatureTriggered, true);
     }
   }
 
@@ -178,34 +160,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
     final themeJoker = Circus.find<Joker<AppThemeMode>>('themeMode');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('設定'),
-        centerTitle: true,
-        elevation: 1,
-        actions: [
-          _secretCounter.perform(
-            builder: (context, count) {
-              // 當計數達到 7 或使用者已觸發過秘密功能時，顯示背景服務入口
-              if (count >= 7 || _secretFeatureEnabled) {
-                // 若使用者首次達到 7 次點擊，儲存狀態
-                if (count >= 7 && !_secretFeatureEnabled) {
-                  _secretFeatureEnabled = true;
-                  LocalStorage.set(StorageKeys.secretFeatureTriggered, true);
-                }
-
-                return IconButton(
-                  icon: const Icon(Icons.settings_applications),
-                  tooltip: '背景服務設定',
-                  onPressed: () {
-                    context.pushRoute(const ScheduleClockRoute());
-                  },
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('設定'), centerTitle: true, elevation: 1),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: context.w(16)),
         child: Column(
