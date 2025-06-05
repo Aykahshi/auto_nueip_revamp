@@ -52,7 +52,7 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
     _dataPresenter = ApplyFormPresenter(formType: widget.formType);
 
     // Initialize UI presenter
-    _uiPresenter = ApplyFormUiPresenter();
+    _uiPresenter = Circus.find<ApplyFormUiPresenter>();
 
     // Listen to remark field changes to update form validation
     _remarkController.addListener(_validateForm);
@@ -272,30 +272,6 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
         ).showSnackBar(const SnackBar(content: Text('無法提交：所選時間範圍內沒有有效的工作時間。')));
         return;
       }
-
-      // Debug log generated leave entries
-      debugPrint('Generated Leave Entries:');
-      for (var i = 0; i < leaveEntries.length; i++) {
-        final entry = leaveEntries[i];
-        debugPrint('  Entry $i:');
-        debugPrint('    Date: ${entry.$1}');
-        debugPrint('    Start: ${entry.$2}');
-        debugPrint('    End: ${entry.$3}');
-        debugPrint('    Hours: ${entry.$4}');
-        debugPrint('    Minutes: ${entry.$5}');
-      }
-
-      debugPrint('Form Data:');
-      debugPrint('  Rule ID: ${uiState.selectedLeaveRuleId}');
-      debugPrint('  Start Date: $startDateStr');
-      debugPrint('  End Date: $endDateStr');
-      debugPrint(
-        '  Agent ID: ${uiState.selectedAgent?.id} (${uiState.selectedAgent?.name})',
-      );
-      debugPrint('  Remark: ${_remarkController.text}');
-      debugPrint(
-        '  Files: ${uiState.selectedFiles.map((f) => f.path).toList()}',
-      );
 
       // Check if leave type is selected
       if (uiState.selectedLeaveRuleId == null) {
