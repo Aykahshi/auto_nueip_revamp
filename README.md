@@ -50,7 +50,6 @@ mindmap
 - **form**：請假查詢、申請、撤銷，請款功能暫緩。
 - **setting**：可編輯公司代碼、員工編號、密碼、公司地址（自動轉經緯度），含 hidden/開發者頁入口。
 - **holiday**：假日資料來源，供 calendar 使用。
-- **hidden**：隱藏功能（背景打卡、定位服務），入口於 setting 頁。
 
 ---
 
@@ -64,7 +63,7 @@ mindmap
 - **UI/UX**：google_fonts、gap、flutter_animate、dropdown_button2 等
 - **表單/驗證**：flutter_form_builder、form_builder_validators
 - **背景服務/通知**：flutter_background_service、flutter_local_notifications
-- **地理定位**：geolocator（預計用於 hidden 定位服務）
+- **地理定位**：geolocator
 - **資料處理**：freezed、json_serializable、intl、collection 等
 
 ---
@@ -95,7 +94,6 @@ mindmap
 
 - **功能模組化**：每個 feature 皆可獨立維護與擴充。
 - **資料來源統一**：nueip 為所有 presenter 的資料根基（除 holiday 外）。
-- **隱藏功能**：hidden 預計支援背景打卡與定位自動打卡，入口於 setting 頁。
 - **可測試性/可維護性**：強制介面抽象與分層、狀態不可變、mock-friendly 設計。
 
 ---

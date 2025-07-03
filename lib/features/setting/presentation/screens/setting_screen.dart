@@ -5,11 +5,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:gap/gap.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../../../core/config/storage_keys.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/utils/local_storage.dart';
 import '../../../../core/utils/notification.dart';
 import '../presenters/setting_presenter.dart';
 
@@ -33,48 +31,11 @@ class SettingMainScreen extends StatefulWidget {
 
 class _SettingMainScreenState extends State<SettingMainScreen> {
   late SettingPresenter _presenter;
-  late final Joker<int> _secretCounter;
-  late bool _secretFeatureEnabled;
-
   @override
   void initState() {
     super.initState();
     _presenter = Circus.find<SettingPresenter>();
     _presenter.getUserInfo();
-
-    // 初始化秘密計數器
-    _secretCounter = Joker<int>(0);
-
-    // 檢查使用者是否已觸發過秘密功能
-    _secretFeatureEnabled = LocalStorage.get<bool>(
-      StorageKeys.secretFeatureTriggered,
-      defaultValue: false,
-    );
-  }
-
-  // 防抖動點擊處理函數
-  void _incrementSecretCounter(BuildContext context) {
-    // 增加計數器的值
-    _secretCounter.trickWith((count) => count + 1);
-
-    // 當計數達到 4 時顯示 SnackBar 提示
-    if (_secretCounter.state == 4) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            '就快要開啟神秘功能',
-            style: TextStyle(fontSize: context.sp(14)),
-          ),
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
-
-    // 當計數達到 7 時記錄狀態
-    if (_secretCounter.state >= 7 && !_secretFeatureEnabled) {
-      _secretFeatureEnabled = true;
-      LocalStorage.set(StorageKeys.secretFeatureTriggered, true);
-    }
   }
 
   // 建立個人資料區塊
@@ -99,71 +60,68 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(context.r(16)),
               ),
-              child: InkWell(
-                onTap: () => _incrementSecretCounter(context),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: context.h(20),
-                    horizontal: context.w(16),
-                  ),
-                  child: Row(
-                    children: [
-                      // Profile Image (using asset based on theme)
-                      Circus.find<Joker<AppThemeMode>>('themeMode').perform(
-                        builder: (context, themeMode) {
-                          final isDarkMode = themeMode == AppThemeMode.dark;
-                          return CircleAvatar(
-                            radius: context.r(45),
-                            backgroundColor:
-                                context.colorScheme.surfaceContainerHighest,
-                            backgroundImage: AssetImage(
-                              isDarkMode
-                                  ? 'assets/images/logo_dark.png'
-                                  : 'assets/images/logo.png',
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  vertical: context.h(20),
+                  horizontal: context.w(16),
+                ),
+                child: Row(
+                  children: [
+                    // Profile Image (using asset based on theme)
+                    Circus.find<Joker<AppThemeMode>>('themeMode').perform(
+                      builder: (context, themeMode) {
+                        final isDarkMode = themeMode == AppThemeMode.dark;
+                        return CircleAvatar(
+                          radius: context.r(45),
+                          backgroundColor:
+                              context.colorScheme.surfaceContainerHighest,
+                          backgroundImage: AssetImage(
+                            isDarkMode
+                                ? 'assets/images/logo_dark.png'
+                                : 'assets/images/logo.png',
+                          ),
+                        );
+                      },
+                    ),
+                    Gap(context.w(16)),
+                    // User Info Text Column
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            style: context.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: context.sp(22),
                             ),
-                          );
-                        },
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Gap(context.h(4)),
+                          Text(
+                            displayDept,
+                            style: context.textTheme.bodyMedium?.copyWith(
+                              color: context.colorScheme.onSurfaceVariant,
+                              fontSize: context.sp(14),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Gap(context.h(2)),
+                          Text(
+                            displayCompany,
+                            style: context.textTheme.bodySmall?.copyWith(
+                              color: context.colorScheme.outline,
+                              fontSize: context.sp(12),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Gap(context.w(16)),
-                      // User Info Text Column
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              displayName,
-                              style: context.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: context.sp(22),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Gap(context.h(4)),
-                            Text(
-                              displayDept,
-                              style: context.textTheme.bodyMedium?.copyWith(
-                                color: context.colorScheme.onSurfaceVariant,
-                                fontSize: context.sp(14),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            Gap(context.h(2)),
-                            Text(
-                              displayCompany,
-                              style: context.textTheme.bodySmall?.copyWith(
-                                color: context.colorScheme.outline,
-                                fontSize: context.sp(12),
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -178,34 +136,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
     final themeJoker = Circus.find<Joker<AppThemeMode>>('themeMode');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('設定'),
-        centerTitle: true,
-        elevation: 1,
-        actions: [
-          _secretCounter.perform(
-            builder: (context, count) {
-              // 當計數達到 7 或使用者已觸發過秘密功能時，顯示背景服務入口
-              if (count >= 7 || _secretFeatureEnabled) {
-                // 若使用者首次達到 7 次點擊，儲存狀態
-                if (count >= 7 && !_secretFeatureEnabled) {
-                  _secretFeatureEnabled = true;
-                  LocalStorage.set(StorageKeys.secretFeatureTriggered, true);
-                }
-
-                return IconButton(
-                  icon: const Icon(Icons.settings_applications),
-                  tooltip: '背景服務設定',
-                  onPressed: () {
-                    context.pushRoute(const ScheduleClockRoute());
-                  },
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('設定'), centerTitle: true, elevation: 1),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: context.w(16)),
         child: Column(
@@ -311,7 +242,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                     context,
                     title: '版本',
                     icon: Icons.android_outlined,
-                    subtitle: 'v1.0.0',
+                    subtitle: 'v1.1.1',
                     onTap: null,
                   ),
                 ])

@@ -9,6 +9,7 @@ import 'core/utils/local_storage.dart';
 import 'core/utils/notification.dart';
 import 'core/utils/nueip_helper.dart';
 import 'features/calendar/presentation/presenters/attendance_presenter.dart';
+import 'features/form/presentation/presenters/apply_form_ui_presenter.dart';
 import 'features/form/presentation/presenters/leave_record_presenter.dart';
 import 'features/form/presentation/presenters/sign_presenter.dart';
 import 'features/hidden/presentation/presenters/schedule_clock_presenter.dart';
@@ -73,6 +74,7 @@ Future<void> _initDependencies() async {
     ..hireLazily<ClockPresenter>(() => ClockPresenter())
     ..hireLazily<LeaveRecordPresenter>(() => LeaveRecordPresenter())
     ..contract<SignPresenter>(() => SignPresenter())
+    ..contract<ApplyFormUiPresenter>(() => ApplyFormUiPresenter())
     ..hireLazily<ScheduleClockPresenter>(() => ScheduleClockPresenter());
 
   // Add theme mode Joker registration
