@@ -106,8 +106,8 @@ class _HomeScreenState extends State<HomeScreen> {
       fontSize: context.sp(45),
     );
 
-    return _presenter.effect(
-      effect: (context, state) {
+    return _presenter.watch(
+      onStateChange: (context, state) {
         if (state.status == ClockActionStatus.success) {
           NotificationUtils.showSimpleNotification(
             87,

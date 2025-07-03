@@ -65,7 +65,22 @@ class _ProfileEditingScreenState extends State<ProfileEditingScreen> {
   Widget build(BuildContext context) {
     final iconColor = context.colorScheme.primary;
 
-    return _presenter.effect(
+    return _presenter.watch(
+      onStateChange: (BuildContext context, ProfileEditingState state) {
+        // Show error message if any
+        if (state.error != null) {
+          _showErrorMessage(state.error!);
+        }
+        // Reset form fields if editing is toggled off after saving
+        if (!state.isEditing && state.error == null) {
+          _formKey.currentState?.patchValue({
+            'companyCode': state.companyCode,
+            'employeeId': state.employeeId,
+            'password': state.password,
+            'companyAddress': state.companyAddress,
+          });
+        }
+      },
       child: Scaffold(
         appBar: AppBar(
           title: const Text('編輯帳號資訊'),
@@ -340,21 +355,6 @@ class _ProfileEditingScreenState extends State<ProfileEditingScreen> {
           ),
         ),
       ),
-      effect: (BuildContext context, ProfileEditingState state) {
-        // Show error message if any
-        if (state.error != null) {
-          _showErrorMessage(state.error!);
-        }
-        // Reset form fields if editing is toggled off after saving
-        if (!state.isEditing && state.error == null) {
-          _formKey.currentState?.patchValue({
-            'companyCode': state.companyCode,
-            'employeeId': state.employeeId,
-            'password': state.password,
-            'companyAddress': state.companyAddress,
-          });
-        }
-      },
     );
   }
 }
