@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../data/repositories/holiday_repository_impl.dart';
 import '../../domain/entities/holiday_state.dart';
 import '../../domain/repositories/holiday_repository.dart';
 
@@ -10,7 +9,7 @@ final class HolidayPresenter extends Presenter<HolidayState> {
 
   // Constructor finds the registered HolidayRepository via CircusRing
   HolidayPresenter({HolidayRepository? repository, super.keepAlive = true})
-    : _repository = repository ?? Circus.find<HolidayRepositoryImpl>(),
+    : _repository = repository ?? Circus.find<HolidayRepository>(),
       super(
         const HolidayState.initial(),
       ); // Set initial state using freezed constructor

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../../nueip/data/repositories/nueip_repository_impl.dart';
 import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../data/models/work_hour.dart';
 import '../../domain/entities/apply_form_state.dart';
@@ -15,14 +14,14 @@ import '../screens/form_screen.dart';
 class ApplyFormPresenter extends Presenter<ApplyFormState> {
   final NueipRepository _repository;
 
-  ApplyFormPresenter({required FormHistoryType formType})
-    : _repository = Circus.find<NueipRepositoryImpl>(),
-      super(ApplyFormState(formType: formType));
+  ApplyFormPresenter({FormHistoryType? formType})
+    : _repository = Circus.find<NueipRepository>(),
+      super(ApplyFormState(formType: formType ?? FormHistoryType.leave));
 
   @override
-  void onReady() {
+  void onReady() async {
     super.onReady();
-    fetchAllInitialData();
+    await fetchAllInitialData();
   }
 
   /// 並行獲取所有初始資料 (員工清單和假別規則)

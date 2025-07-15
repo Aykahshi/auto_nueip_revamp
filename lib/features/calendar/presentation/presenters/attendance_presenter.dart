@@ -4,7 +4,6 @@ import 'package:joker_state/joker_state.dart';
 import '../../../../core/config/storage_keys.dart';
 import '../../../../core/utils/auth_utils.dart';
 import '../../../../core/utils/local_storage.dart';
-import '../../../nueip/data/repositories/nueip_repository_impl.dart';
 import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../data/models/attendance_details.dart';
 import '../../domain/entities/attendance_state.dart';
@@ -14,7 +13,7 @@ final class AttendancePresenter extends Presenter<AttendanceState> {
   late final String _userNo;
 
   AttendancePresenter({super.keepAlive = true})
-    : _repository = Circus.find<NueipRepositoryImpl>(),
+    : _repository = Circus.find<NueipRepository>(),
       super(const AttendanceState.initial());
 
   @override

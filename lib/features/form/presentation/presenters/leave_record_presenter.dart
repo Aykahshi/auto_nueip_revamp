@@ -7,15 +7,14 @@ import '../../../../core/network/failure.dart';
 import '../../../../core/utils/auth_utils.dart';
 import '../../../../core/utils/local_storage.dart';
 import '../../../nueip/data/models/user_sn.dart';
-import '../../../nueip/data/repositories/nueip_repository_impl.dart';
 import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../domain/entities/leave_record_state.dart';
 
 final class LeaveRecordPresenter extends Presenter<LeaveRecordState> {
   final NueipRepository _repository;
 
-  LeaveRecordPresenter({NueipRepository? repository, super.keepAlive = true})
-    : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
+  LeaveRecordPresenter({super.keepAlive = true})
+    : _repository = Circus.find<NueipRepository>(),
       super(const LeaveRecordState.initial());
 
   Future<void> fetchLeaveRecords({

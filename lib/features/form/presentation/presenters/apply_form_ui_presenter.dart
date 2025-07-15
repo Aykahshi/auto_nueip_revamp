@@ -10,20 +10,35 @@ import '../../domain/entities/apply_form_ui_state.dart';
 /// 管理 ApplyFormScreen 的 UI 狀態的 Presenter
 class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
   final DateFormat _dateFormatter = DateFormat('yyyy / MM / dd');
+  late final TextEditingController agentSearchController;
+  late final TextEditingController remarkController;
 
-  /// 建構子
   ApplyFormUiPresenter() : super(const ApplyFormUiState());
+
+  TextEditingController get remark => remarkController;
+
+  TextEditingController get agentSearch => agentSearchController;
 
   @override
   onInit() {
-    debugPrint('ApplyFormUiPresenter.onInit()');
     super.onInit();
+    agentSearchController = TextEditingController();
+    remarkController = TextEditingController();
+  }
+
+  @override
+  onReady() {
+    super.onReady();
+    remarkController.addListener(() {
+      setRemark(remarkController.text);
+    });
   }
 
   @override
   onDone() {
-    debugPrint('ApplyFormUiPresenter.onDone()');
     super.onDone();
+    agentSearchController.dispose();
+    remarkController.dispose();
   }
 
   /// 取得合併開始日期時間
@@ -87,7 +102,7 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
       trickWith(
         (s) => s.copyWith(calculatedDuration: null, displayDuration: '請選擇起始時間'),
       );
-      
+
       // Always validate form after changing any field
       validateForm();
     }
@@ -221,12 +236,12 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
     final minutes = duration.inMinutes.remainder(60);
     return '$hours 小時 $minutes 分鐘';
   }
-  
+
   /// Set submitting state
   void setSubmitting(bool isSubmitting) {
     trickWith((s) => s.copyWith(isSubmitting: isSubmitting));
   }
-  
+
   /// Set error message
   void setErrorMessage(String? errorMessage) {
     trickWith((s) => s.copyWith(errorMessage: errorMessage));
@@ -234,7 +249,7 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
 
   // Current remark value for form validation
   String _currentRemark = '';
-  
+
   /// Set current remark value
   void setRemark(String value) {
     _currentRemark = value;
@@ -245,7 +260,7 @@ class ApplyFormUiPresenter extends Presenter<ApplyFormUiState> {
   void validateForm({String? remark}) {
     // Use provided remark or current stored remark
     final remarkToCheck = remark ?? _currentRemark;
-    
+
     final isValid =
         state.selectedStartDate != null &&
         state.selectedStartTime != null &&

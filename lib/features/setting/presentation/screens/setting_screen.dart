@@ -22,117 +22,12 @@ class SettingScreen extends StatelessWidget {
 }
 
 @RoutePage()
-class SettingMainScreen extends StatefulWidget {
+class SettingMainScreen extends StatelessWidget {
   const SettingMainScreen({super.key});
 
   @override
-  State<SettingMainScreen> createState() => _SettingMainScreenState();
-}
-
-class _SettingMainScreenState extends State<SettingMainScreen> {
-  late SettingPresenter _presenter;
-  @override
-  void initState() {
-    super.initState();
-    _presenter = Circus.find<SettingPresenter>();
-    _presenter.getUserInfo();
-  }
-
-  // 建立個人資料區塊
-  Widget _buildProfileSection(
-    BuildContext context,
-    SettingPresenter presenter,
-  ) {
-    return presenter.perform(
-      builder: (context, state) {
-        final userInfo = state.userInfo; // Access the UserInfo object
-
-        // Fallback values for display
-        final String displayName = userInfo.userName ?? '使用者名稱';
-        final String displayDept = userInfo.deptName ?? '部門資訊';
-        final String displayCompany = userInfo.companyName ?? '公司資訊';
-
-        return Center(
-          child: SizedBox(
-            width: double.infinity,
-            child: Card(
-              elevation: 1,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(context.r(16)),
-              ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  vertical: context.h(20),
-                  horizontal: context.w(16),
-                ),
-                child: Row(
-                  children: [
-                    // Profile Image (using asset based on theme)
-                    Circus.find<Joker<AppThemeMode>>('themeMode').perform(
-                      builder: (context, themeMode) {
-                        final isDarkMode = themeMode == AppThemeMode.dark;
-                        return CircleAvatar(
-                          radius: context.r(45),
-                          backgroundColor:
-                              context.colorScheme.surfaceContainerHighest,
-                          backgroundImage: AssetImage(
-                            isDarkMode
-                                ? 'assets/images/logo_dark.png'
-                                : 'assets/images/logo.png',
-                          ),
-                        );
-                      },
-                    ),
-                    Gap(context.w(16)),
-                    // User Info Text Column
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            displayName,
-                            style: context.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: context.sp(22),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Gap(context.h(4)),
-                          Text(
-                            displayDept,
-                            style: context.textTheme.bodyMedium?.copyWith(
-                              color: context.colorScheme.onSurfaceVariant,
-                              fontSize: context.sp(14),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          Gap(context.h(2)),
-                          Text(
-                            displayCompany,
-                            style: context.textTheme.bodySmall?.copyWith(
-                              color: context.colorScheme.outline,
-                              fontSize: context.sp(12),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final presenter = Circus.find<SettingPresenter>();
     final themeJoker = Circus.find<Joker<AppThemeMode>>('themeMode');
 
     return Scaffold(
@@ -144,7 +39,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
           children: [
             Gap(context.h(16)),
             // Profile Section
-            _buildProfileSection(context, _presenter)
+            _buildProfileSection(context, presenter)
                 .animate()
                 .fadeIn(duration: 600.ms)
                 .slideY(begin: 0.2, end: 0, duration: 400.ms),
@@ -160,7 +55,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                     onTap: () {
                       // Navigate to account editing screen
                       context.pushRoute(const ProfileEditingRoute()).then((_) {
-                        _presenter.getUserInfo();
+                        presenter.getUserInfo();
                       });
                     },
                   ),
@@ -169,7 +64,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                     title: '清除帳號資料',
                     icon: Icons.delete_outline,
                     onTap: () {
-                      _showClearDataDialog(context, _presenter);
+                      _showClearDataDialog(context, presenter);
                     },
                     isDestructive: true,
                   ),
@@ -190,7 +85,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                     value: themeJoker.state == AppThemeMode.dark,
                     onChanged: (value) {
                       // Update setting state
-                      _presenter.toggleDarkMode(value);
+                      presenter.toggleDarkMode(value);
                       // Update theme mode
                       themeJoker.trick(
                         value ? AppThemeMode.dark : AppThemeMode.light,
@@ -199,7 +94,7 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                   ),
 
                   // Notification switch
-                  _presenter.perform(
+                  presenter.perform(
                     builder: (context, state) {
                       return _buildSwitchTile(
                         context,
@@ -211,11 +106,11 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
                             // Try to request notification permissions
                             await _requestNotificationPermissions(
                               context,
-                              _presenter,
+                              presenter,
                             );
                           } else {
                             // Directly disable notifications
-                            _presenter.toggleNotifications(false);
+                            presenter.toggleNotifications(false);
                           }
                         },
                       );
@@ -256,6 +151,95 @@ class _SettingMainScreenState extends State<SettingMainScreen> {
       ),
     );
   }
+}
+
+Widget _buildProfileSection(BuildContext context, SettingPresenter presenter) {
+  return presenter.perform(
+    builder: (context, state) {
+      final userInfo = state.userInfo; // Access the UserInfo object
+
+      // Fallback values for display
+      final String displayName = userInfo.userName ?? '使用者名稱';
+      final String displayDept = userInfo.deptName ?? '部門資訊';
+      final String displayCompany = userInfo.companyName ?? '公司資訊';
+
+      return Center(
+        child: SizedBox(
+          width: double.infinity,
+          child: Card(
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(context.r(16)),
+            ),
+            child: Padding(
+              padding: EdgeInsets.symmetric(
+                vertical: context.h(20),
+                horizontal: context.w(16),
+              ),
+              child: Row(
+                children: [
+                  // Profile Image (using asset based on theme)
+                  Circus.find<Joker<AppThemeMode>>('themeMode').perform(
+                    builder: (context, themeMode) {
+                      final isDarkMode = themeMode == AppThemeMode.dark;
+                      return CircleAvatar(
+                        radius: context.r(45),
+                        backgroundColor:
+                            context.colorScheme.surfaceContainerHighest,
+                        backgroundImage: AssetImage(
+                          isDarkMode
+                              ? 'assets/images/logo_dark.png'
+                              : 'assets/images/logo.png',
+                        ),
+                      );
+                    },
+                  ),
+                  Gap(context.w(16)),
+                  // User Info Text Column
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          displayName,
+                          style: context.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: context.sp(22),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Gap(context.h(4)),
+                        Text(
+                          displayDept,
+                          style: context.textTheme.bodyMedium?.copyWith(
+                            color: context.colorScheme.onSurfaceVariant,
+                            fontSize: context.sp(14),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Gap(context.h(2)),
+                        Text(
+                          displayCompany,
+                          style: context.textTheme.bodySmall?.copyWith(
+                            color: context.colorScheme.outline,
+                            fontSize: context.sp(12),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 // Request notification permissions and update notification status

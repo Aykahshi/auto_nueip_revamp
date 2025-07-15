@@ -43,19 +43,6 @@ Future<List<Holiday>> _fetchAndParseHolidaysForYear(int year) async {
 // --- End of Isolate function ---
 
 final class HolidayService {
-  void _addLaborDayHoliday(List<Holiday> holidays, int year) {
-    final laborDay = '$year-05-01';
-
-    final existingHoliday = holidays.any((holiday) => holiday.date == laborDay);
-
-    if (!existingHoliday) {
-      holidays.add(
-        Holiday(date: laborDay, isHoliday: true, description: '勞動節補休'),
-      );
-      debugPrint('已添加 $year 年勞動節補休假期');
-    }
-  }
-
   TaskEither<Failure, List<Holiday>> getHolidays() {
     return TaskEither.tryCatch(
       () async {
@@ -83,9 +70,6 @@ final class HolidayService {
         // Filter the combined list for actual holidays (on main thread)
         final List<Holiday> filteredHolidays =
             allHolidays.where((element) => element.isHoliday).toList();
-
-        // 添加當年度的 5/1 勞動節補休假期
-        _addLaborDayHoliday(filteredHolidays, currentYear);
 
         debugPrint(
           'Total holidays fetched & filtered across 2 years: ${filteredHolidays.length}',

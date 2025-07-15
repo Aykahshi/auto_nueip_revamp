@@ -4,7 +4,6 @@ import 'package:joker_state/joker_state.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/utils/auth_utils.dart';
 import '../../../../core/utils/nueip_helper.dart';
-import '../../../nueip/data/repositories/nueip_repository_impl.dart';
 import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../domain/entities/login_status_enum.dart';
 
@@ -13,14 +12,14 @@ final class LoginPresenter extends Presenter<LoginStatus> {
   final NueipHelper _helper;
 
   LoginPresenter({super.keepAlive = true})
-    : _repository = Circus.find<NueipRepositoryImpl>(),
+    : _repository = Circus.find<NueipRepository>(),
       _helper = Circus.find<NueipHelper>(),
       super(LoginStatus.initial);
 
   @override
-  void onReady() {
-    super.onReady();
-    init();
+  void onInit() async {
+    super.onInit();
+    await init();
   }
 
   Future<void> init() async {

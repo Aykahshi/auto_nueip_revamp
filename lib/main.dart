@@ -9,18 +9,22 @@ import 'core/utils/local_storage.dart';
 import 'core/utils/notification.dart';
 import 'core/utils/nueip_helper.dart';
 import 'features/calendar/presentation/presenters/attendance_presenter.dart';
+import 'features/form/presentation/presenters/apply_form_presenter.dart';
 import 'features/form/presentation/presenters/apply_form_ui_presenter.dart';
+import 'features/form/presentation/presenters/date_range_presenter.dart';
 import 'features/form/presentation/presenters/leave_record_presenter.dart';
 import 'features/form/presentation/presenters/sign_presenter.dart';
-import 'features/hidden/presentation/presenters/schedule_clock_presenter.dart';
 import 'features/holiday/data/repositories/holiday_repository_impl.dart';
 import 'features/holiday/data/services/holiday_service.dart';
+import 'features/holiday/domain/repositories/holiday_repository.dart';
 import 'features/holiday/presentation/presenters/holiday_presenter.dart';
 import 'features/home/presentation/presenters/clock_presenter.dart';
 import 'features/login/data/models/auth_session.dart';
 import 'features/login/presentation/presenters/login_presenter.dart';
 import 'features/nueip/data/repositories/nueip_repository_impl.dart';
 import 'features/nueip/data/services/nueip_services.dart';
+import 'features/nueip/domain/repositories/nueip_repository.dart';
+import 'features/setting/presentation/presenters/profile_editing_presenter.dart';
 import 'features/setting/presentation/presenters/setting_presenter.dart';
 import 'index.dart';
 
@@ -49,21 +53,30 @@ Future<void> _initDependencies() async {
     defaultValue: '',
   );
 
-  Circus.hire(Joker<String>(initialAddress), tag: 'companyAddress');
+  Circus.hire(
+    Joker<String>(initialAddress, keepAlive: true),
+    tag: 'companyAddress',
+  );
 
   // Add API features registration
   Circus
     ..hire<ApiClient>(ApiClient())
     ..hire<NueipHelper>(NueipHelper())
     ..contract<NueipService>(() => NueipService())
-    ..hireLazily<NueipRepositoryImpl>(() => NueipRepositoryImpl())
-    ..bindDependency<NueipRepositoryImpl, NueipService>();
+    ..hireLazily<NueipRepositoryImpl>(
+      () => NueipRepositoryImpl(),
+      alias: NueipRepository,
+    )
+    ..bindDependency<NueipRepository, NueipService>();
 
   // Add API features registration
   Circus
     ..contract<HolidayService>(() => HolidayService())
-    ..hireLazily<HolidayRepositoryImpl>(() => HolidayRepositoryImpl())
-    ..bindDependency<HolidayRepositoryImpl, HolidayService>();
+    ..hireLazily<HolidayRepositoryImpl>(
+      () => HolidayRepositoryImpl(),
+      alias: HolidayRepository,
+    )
+    ..bindDependency<HolidayRepository, HolidayService>();
 
   // Add Presenters registration
   Circus
@@ -71,11 +84,13 @@ Future<void> _initDependencies() async {
     ..hireLazily<AttendancePresenter>(() => AttendancePresenter())
     ..hireLazily<LoginPresenter>(() => LoginPresenter())
     ..hireLazily<SettingPresenter>(() => SettingPresenter())
-    ..hireLazily<ClockPresenter>(() => ClockPresenter())
     ..hireLazily<LeaveRecordPresenter>(() => LeaveRecordPresenter())
+    ..contract<ClockPresenter>(() => ClockPresenter())
     ..contract<SignPresenter>(() => SignPresenter())
+    ..contract<ApplyFormPresenter>(() => ApplyFormPresenter())
     ..contract<ApplyFormUiPresenter>(() => ApplyFormUiPresenter())
-    ..hireLazily<ScheduleClockPresenter>(() => ScheduleClockPresenter());
+    ..contract<DateRangePresenter>(() => DateRangePresenter())
+    ..contract<ProfileEditingPresenter>(() => ProfileEditingPresenter());
 
   // Add theme mode Joker registration
   Circus.hire(Joker<AppThemeMode>(AppThemeMode.light), tag: 'themeMode');

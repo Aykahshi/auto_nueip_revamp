@@ -7,6 +7,8 @@ part 'setting_state.freezed.dart';
 
 @freezed
 sealed class SettingState with _$SettingState {
+  const SettingState._();
+
   const factory SettingState({
     required UserInfo userInfo,
     @Default(false) final bool notificationsEnabled,
@@ -14,4 +16,12 @@ sealed class SettingState with _$SettingState {
     @Default(false) final bool isLoading,
     final Failure? error,
   }) = _SettingState;
+
+  factory SettingState.initial() => SettingState(
+    userInfo: UserInfo.empty(),
+    notificationsEnabled: false,
+    darkModeEnabled: false,
+    isLoading: false,
+    error: null,
+  );
 }

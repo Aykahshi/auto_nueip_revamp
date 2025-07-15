@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:joker_state/joker_state.dart';
 
@@ -13,8 +13,8 @@ final class ProfileEditingPresenter extends Presenter<ProfileEditingState> {
   ProfileEditingPresenter() : super(const ProfileEditingState());
 
   @override
-  void onInit() {
-    super.onInit();
+  void onReady() {
+    super.onReady();
     _loadCredentials();
   }
 

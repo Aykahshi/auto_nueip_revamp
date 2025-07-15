@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:animated_flip_counter/animated_flip_counter.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +7,8 @@ import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../../../core/config/storage_keys.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/utils/auth_utils.dart';
-import '../../../../core/utils/local_storage.dart';
 import '../../../../core/utils/notification.dart';
 import '../../../calendar/data/models/daily_clock_detail.dart';
 import '../../domain/entities/clock_action_enum.dart';
@@ -22,74 +17,14 @@ import '../presenters/clock_presenter.dart';
 import '../widgets/time_card.dart';
 
 @RoutePage()
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-// Define Chinese weekday names outside the state class for better organization
-const List<String> _zhWeekdays = [
-  '星期一',
-  '星期二',
-  '星期三',
-  '星期四',
-  '星期五',
-  '星期六',
-  '星期日',
-];
-
-class _HomeScreenState extends State<HomeScreen> {
-  late final Joker<DateTime> _timeJoker;
-  late final ClockPresenter _presenter;
-
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _timeJoker = Joker<DateTime>(DateTime.now());
-    _presenter = Circus.find<ClockPresenter>();
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (mounted) {
-        _timeJoker.trick(DateTime.now());
-      }
-    });
-  }
-
-  Future<void> _performClockAction(ClockAction action) async {
-    final session = AuthUtils.getAuthSession();
-
-    final double latitude = LocalStorage.get<double>(
-      StorageKeys.companyLatitude,
-      defaultValue: 0,
-    );
-    final double longitude = LocalStorage.get<double>(
-      StorageKeys.companyLongitude,
-      defaultValue: 0,
-    );
-
-    await _presenter.clockAction(
-      action: action,
-      cookie: session.cookie ?? '',
-      csrfToken: session.csrfToken ?? '',
-      latitude: latitude,
-      longitude: longitude,
-      accessToken: session.accessToken ?? '',
-    );
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     final addressJoker = Circus.find<Joker<String>>('companyAddress');
+
+    final ClockPresenter presenter = Circus.find<ClockPresenter>();
 
     final dateTextStyle = context.textTheme.titleMedium?.copyWith(
       color: context.colorScheme.onSurfaceVariant,
@@ -106,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
       fontSize: context.sp(45),
     );
 
-    return _presenter.watch(
+    return presenter.watch(
       onStateChange: (context, state) {
         if (state.status == ClockActionStatus.success) {
           NotificationUtils.showSimpleNotification(
@@ -115,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
             '打卡時間：${DateFormat('yyyy/MM/dd kk:mm:ss').format(DateTime.now())}',
           );
         } else if (state.status == ClockActionStatus.failure) {
-          if (mounted) {
+          if (context.mounted) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(const SnackBar(content: Text('打卡失敗，請重新嘗試')));
@@ -206,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               vertical: context.h(24),
                               horizontal: context.w(32),
                             ),
-                            child: _timeJoker.perform(
+                            child: presenter.timeJoker.perform(
                               builder: (context, currentTime) {
                                 final formattedDate = DateFormat(
                                   'yyyy / MM / dd',
@@ -303,7 +238,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Gap(context.h(40)),
 
                     // --- Clock Action Buttons ---
-                    _presenter.focusOn<
+                    presenter.focusOn<
                       (
                         ClockActionStatus, // status
                         DailyClockDetail?, // details
@@ -327,6 +262,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             details?.clockOutTime == null;
                         final isActionLoading =
                             status == ClockActionStatus.loading;
+
+                        final bool canProcess =
+                            canClockIn && isAddressSet && !isActionLoading;
 
                         return Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -362,29 +300,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   onPressed:
-                                      canClockIn &&
-                                              isAddressSet &&
-                                              !isActionLoading
-                                          ? () => _performClockAction(
+                                      canProcess
+                                          ? () => presenter.performClockAction(
                                             ClockAction.IN,
                                           )
                                           : null,
                                 )
-                                .animate(
-                                  target:
-                                      canClockIn &&
-                                              isAddressSet &&
-                                              !isActionLoading
-                                          ? 1.0
-                                          : 0.8,
-                                )
+                                .animate(target: canProcess ? 1.0 : 0.8)
                                 .scaleXY(
-                                  end:
-                                      canClockIn &&
-                                              isAddressSet &&
-                                              !isActionLoading
-                                          ? 1.0
-                                          : 0.95,
+                                  end: canProcess ? 1.0 : 0.95,
                                   duration: 200.ms,
                                 )
                                 .fadeIn(delay: 500.ms, duration: 600.ms)
@@ -431,7 +355,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       canClockOut &&
                                               isAddressSet &&
                                               !isActionLoading
-                                          ? () => _performClockAction(
+                                          ? () => presenter.performClockAction(
                                             ClockAction.OUT,
                                           )
                                           : null,
@@ -467,7 +391,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Gap(context.h(30)),
 
                     // --- Time Cards Display ---
-                    _presenter.focusOn<(ClockTimeStatus, DailyClockDetail?)>(
+                    presenter.focusOn<(ClockTimeStatus, DailyClockDetail?)>(
                       selector: (state) => (state.timeStatus, state.details),
                       builder: (context, data) {
                         final timeStatus = data.$1;
@@ -547,3 +471,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+
+const List<String> _zhWeekdays = [
+  '星期一',
+  '星期二',
+  '星期三',
+  '星期四',
+  '星期五',
+  '星期六',
+  '星期日',
+];

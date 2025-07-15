@@ -3,7 +3,6 @@ import 'package:joker_state/joker_state.dart';
 import '../../../../core/config/storage_keys.dart';
 import '../../../../core/utils/auth_utils.dart';
 import '../../../../core/utils/local_storage.dart';
-import '../../../nueip/data/repositories/nueip_repository_impl.dart';
 import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../data/models/user_info.dart';
 import '../../domain/entities/setting_state.dart';
@@ -12,16 +11,17 @@ final class SettingPresenter extends Presenter<SettingState> {
   final NueipRepository _repository;
 
   SettingPresenter({super.keepAlive = true})
-    : _repository = Circus.find<NueipRepositoryImpl>(),
-      super(
-        SettingState(
-          userInfo: UserInfo(companyName: '', deptName: '', userName: ''),
-        ),
-      );
+    : _repository = Circus.find<NueipRepository>(),
+      super(SettingState.initial());
 
   @override
-  void onInit() {
-    super.onInit();
+  void onReady() async {
+    super.onReady();
+    _setDefaultToggle();
+    await getUserInfo();
+  }
+
+  void _setDefaultToggle() {
     trickWith(
       (state) => state.copyWith(
         notificationsEnabled: LocalStorage.get<bool>(

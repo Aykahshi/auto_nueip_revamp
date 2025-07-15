@@ -123,278 +123,24 @@ class FormScreen extends StatelessWidget {
 
 // --- Actual UI Screen for History ---
 @RoutePage()
-class FormHistoryScreen extends StatefulWidget {
+class FormHistoryScreen extends StatelessWidget {
   const FormHistoryScreen({super.key});
 
   @override
-  State<FormHistoryScreen> createState() => _FormHistoryScreenState();
-}
-
-class _FormHistoryScreenState extends State<FormHistoryScreen> {
-  // Joker for applied query state
-  late final Joker<FormHistoryQuery> _historyJoker;
-  // Joker Presenter for leave records state
-  late final LeaveRecordPresenter _leaveRecordPresenter;
-  // Presenter for date range state management
-  late final DateRangePresenter _dateRangePresenter;
-
-  @override
-  void initState() {
-    super.initState();
-    _historyJoker = Joker<FormHistoryQuery>(
+  Widget build(BuildContext context) {
+    // Joker for applied query state
+    final Joker<FormHistoryQuery> historyJoker = Joker<FormHistoryQuery>(
       const FormHistoryQuery(historyType: FormHistoryType.leave),
     );
-    // Directly create the presenter instance
-    _leaveRecordPresenter = LeaveRecordPresenter();
+    // Joker Presenter for leave records state
+    final LeaveRecordPresenter leaveRecordPresenter =
+        Circus.find<LeaveRecordPresenter>();
+    // Presenter for date range state management
+    final DateRangePresenter dateRangePresenter =
+        Circus.find<DateRangePresenter>();
 
-    // 初始化日期範圍 presenter
-    _dateRangePresenter = DateRangePresenter();
-  }
-
-  void _showDateRangePickerInSheet() {
-    // 使用 DateRangePresenter 的狀態作為初始選擇
-    PickerDateRange? initialRange;
-    final dateState = _dateRangePresenter.state;
-
-    if (dateState.tempStartDate != null && dateState.tempEndDate != null) {
-      initialRange = PickerDateRange(
-        dateState.tempStartDate!,
-        dateState.tempEndDate!,
-      );
-    } else if (dateState.tempStartDate != null) {
-      initialRange = PickerDateRange(
-        dateState.tempStartDate!,
-        dateState.tempStartDate!,
-      );
-    }
-
-    PickerDateRange? currentSheetSelection = initialRange;
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext sheetContext) {
-        final sheetTheme = sheetContext.theme;
-        final sheetColorScheme = sheetTheme.colorScheme;
-        final safeAreaBottom = MediaQuery.viewInsetsOf(sheetContext).bottom;
-
-        return Padding(
-          padding: EdgeInsets.only(bottom: safeAreaBottom),
-          child: Container(
-            constraints: BoxConstraints(maxHeight: context.vh * 0.5),
-            decoration: BoxDecoration(
-              color: sheetColorScheme.surfaceContainer,
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(context.r(20)),
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.symmetric(vertical: context.h(10)),
-                  child: Container(
-                    width: context.w(40),
-                    height: context.h(5),
-                    decoration: BoxDecoration(
-                      color: sheetColorScheme.onSurfaceVariant.withValues(
-                        alpha: 0.4,
-                      ),
-                      borderRadius: BorderRadius.circular(context.r(10)),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: context.w(16)),
-                  child: Text(
-                    // Read history type from Joker state
-                    _historyJoker.state.historyType == FormHistoryType.leave
-                        ? "篩選請假日期"
-                        : "篩選請款申請日期",
-                    style: sheetTheme.textTheme.titleLarge?.copyWith(
-                      color: sheetColorScheme.onSurface,
-                      fontSize: context.sp(22),
-                    ),
-                  ),
-                ),
-                Divider(height: context.h(16), thickness: context.w(0.5)),
-                Flexible(
-                  child: SfDateRangePicker(
-                    initialSelectedRange: currentSheetSelection,
-                    onSelectionChanged: (args) {
-                      if (args.value is PickerDateRange) {
-                        currentSheetSelection = args.value;
-                      }
-                    },
-                    selectionMode: DateRangePickerSelectionMode.range,
-                    view: DateRangePickerView.month,
-                    backgroundColor: Colors.transparent,
-                    monthViewSettings: DateRangePickerMonthViewSettings(
-                      firstDayOfWeek: 1,
-                      viewHeaderStyle: DateRangePickerViewHeaderStyle(
-                        textStyle: TextStyle(
-                          color: sheetColorScheme.onSurfaceVariant,
-                          fontSize: context.sp(12),
-                        ),
-                      ),
-                    ),
-                    headerStyle: DateRangePickerHeaderStyle(
-                      backgroundColor: Colors.transparent,
-                      textAlign: TextAlign.center,
-                      textStyle: sheetTheme.textTheme.titleMedium?.copyWith(
-                        color: sheetColorScheme.onSurface,
-                        fontSize: context.sp(16),
-                      ),
-                    ),
-                    monthCellStyle: DateRangePickerMonthCellStyle(
-                      textStyle: TextStyle(
-                        color: sheetColorScheme.onSurface,
-                        fontSize: context.sp(14),
-                      ),
-                      todayTextStyle: TextStyle(
-                        color: sheetColorScheme.primary,
-                        fontSize: context.sp(14),
-                      ),
-                      todayCellDecoration: BoxDecoration(
-                        border: Border.all(color: sheetColorScheme.primary),
-                        shape: BoxShape.circle,
-                      ),
-                      disabledDatesTextStyle: TextStyle(
-                        color: sheetColorScheme.outline.withValues(alpha: 0.5),
-                        fontSize: context.sp(14),
-                      ),
-                    ),
-                    yearCellStyle: DateRangePickerYearCellStyle(
-                      textStyle: TextStyle(
-                        color: sheetColorScheme.onSurface,
-                        fontSize: context.sp(14),
-                      ),
-                      todayTextStyle: TextStyle(
-                        color: sheetColorScheme.primary,
-                        fontSize: context.sp(14),
-                      ),
-                      disabledDatesTextStyle: TextStyle(
-                        color: sheetColorScheme.outline.withValues(alpha: 0.5),
-                        fontSize: context.sp(14),
-                      ),
-                    ),
-                    rangeSelectionColor: sheetColorScheme.primaryContainer
-                        .withValues(alpha: 0.3),
-                    startRangeSelectionColor: sheetColorScheme.primary,
-                    endRangeSelectionColor: sheetColorScheme.primary,
-                    selectionTextStyle: TextStyle(
-                      color: sheetColorScheme.onPrimary,
-                      fontSize: context.sp(14),
-                    ),
-                    rangeTextStyle: TextStyle(
-                      color: sheetColorScheme.onPrimaryContainer,
-                      fontSize: context.sp(14),
-                    ),
-                    minDate: DateTime(2010),
-                    maxDate: DateTime(2030),
-                    showNavigationArrow: true,
-                    showActionButtons: false,
-                  ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.w(16),
-                    vertical: context.h(12),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        child: Text(
-                          '取消',
-                          style: TextStyle(
-                            color: sheetColorScheme.secondary,
-                            fontSize: context.sp(14),
-                          ),
-                        ),
-                        onPressed: () => sheetContext.pop(),
-                      ),
-                      Gap(context.w(8)),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: sheetColorScheme.primary,
-                          foregroundColor: sheetColorScheme.onPrimary,
-                        ),
-                        child: const Text('確定'),
-                        onPressed: () {
-                          // 使用 DateRangePresenter 設置日期範圍
-                          _dateRangePresenter.setDateRange(
-                            currentSheetSelection,
-                          );
-                          sheetContext.pop();
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-                Gap(context.h(20)),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  void _setRangeToYesterday() {
-    _dateRangePresenter.setYesterday();
-  }
-
-  void _setRangeToToday() {
-    _dateRangePresenter.setToday();
-  }
-
-  void _setRangeToThisWeek() {
-    _dateRangePresenter.setThisWeek();
-  }
-
-  void _setRangeToThisMonth() {
-    _dateRangePresenter.setThisMonth();
-  }
-
-  void _clearQuery() {
-    // 使用 DateRangePresenter 清除日期範圍
-    _dateRangePresenter.clearDateRange();
-
-    // Clear applied dates in Joker state
-    _historyJoker.trickWith(
-      (state) => state.copyWith(startDate: null, endDate: null),
-    );
-
-    // Reset leave record presenter state
-    _leaveRecordPresenter.reset();
-  }
-
-  // 修改查詢方法，使用 DateRangePresenter 的狀態
-  void _performQuery() {
-    final dateState = _dateRangePresenter.state;
-
-    // Apply the temporary dates to the Joker state for FilterArea display
-    _historyJoker.trickWith(
-      (state) => state.copyWith(
-        startDate: dateState.tempStartDate,
-        endDate: dateState.tempEndDate,
-      ),
-    );
-
-    // Trigger fetch in the presenter using the temporary dates
-    _leaveRecordPresenter.fetchLeaveRecords(
-      startDate: dateState.tempStartDate,
-      endDate: dateState.tempEndDate,
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return _historyJoker.perform(
+    return historyJoker.perform(
       builder: (context, historyState) {
-        // historyState is FormHistoryQuery (used for FilterArea and type switching)
         return Scaffold(
           appBar: AppBar(
             title: Text(
@@ -441,20 +187,50 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
           ),
           body: Column(
             children: [
-              // 使用 jokers.assemble 同時監聽兩個 presenter 的狀態
-              _dateRangePresenter.perform(
+              dateRangePresenter.perform(
                 builder: (context, dateState) {
                   return FilterArea(
-                    // 使用 DateRangePresenter 的狀態代替臨時變數
                     selectedStartDate: dateState.tempStartDate,
                     selectedEndDate: dateState.tempEndDate,
-                    onSelectRange: _showDateRangePickerInSheet,
-                    onSetYesterday: _setRangeToYesterday,
-                    onSetToday: _setRangeToToday,
-                    onSetThisWeek: _setRangeToThisWeek,
-                    onSetThisMonth: _setRangeToThisMonth,
-                    onClear: _clearQuery,
-                    onQuery: _performQuery, // Trigger query application & fetch
+                    onSelectRange:
+                        () => _showDateRangePickerInSheet(
+                          context,
+                          dateRangePresenter,
+                          historyJoker,
+                        ),
+                    onSetYesterday: dateRangePresenter.setYesterday,
+                    onSetToday: dateRangePresenter.setToday,
+                    onSetThisWeek: dateRangePresenter.setThisWeek,
+                    onSetThisMonth: dateRangePresenter.setThisMonth,
+                    onClear: () {
+                      dateRangePresenter.clearDateRange();
+
+                      // Clear applied dates in Joker state
+                      historyJoker.trickWith(
+                        (state) =>
+                            state.copyWith(startDate: null, endDate: null),
+                      );
+
+                      // Reset leave record presenter state
+                      leaveRecordPresenter.reset();
+                    },
+                    onQuery: () {
+                      final dateState = dateRangePresenter.state;
+
+                      // Apply the temporary dates to the Joker state for FilterArea display
+                      historyJoker.trickWith(
+                        (state) => state.copyWith(
+                          startDate: dateState.tempStartDate,
+                          endDate: dateState.tempEndDate,
+                        ),
+                      );
+
+                      // Trigger fetch in the presenter using the temporary dates
+                      leaveRecordPresenter.fetchLeaveRecords(
+                        startDate: dateState.tempStartDate,
+                        endDate: dateState.tempEndDate,
+                      );
+                    }, // Trigger query application & fetch
                   );
                 },
               ),
@@ -467,7 +243,7 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                   // Use LeaveRecordPresenter for leave tab, mock data for expense tab
                   child:
                       historyState.historyType == FormHistoryType.leave
-                          ? _leaveRecordPresenter.perform(
+                          ? leaveRecordPresenter.perform(
                             // Listen to presenter state
                             builder: (context, leaveState) {
                               if (leaveState is LeaveRecordLoading) {
@@ -478,7 +254,10 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
                               } else if (leaveState is LeaveRecordError) {
                                 return _buildErrorState(
                                   context,
-                                  leaveState.failure.message,
+                                  message: leaveState.failure.message,
+                                  historyJoker: historyJoker,
+                                  dateRangePresenter: dateRangePresenter,
+                                  leaveRecordPresenter: leaveRecordPresenter,
                                 );
                               } else if (leaveState is LeaveRecordSuccess) {
                                 return _buildLeaveHistoryList(
@@ -751,7 +530,13 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
   }
 
   // Builds the error state widget
-  Widget _buildErrorState(BuildContext context, String message, {Key? key}) {
+  Widget _buildErrorState(
+    BuildContext context, {
+    required String message,
+    required Joker historyJoker,
+    required DateRangePresenter dateRangePresenter,
+    required LeaveRecordPresenter leaveRecordPresenter,
+  }) {
     return Center(
       key: key ?? const ValueKey('error_state'),
       child: Padding(
@@ -778,7 +563,23 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
             ElevatedButton.icon(
               icon: const Icon(Icons.refresh),
               label: const Text('重試'),
-              onPressed: _performQuery, // Retry the query
+              onPressed: () {
+                final dateState = dateRangePresenter.state;
+
+                // Apply the temporary dates to the Joker state for FilterArea display
+                historyJoker.trickWith(
+                  (state) => state.copyWith(
+                    startDate: dateState.tempStartDate,
+                    endDate: dateState.tempEndDate,
+                  ),
+                );
+
+                // Trigger fetch in the presenter using the temporary dates
+                leaveRecordPresenter.fetchLeaveRecords(
+                  startDate: dateState.tempStartDate,
+                  endDate: dateState.tempEndDate,
+                );
+              }, // Retry the query
               style: ElevatedButton.styleFrom(
                 foregroundColor: context.colorScheme.onError,
                 backgroundColor: context.colorScheme.error,
@@ -789,4 +590,197 @@ class _FormHistoryScreenState extends State<FormHistoryScreen> {
       ),
     );
   }
+}
+
+void _showDateRangePickerInSheet(
+  BuildContext context,
+  DateRangePresenter dateRangePresenter,
+  Joker historyJoker,
+) {
+  // 使用 DateRangePresenter 的狀態作為初始選擇
+  PickerDateRange? initialRange;
+  final dateState = dateRangePresenter.state;
+
+  if (dateState.tempStartDate != null && dateState.tempEndDate != null) {
+    initialRange = PickerDateRange(
+      dateState.tempStartDate!,
+      dateState.tempEndDate!,
+    );
+  } else if (dateState.tempStartDate != null) {
+    initialRange = PickerDateRange(
+      dateState.tempStartDate!,
+      dateState.tempStartDate!,
+    );
+  }
+
+  PickerDateRange? currentSheetSelection = initialRange;
+
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (BuildContext sheetContext) {
+      final sheetTheme = sheetContext.theme;
+      final sheetColorScheme = sheetTheme.colorScheme;
+      final safeAreaBottom = MediaQuery.viewInsetsOf(sheetContext).bottom;
+
+      return Padding(
+        padding: EdgeInsets.only(bottom: safeAreaBottom),
+        child: Container(
+          constraints: BoxConstraints(maxHeight: context.vh * 0.5),
+          decoration: BoxDecoration(
+            color: sheetColorScheme.surfaceContainer,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(context.r(20)),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.symmetric(vertical: context.h(10)),
+                child: Container(
+                  width: context.w(40),
+                  height: context.h(5),
+                  decoration: BoxDecoration(
+                    color: sheetColorScheme.onSurfaceVariant.withValues(
+                      alpha: 0.4,
+                    ),
+                    borderRadius: BorderRadius.circular(context.r(10)),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: context.w(16)),
+                child: Text(
+                  // Read history type from Joker state
+                  historyJoker.state.historyType == FormHistoryType.leave
+                      ? "篩選請假日期"
+                      : "篩選請款申請日期",
+                  style: sheetTheme.textTheme.titleLarge?.copyWith(
+                    color: sheetColorScheme.onSurface,
+                    fontSize: context.sp(22),
+                  ),
+                ),
+              ),
+              Divider(height: context.h(16), thickness: context.w(0.5)),
+              Flexible(
+                child: SfDateRangePicker(
+                  initialSelectedRange: currentSheetSelection,
+                  onSelectionChanged: (args) {
+                    if (args.value is PickerDateRange) {
+                      currentSheetSelection = args.value;
+                    }
+                  },
+                  selectionMode: DateRangePickerSelectionMode.range,
+                  view: DateRangePickerView.month,
+                  backgroundColor: Colors.transparent,
+                  monthViewSettings: DateRangePickerMonthViewSettings(
+                    firstDayOfWeek: 1,
+                    viewHeaderStyle: DateRangePickerViewHeaderStyle(
+                      textStyle: TextStyle(
+                        color: sheetColorScheme.onSurfaceVariant,
+                        fontSize: context.sp(12),
+                      ),
+                    ),
+                  ),
+                  headerStyle: DateRangePickerHeaderStyle(
+                    backgroundColor: Colors.transparent,
+                    textAlign: TextAlign.center,
+                    textStyle: sheetTheme.textTheme.titleMedium?.copyWith(
+                      color: sheetColorScheme.onSurface,
+                      fontSize: context.sp(16),
+                    ),
+                  ),
+                  monthCellStyle: DateRangePickerMonthCellStyle(
+                    textStyle: TextStyle(
+                      color: sheetColorScheme.onSurface,
+                      fontSize: context.sp(14),
+                    ),
+                    todayTextStyle: TextStyle(
+                      color: sheetColorScheme.primary,
+                      fontSize: context.sp(14),
+                    ),
+                    todayCellDecoration: BoxDecoration(
+                      border: Border.all(color: sheetColorScheme.primary),
+                      shape: BoxShape.circle,
+                    ),
+                    disabledDatesTextStyle: TextStyle(
+                      color: sheetColorScheme.outline.withValues(alpha: 0.5),
+                      fontSize: context.sp(14),
+                    ),
+                  ),
+                  yearCellStyle: DateRangePickerYearCellStyle(
+                    textStyle: TextStyle(
+                      color: sheetColorScheme.onSurface,
+                      fontSize: context.sp(14),
+                    ),
+                    todayTextStyle: TextStyle(
+                      color: sheetColorScheme.primary,
+                      fontSize: context.sp(14),
+                    ),
+                    disabledDatesTextStyle: TextStyle(
+                      color: sheetColorScheme.outline.withValues(alpha: 0.5),
+                      fontSize: context.sp(14),
+                    ),
+                  ),
+                  rangeSelectionColor: sheetColorScheme.primaryContainer
+                      .withValues(alpha: 0.3),
+                  startRangeSelectionColor: sheetColorScheme.primary,
+                  endRangeSelectionColor: sheetColorScheme.primary,
+                  selectionTextStyle: TextStyle(
+                    color: sheetColorScheme.onPrimary,
+                    fontSize: context.sp(14),
+                  ),
+                  rangeTextStyle: TextStyle(
+                    color: sheetColorScheme.onPrimaryContainer,
+                    fontSize: context.sp(14),
+                  ),
+                  minDate: DateTime(2010),
+                  maxDate: DateTime(2030),
+                  showNavigationArrow: true,
+                  showActionButtons: false,
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.w(16),
+                  vertical: context.h(12),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      child: Text(
+                        '取消',
+                        style: TextStyle(
+                          color: sheetColorScheme.secondary,
+                          fontSize: context.sp(14),
+                        ),
+                      ),
+                      onPressed: () => sheetContext.pop(),
+                    ),
+                    Gap(context.w(8)),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: sheetColorScheme.primary,
+                        foregroundColor: sheetColorScheme.onPrimary,
+                      ),
+                      child: const Text('確定'),
+                      onPressed: () {
+                        // 使用 DateRangePresenter 設置日期範圍
+                        dateRangePresenter.setDateRange(currentSheetSelection);
+                        sheetContext.pop();
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Gap(context.h(20)),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

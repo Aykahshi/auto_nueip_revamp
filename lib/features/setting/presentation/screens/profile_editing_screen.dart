@@ -8,72 +8,29 @@ import 'package:gap/gap.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../../../core/extensions/theme_extensions.dart';
-import '../../domain/entities/profile_editing_state.dart';
 import '../presenters/profile_editing_presenter.dart';
 
 @RoutePage()
-class ProfileEditingScreen extends StatefulWidget {
+class ProfileEditingScreen extends StatelessWidget {
   const ProfileEditingScreen({super.key});
-
-  @override
-  State<ProfileEditingScreen> createState() => _ProfileEditingScreenState();
-}
-
-class _ProfileEditingScreenState extends State<ProfileEditingScreen> {
-  late final ProfileEditingPresenter _presenter;
-  late final GlobalKey<FormBuilderState> _formKey;
-
-  @override
-  void initState() {
-    super.initState();
-    _formKey = GlobalKey<FormBuilderState>();
-    _presenter = ProfileEditingPresenter();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
-
-  void _showErrorMessage(String message) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: context.colorScheme.error,
-      ),
-    );
-  }
-
-  void _handleSave(ProfileEditingState currentState) {
-    FocusScope.of(context).unfocus();
-    if (_formKey.currentState?.saveAndValidate() ?? false) {
-      final values = _formKey.currentState!.value;
-      _presenter.saveProfile(
-        values['companyCode'],
-        values['employeeId'],
-        values['password'],
-        values['companyAddress'],
-      );
-    } else {
-      _showErrorMessage('請檢查輸入欄位');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final iconColor = context.colorScheme.primary;
 
-    return _presenter.watch(
-      onStateChange: (BuildContext context, ProfileEditingState state) {
+    final presenter = Circus.find<ProfileEditingPresenter>();
+
+    final formKey = GlobalKey<FormBuilderState>();
+
+    return presenter.watch(
+      onStateChange: (context, state) {
         // Show error message if any
         if (state.error != null) {
-          _showErrorMessage(state.error!);
+          _showErrorMessage(context, state.error!);
         }
         // Reset form fields if editing is toggled off after saving
         if (!state.isEditing && state.error == null) {
-          _formKey.currentState?.patchValue({
+          formKey.currentState?.patchValue({
             'companyCode': state.companyCode,
             'employeeId': state.employeeId,
             'password': state.password,
@@ -94,12 +51,12 @@ class _ProfileEditingScreenState extends State<ProfileEditingScreen> {
               horizontal: context.w(16),
               vertical: context.h(16),
             ),
-            child: _presenter.perform(
+            child: presenter.perform(
               builder: (context, state) {
                 return IgnorePointer(
                   ignoring: state.isLoading,
                   child: FormBuilder(
-                    key: _formKey,
+                    key: formKey,
                     initialValue: {
                       'companyCode': state.companyCode,
                       'employeeId': state.employeeId,
@@ -214,7 +171,7 @@ class _ProfileEditingScreenState extends State<ProfileEditingScreen> {
                                                             color: iconColor,
                                                           ),
                                                           onPressed:
-                                                              _presenter
+                                                              presenter
                                                                   .togglePasswordVisibility,
                                                         )
                                                         : null,
@@ -315,9 +272,9 @@ class _ProfileEditingScreenState extends State<ProfileEditingScreen> {
                               ),
                               onPressed: () {
                                 if (state.isEditing) {
-                                  _handleSave(state);
+                                  _handleSave(context, presenter, formKey);
                                 } else {
-                                  _presenter.toggleEditing();
+                                  presenter.toggleEditing();
                                 }
                               },
                               child:
@@ -356,5 +313,36 @@ class _ProfileEditingScreenState extends State<ProfileEditingScreen> {
         ),
       ),
     );
+  }
+}
+
+void _showErrorMessage(BuildContext context, String message) {
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).hideCurrentSnackBar();
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      backgroundColor: context.colorScheme.error,
+    ),
+  );
+}
+
+void _handleSave(
+  BuildContext context,
+  ProfileEditingPresenter presenter,
+  GlobalKey<FormBuilderState> formKey,
+) {
+  FocusScope.of(context).unfocus();
+
+  if (formKey.currentState?.saveAndValidate() ?? false) {
+    final values = formKey.currentState!.value;
+    presenter.saveProfile(
+      values['companyCode'],
+      values['employeeId'],
+      values['password'],
+      values['companyAddress'],
+    );
+  } else {
+    _showErrorMessage(context, '請檢查輸入欄位');
   }
 }

@@ -8,16 +8,13 @@ import '../../../../core/network/failure.dart';
 import '../../../../core/utils/auth_utils.dart';
 import '../../../../core/utils/local_storage.dart';
 import '../../../calendar/data/models/daily_clock_detail.dart';
-import '../../../nueip/data/repositories/nueip_repository_impl.dart';
 import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../domain/entities/clock_action_enum.dart';
 import '../../domain/entities/clock_state.dart';
 
 final class ClockPresenter extends Presenter<ClockState> {
-  final NueipRepository _repository;
-
-  ClockPresenter({NueipRepository? repository, super.keepAlive = true})
-    : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
+  ClockPresenter()
+    : _repository = Circus.find<NueipRepository>(),
       super(
         const ClockState(
           status: ClockActionStatus.idle,
@@ -25,10 +22,29 @@ final class ClockPresenter extends Presenter<ClockState> {
         ),
       );
 
+  final NueipRepository _repository;
+  late final Joker<DateTime> timeJoker;
+  Timer? _timer;
+
   @override
-  void onReady() {
+  onInit() {
+    super.onInit();
+    timeJoker = Joker<DateTime>(DateTime.now());
+  }
+
+  @override
+  void onReady() async {
     super.onReady();
-    _init();
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      timeJoker.trick(DateTime.now());
+    });
+    await _init();
+  }
+
+  @override
+  void onDone() {
+    _timer?.cancel();
+    super.onDone();
   }
 
   Future<void> _init() async {
@@ -104,9 +120,31 @@ final class ClockPresenter extends Presenter<ClockState> {
     );
   }
 
+  Future<void> performClockAction(ClockAction action) async {
+    final session = AuthUtils.getAuthSession();
+
+    final double latitude = LocalStorage.get<double>(
+      StorageKeys.companyLatitude,
+      defaultValue: 0,
+    );
+    final double longitude = LocalStorage.get<double>(
+      StorageKeys.companyLongitude,
+      defaultValue: 0,
+    );
+
+    await _clockAction(
+      action: action,
+      cookie: session.cookie ?? '',
+      csrfToken: session.csrfToken ?? '',
+      latitude: latitude,
+      longitude: longitude,
+      accessToken: session.accessToken ?? '',
+    );
+  }
+
   /// Performs a clock action (e.g., clock-in or clock-out).
   /// Requires method ('1' for in, '2' for out), tokens, and location.
-  Future<void> clockAction({
+  Future<void> _clockAction({
     required ClockAction action,
     required String cookie,
     required String csrfToken,

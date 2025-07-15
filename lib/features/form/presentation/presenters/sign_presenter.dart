@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:joker_state/joker_state.dart';
 
-import '../../../nueip/data/repositories/nueip_repository_impl.dart';
 import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../data/models/form_type_enum.dart';
 import '../../domain/entities/sign_state.dart'; // Import the new SignState entity
@@ -11,11 +10,9 @@ final class SignPresenter extends Presenter<SignState> {
   // Use the SignState entity
   final NueipRepository _repository;
 
-  SignPresenter({NueipRepository? repository})
-    : _repository = repository ?? Circus.find<NueipRepositoryImpl>(),
-      super(
-        SignState.initial(), // Use the factory for initial state
-      );
+  SignPresenter()
+    : _repository = Circus.find<NueipRepository>(),
+      super(SignState.initial());
 
   /// Fetches the sign data for a specific leave form.
   Future<void> fetchSignData(FormType type, String id) async {

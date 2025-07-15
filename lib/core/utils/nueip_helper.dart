@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../features/login/data/models/auth_session.dart';
-import '../../features/nueip/data/repositories/nueip_repository_impl.dart';
+import '../../features/nueip/domain/repositories/nueip_repository.dart';
 import '../config/apis.dart';
 import '../extensions/cookie_parser.dart';
 import '../extensions/htmlx.dart';
@@ -74,7 +74,7 @@ final class NueipHelper {
   }
 
   Future<void> _getOauthToken() async {
-    final repository = Circus.find<NueipRepositoryImpl>();
+    final repository = Circus.find<NueipRepository>();
 
     final result = await repository.getOauthToken(cookie: _cookie ?? '').run();
 

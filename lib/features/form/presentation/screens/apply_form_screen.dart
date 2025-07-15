@@ -18,326 +18,18 @@ import '../widgets/time_picker_theme_builder.dart'; // Import the time picker th
 import 'form_screen.dart'; // Assuming FormHistoryType is here
 
 @RoutePage()
-class ApplyFormScreen extends StatefulWidget {
+class ApplyFormScreen extends StatelessWidget {
   final FormHistoryType formType;
 
   const ApplyFormScreen({required this.formType, super.key});
 
   @override
-  State<ApplyFormScreen> createState() => _ApplyFormScreenState();
-}
-
-class _ApplyFormScreenState extends State<ApplyFormScreen> {
-  // --- State Variables (Managed by Screen) ---
-  final TextEditingController _agentSearchController = TextEditingController();
-  final TextEditingController _remarkController = TextEditingController();
-
-  // --- Presenters ---
-  late final ApplyFormPresenter _dataPresenter;
-  late final ApplyFormUiPresenter _uiPresenter;
-
-  // --- Text Editing Controllers Dispose ---
-  @override
-  void dispose() {
-    _agentSearchController.dispose();
-    _remarkController.dispose();
-    super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-
-    // Initialize data presenter
-    _dataPresenter = ApplyFormPresenter(formType: widget.formType);
-
-    // Initialize UI presenter
-    _uiPresenter = Circus.find<ApplyFormUiPresenter>();
-
-    // Listen to remark field changes to update form validation
-    _remarkController.addListener(_validateForm);
-
-    // Initial validation (in case there's a default value)
-    _validateForm();
-  }
-
-  // --- Date and Time formatters ---
-  final DateFormat _dateFormatter = DateFormat('yyyy-MM-dd');
-  // Time formatter handled by TimeOfDay.format
-
-  // --- Date Picker Logic (Modified for Start/End) ---
-  void _showDatePickerSheet({required bool isStartDate}) {
-    final uiState = _uiPresenter.state;
-    DateTime? initialDate =
-        (isStartDate ? uiState.selectedStartDate : uiState.selectedEndDate) ??
-        DateTime.now();
-
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext sheetContext) {
-        return buildDatePickerSheetContent(
-          sheetContext: sheetContext,
-          isStartDate: isStartDate,
-          initialDate: initialDate,
-          selectedStartDateForMinDate: uiState.selectedStartDate,
-          onSelectionConfirmed: (DateTime? selectedDate) {
-            if (selectedDate != null) {
-              if (isStartDate) {
-                _uiPresenter.setStartDate(selectedDate);
-              } else {
-                _uiPresenter.setEndDate(selectedDate);
-              }
-              _checkAndTriggerWorkHourCalculation();
-            }
-          },
-        );
-      },
-    );
-  }
-
-  // --- Time Picker Logic (Modified for Start/End) ---
-  Future<void> _showTimePickerSheet({required bool isStartTime}) async {
-    final uiState = _uiPresenter.state;
-    final TimeOfDay initialTime =
-        (isStartTime ? uiState.selectedStartTime : uiState.selectedEndTime) ??
-        TimeOfDay.now();
-
-    final TimeOfDay? picked = await showTimePicker(
-      context: context,
-      initialTime: initialTime,
-      builder:
-          (builderContext, child) =>
-              buildTimePickerTheme(context: builderContext, child: child),
-    );
-
-    if (picked != null) {
-      if (isStartTime) {
-        _uiPresenter.setStartTime(picked);
-      } else {
-        _uiPresenter.setEndTime(picked);
-      }
-      _checkAndTriggerWorkHourCalculation();
-    }
-  }
-
-  // 新增：檢查並觸發工時計算的方法
-  void _checkAndTriggerWorkHourCalculation() {
-    final uiState = _uiPresenter.state;
-
-    // 檢查是否所有日期時間都已選擇
-    if (uiState.selectedStartDate != null &&
-        uiState.selectedEndDate != null &&
-        uiState.selectedStartTime != null &&
-        uiState.selectedEndTime != null) {
-      // 生成日期列表
-      final List<String> datesToFetch = [];
-      DateTime currentDate = uiState.selectedStartDate!;
-
-      while (!currentDate.isAfter(uiState.selectedEndDate!)) {
-        datesToFetch.add(DateFormat('yyyy-MM-dd').format(currentDate));
-        currentDate = currentDate.add(const Duration(days: 1));
-      }
-
-      // 創建完整的 DateTime 對象
-      final startDateTime = DateTime(
-        uiState.selectedStartDate!.year,
-        uiState.selectedStartDate!.month,
-        uiState.selectedStartDate!.day,
-        uiState.selectedStartTime!.hour,
-        uiState.selectedStartTime!.minute,
-      );
-
-      final endDateTime = DateTime(
-        uiState.selectedEndDate!.year,
-        uiState.selectedEndDate!.month,
-        uiState.selectedEndDate!.day,
-        uiState.selectedEndTime!.hour,
-        uiState.selectedEndTime!.minute,
-      );
-
-      // 呼叫 Presenter 方法計算工時
-      if (datesToFetch.isNotEmpty) {
-        _dataPresenter.cauculateWorkHour(
-          dates: datesToFetch,
-          startDateTime: startDateTime,
-          endDateTime: endDateTime,
-        );
-      }
-    }
-  }
-
-  // --- File Picker Logic ---
-  Future<void> _pickFiles() async {
-    try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
-        allowMultiple: true,
-        type: FileType.media,
-      );
-
-      if (result != null) {
-        final files =
-            result.paths
-                .where((path) => path != null)
-                .map((path) => File(path!))
-                .toList();
-        _uiPresenter.setFiles(files);
-      } else {
-        // User canceled
-      }
-    } catch (e) {
-      debugPrint('Error picking files: $e');
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('檔案選擇失敗: ${e.toString()}')));
-    }
-  }
-
-  // --- Helper to flatten departments to employees --- (Can stay here or move to utils/presenter)
-  List<Employee> _getAllEmployees(
-    Map<String, (String?, List<Employee>)> departmentEmployees,
-  ) {
-    final List<Employee> employees = [];
-    for (var entry in departmentEmployees.entries) {
-      employees.addAll(entry.value.$2);
-    }
-    employees.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
-    return employees;
-  }
-
-  // --- Submit Logic (Placeholder) ---
-  // Submit form button click handler with debounce
-  final _submitFormDebouncer = CueGate.debounce(
-    delay: const Duration(milliseconds: 500),
-  );
-
-  void _submitForm() {
-    // Use CueGate to prevent multiple rapid clicks
-    _submitFormDebouncer.trigger(() {
-      final uiState = _uiPresenter.state;
-      final dataState = _dataPresenter.state;
-
-      // Set UI to submitting state
-      _uiPresenter.setSubmitting(true);
-      _uiPresenter.setErrorMessage(null);
-
-      // Get form data from UI state
-      final String startDateStr = _dateFormatter.format(
-        uiState.selectedStartDate!,
-      );
-      final String endDateStr = _dateFormatter.format(uiState.selectedEndDate!);
-
-      // Create complete DateTime objects for generating leave entries
-      final startDateTime = DateTime(
-        uiState.selectedStartDate!.year,
-        uiState.selectedStartDate!.month,
-        uiState.selectedStartDate!.day,
-        uiState.selectedStartTime!.hour,
-        uiState.selectedStartTime!.minute,
-      );
-
-      final endDateTime = DateTime(
-        uiState.selectedEndDate!.year,
-        uiState.selectedEndDate!.month,
-        uiState.selectedEndDate!.day,
-        uiState.selectedEndTime!.hour,
-        uiState.selectedEndTime!.minute,
-      );
-
-      // Check if work hours data is available
-      if (dataState.workHours == null || dataState.workHours!.isEmpty) {
-        _uiPresenter.setSubmitting(false);
-        _uiPresenter.setErrorMessage('無法提交：缺少工時資料。請確保已選擇有效的日期和時間。');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('無法提交：缺少工時資料。請確保已選擇有效的日期和時間。')),
-        );
-        return;
-      }
-
-      // Generate multi-day leave entries
-      final leaveEntries = _dataPresenter.generateLeaveEntries(
-        workHoursList: dataState.workHours!,
-        startDateTime: startDateTime,
-        endDateTime: endDateTime,
-      );
-
-      // Check if there are valid leave entries
-      if (leaveEntries.isEmpty) {
-        _uiPresenter.setSubmitting(false);
-        _uiPresenter.setErrorMessage('無法提交：所選時間範圍內沒有有效的工作時間。');
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('無法提交：所選時間範圍內沒有有效的工作時間。')));
-        return;
-      }
-
-      // Check if leave type is selected
-      if (uiState.selectedLeaveRuleId == null) {
-        _uiPresenter.setSubmitting(false);
-        _uiPresenter.setErrorMessage('請選擇假別類型');
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('請選擇假別類型')));
-        return;
-      }
-
-      // Check if agent is selected
-      if (uiState.selectedAgent == null) {
-        _uiPresenter.setSubmitting(false);
-        _uiPresenter.setErrorMessage('請選擇代理人');
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('請選擇代理人')));
-        return;
-      }
-
-      // Get auth session
-      final session = AuthUtils.getAuthSession();
-
-      // Submit leave form with callbacks
-      _dataPresenter.submitLeaveForm(
-        ruleId: uiState.selectedLeaveRuleId!,
-        startDate: startDateStr,
-        endDate: endDateStr,
-        leaveEntries: leaveEntries,
-        agent: (uiState.selectedAgent!.id!, uiState.selectedAgent!.sn!),
-        remark: _remarkController.text,
-        files: uiState.selectedFiles,
-        cookie: session.cookie!,
-        onSuccess: () {
-          // Reset UI submitting state
-          _uiPresenter.setSubmitting(false);
-
-          // Show success message and navigate back
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('申請已提交成功！')));
-          // Use Auto Route to navigate back
-          context.pop();
-        },
-        onFailed: (errorMessage) {
-          // Reset UI submitting state
-          _uiPresenter.setSubmitting(false);
-
-          // Show error message (只設置錯誤訊息，不顯示 Snackbar)
-          _uiPresenter.setErrorMessage(errorMessage);
-        },
-      );
-    });
-  }
-
-  // --- Form validation
-  void _validateForm() {
-    // Update remark in UI presenter and validate form
-    _uiPresenter.setRemark(_remarkController.text);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final String title =
-        widget.formType == FormHistoryType.leave ? '申請請假單' : '申請請款單';
+    final ApplyFormPresenter dataPresenter = Circus.find<ApplyFormPresenter>();
+    final ApplyFormUiPresenter uiPresenter =
+        Circus.find<ApplyFormUiPresenter>();
+
+    final String title = formType == FormHistoryType.leave ? '申請請假單' : '申請請款單';
 
     return Scaffold(
       appBar: AppBar(
@@ -347,7 +39,7 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
         shadowColor: context.colorScheme.shadow.withValues(alpha: 0.1),
         leading: const AutoLeadingButton(),
       ),
-      body: _dataPresenter.perform(
+      body: dataPresenter.perform(
         builder: (context, dataState) {
           // 處理數據載入中和錯誤狀態
           if (dataState.isLoadingInitialData) {
@@ -371,7 +63,7 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
 
           final allEmployees = _getAllEmployees(dataState.departmentEmployees);
 
-          return _uiPresenter.perform(
+          return uiPresenter.perform(
             builder: (context, uiState) {
               return ApplyFormBody(
                 formState: dataState,
@@ -392,21 +84,46 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
                 selectedLeaveRuleId: uiState.selectedLeaveRuleId,
                 selectedAgent: uiState.selectedAgent,
                 selectedFiles: uiState.selectedFiles,
-                agentSearchController: _agentSearchController,
-                remarkController: _remarkController,
+                agentSearchController: uiPresenter.agentSearch,
+                remarkController: uiPresenter.remark,
                 onShowStartDatePicker:
-                    () => _showDatePickerSheet(isStartDate: true),
+                    () => _showDatePickerSheet(
+                      context,
+                      isStartDate: true,
+                      ui: uiPresenter,
+                      data: dataPresenter,
+                    ),
                 onShowStartTimePicker:
-                    () => _showTimePickerSheet(isStartTime: true),
+                    () => _showTimePickerSheet(
+                      context,
+                      isStartTime: true,
+                      ui: uiPresenter,
+                      data: dataPresenter,
+                    ),
                 onShowEndDatePicker:
-                    () => _showDatePickerSheet(isStartDate: false),
+                    () => _showDatePickerSheet(
+                      context,
+                      isStartDate: false,
+                      ui: uiPresenter,
+                      data: dataPresenter,
+                    ),
                 onShowEndTimePicker:
-                    () => _showTimePickerSheet(isStartTime: false),
-                onLeaveRuleChanged: (id) => _uiPresenter.setLeaveRuleId(id),
-                onAgentChanged: (employee) => _uiPresenter.setAgent(employee),
-                onPickFiles: _pickFiles,
-                onRemoveFile: (file) => _uiPresenter.removeFile(file),
-                onSubmit: _submitForm,
+                    () => _showTimePickerSheet(
+                      context,
+                      isStartTime: false,
+                      ui: uiPresenter,
+                      data: dataPresenter,
+                    ),
+                onLeaveRuleChanged: (id) => uiPresenter.setLeaveRuleId(id),
+                onAgentChanged: (employee) => uiPresenter.setAgent(employee),
+                onPickFiles: () => _pickFiles(context, uiPresenter),
+                onRemoveFile: (file) => uiPresenter.removeFile(file),
+                onSubmit:
+                    () => _submitForm(
+                      context,
+                      ui: uiPresenter,
+                      data: dataPresenter,
+                    ),
                 isFormValid: uiState.isFormValid,
               );
             },
@@ -414,5 +131,275 @@ class _ApplyFormScreenState extends State<ApplyFormScreen> {
         },
       ),
     );
+  }
+}
+
+void _submitForm(
+  BuildContext context, {
+  required ApplyFormUiPresenter ui,
+  required ApplyFormPresenter data,
+}) {
+  final debouncer = CueGate.debounce(delay: const Duration(milliseconds: 500));
+  final formatter = DateFormat('yyyy-MM-dd');
+
+  // Use CueGate to prevent multiple rapid clicks
+  debouncer.trigger(() {
+    final uiState = ui.state;
+    final dataState = data.state;
+
+    // Set UI to submitting state
+    ui.setSubmitting(true);
+    ui.setErrorMessage(null);
+
+    // Get form data from UI state
+    final String startDateStr = formatter.format(uiState.selectedStartDate!);
+    final String endDateStr = formatter.format(uiState.selectedEndDate!);
+
+    // Create complete DateTime objects for generating leave entries
+    final startDateTime = DateTime(
+      uiState.selectedStartDate!.year,
+      uiState.selectedStartDate!.month,
+      uiState.selectedStartDate!.day,
+      uiState.selectedStartTime!.hour,
+      uiState.selectedStartTime!.minute,
+    );
+
+    final endDateTime = DateTime(
+      uiState.selectedEndDate!.year,
+      uiState.selectedEndDate!.month,
+      uiState.selectedEndDate!.day,
+      uiState.selectedEndTime!.hour,
+      uiState.selectedEndTime!.minute,
+    );
+
+    // Check if work hours data is available
+    if (dataState.workHours == null || dataState.workHours!.isEmpty) {
+      ui.setSubmitting(false);
+      ui.setErrorMessage('無法提交：缺少工時資料。請確保已選擇有效的日期和時間。');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('無法提交：缺少工時資料。請確保已選擇有效的日期和時間。')),
+      );
+      return;
+    }
+
+    // Generate multi-day leave entries
+    final leaveEntries = data.generateLeaveEntries(
+      workHoursList: dataState.workHours!,
+      startDateTime: startDateTime,
+      endDateTime: endDateTime,
+    );
+
+    // Check if there are valid leave entries
+    if (leaveEntries.isEmpty) {
+      ui.setSubmitting(false);
+      ui.setErrorMessage('無法提交：所選時間範圍內沒有有效的工作時間。');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('無法提交：所選時間範圍內沒有有效的工作時間。')));
+      return;
+    }
+
+    // Check if leave type is selected
+    if (uiState.selectedLeaveRuleId == null) {
+      ui.setSubmitting(false);
+      ui.setErrorMessage('請選擇假別類型');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('請選擇假別類型')));
+      return;
+    }
+
+    // Check if agent is selected
+    if (uiState.selectedAgent == null) {
+      ui.setSubmitting(false);
+      ui.setErrorMessage('請選擇代理人');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('請選擇代理人')));
+      return;
+    }
+
+    // Get auth session
+    final session = AuthUtils.getAuthSession();
+
+    // Submit leave form with callbacks
+    data.submitLeaveForm(
+      ruleId: uiState.selectedLeaveRuleId!,
+      startDate: startDateStr,
+      endDate: endDateStr,
+      leaveEntries: leaveEntries,
+      agent: (uiState.selectedAgent!.id!, uiState.selectedAgent!.sn!),
+      remark: ui.remark.text,
+      files: uiState.selectedFiles,
+      cookie: session.cookie!,
+      onSuccess: () {
+        // Reset UI submitting state
+        ui.setSubmitting(false);
+
+        // Show success message and navigate back
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('申請已提交成功！')));
+        // Use Auto Route to navigate back
+        context.pop();
+      },
+      onFailed: (errorMessage) {
+        // Reset UI submitting state
+        ui.setSubmitting(false);
+
+        // Show error message (只設置錯誤訊息，不顯示 Snackbar)
+        ui.setErrorMessage(errorMessage);
+      },
+    );
+  });
+}
+
+void _checkAndTriggerWorkHourCalculation(
+  ApplyFormUiPresenter ui,
+  ApplyFormPresenter data,
+) {
+  final uiState = ui.state;
+
+  // 檢查是否所有日期時間都已選擇
+  if (uiState.selectedStartDate != null &&
+      uiState.selectedEndDate != null &&
+      uiState.selectedStartTime != null &&
+      uiState.selectedEndTime != null) {
+    // 生成日期列表
+    final List<String> datesToFetch = [];
+    DateTime currentDate = uiState.selectedStartDate!;
+
+    while (!currentDate.isAfter(uiState.selectedEndDate!)) {
+      datesToFetch.add(DateFormat('yyyy-MM-dd').format(currentDate));
+      currentDate = currentDate.add(const Duration(days: 1));
+    }
+
+    // 創建完整的 DateTime 對象
+    final startDateTime = DateTime(
+      uiState.selectedStartDate!.year,
+      uiState.selectedStartDate!.month,
+      uiState.selectedStartDate!.day,
+      uiState.selectedStartTime!.hour,
+      uiState.selectedStartTime!.minute,
+    );
+
+    final endDateTime = DateTime(
+      uiState.selectedEndDate!.year,
+      uiState.selectedEndDate!.month,
+      uiState.selectedEndDate!.day,
+      uiState.selectedEndTime!.hour,
+      uiState.selectedEndTime!.minute,
+    );
+
+    // 呼叫 Presenter 方法計算工時
+    if (datesToFetch.isNotEmpty) {
+      data.cauculateWorkHour(
+        dates: datesToFetch,
+        startDateTime: startDateTime,
+        endDateTime: endDateTime,
+      );
+    }
+  }
+}
+
+Future<void> _showTimePickerSheet(
+  BuildContext context, {
+  required bool isStartTime,
+  required ApplyFormUiPresenter ui,
+  required ApplyFormPresenter data,
+}) async {
+  final uiState = ui.state;
+  final TimeOfDay initialTime =
+      (isStartTime ? uiState.selectedStartTime : uiState.selectedEndTime) ??
+      TimeOfDay.now();
+
+  final TimeOfDay? picked = await showTimePicker(
+    context: context,
+    initialTime: initialTime,
+    builder:
+        (builderContext, child) =>
+            buildTimePickerTheme(context: builderContext, child: child),
+  );
+
+  if (picked != null) {
+    if (isStartTime) {
+      ui.setStartTime(picked);
+    } else {
+      ui.setEndTime(picked);
+    }
+    _checkAndTriggerWorkHourCalculation(ui, data);
+  }
+}
+
+void _showDatePickerSheet(
+  BuildContext context, {
+  required bool isStartDate,
+  required ApplyFormUiPresenter ui,
+  required ApplyFormPresenter data,
+}) {
+  final uiState = ui.state;
+  DateTime? initialDate =
+      (isStartDate ? uiState.selectedStartDate : uiState.selectedEndDate) ??
+      DateTime.now();
+
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (BuildContext sheetContext) {
+      return buildDatePickerSheetContent(
+        sheetContext: sheetContext,
+        isStartDate: isStartDate,
+        initialDate: initialDate,
+        selectedStartDateForMinDate: uiState.selectedStartDate,
+        onSelectionConfirmed: (DateTime? selectedDate) {
+          if (selectedDate != null) {
+            if (isStartDate) {
+              ui.setStartDate(selectedDate);
+            } else {
+              ui.setEndDate(selectedDate);
+            }
+            _checkAndTriggerWorkHourCalculation(ui, data);
+          }
+        },
+      );
+    },
+  );
+}
+
+List<Employee> _getAllEmployees(
+  Map<String, (String?, List<Employee>)> departmentEmployees,
+) {
+  final List<Employee> employees = [];
+  for (var entry in departmentEmployees.entries) {
+    employees.addAll(entry.value.$2);
+  }
+  employees.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
+  return employees;
+}
+
+Future<void> _pickFiles(BuildContext context, ApplyFormUiPresenter ui) async {
+  try {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      allowMultiple: true,
+      type: FileType.media,
+    );
+
+    if (result != null) {
+      final files =
+          result.paths
+              .where((path) => path != null)
+              .map((path) => File(path!))
+              .toList();
+      ui.setFiles(files);
+    } else {
+      // User canceled
+    }
+  } catch (e) {
+    debugPrint('Error picking files: $e');
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('檔案選擇失敗: ${e.toString()}')));
   }
 }
