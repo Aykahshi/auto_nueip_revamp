@@ -11,6 +11,7 @@ import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
 import '../../../form/data/models/work_hour.dart';
 import '../../../form/domain/entities/leave_rule.dart';
+import '../../../home/data/models/notice.dart';
 import '../../domain/repositories/nueip_repository.dart';
 import '../models/user_sn.dart';
 import '../services/nueip_services.dart';
@@ -158,5 +159,10 @@ final class NueipRepositoryImpl implements NueipRepository {
     required List<String> dates,
   }) {
     return _service.getWorkHour(dates: dates);
+  }
+
+  @override
+  TaskEither<Failure, List<Notice>> getNoticeList([int page = 1]) {
+    return _service.getNoticeList(page);
   }
 }

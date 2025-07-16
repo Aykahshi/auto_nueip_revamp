@@ -21,7 +21,7 @@ sealed class APIs {
   static const String LEAVE_RULES = '$LEAVE_SYSTEM/getLeaveList';
   static const String UNREAD =
       'https://rd2-api.nueip.com/center/notice/get-unread';
-  static const String ANNOUNCEMENT = 'https://rd2-api.nueip.com/center/notice';
+  static const String NOTICE = 'https://rd2-api.nueip.com/center/notice';
   static const String SIGN_DATA =
       '${ApiConfig.BASE_URL}/leader_audit_work_list/getSignData';
   static const String HOLIDAY =

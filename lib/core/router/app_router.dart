@@ -8,6 +8,7 @@ import '../../features/form/presentation/screens/form_detail_screen.dart';
 import '../../features/form/presentation/screens/form_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/home/presentation/screens/main_screen.dart';
+import '../../features/home/presentation/screens/notice_screen.dart';
 import '../../features/login/presentation/screens/login_screen.dart';
 import '../../features/setting/presentation/screens/developer_info_screen.dart';
 import '../../features/setting/presentation/screens/profile_editing_screen.dart';
@@ -24,6 +25,7 @@ class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => <AutoRoute>[
     AutoRoute(page: LoginRoute.page, keepHistory: false),
+    AutoRoute(page: NoticeRoute.page),
     AutoRoute(
       page: MainRoute.page,
       initial: true,

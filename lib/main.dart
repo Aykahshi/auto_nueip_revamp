@@ -19,6 +19,7 @@ import 'features/holiday/data/services/holiday_service.dart';
 import 'features/holiday/domain/repositories/holiday_repository.dart';
 import 'features/holiday/presentation/presenters/holiday_presenter.dart';
 import 'features/home/presentation/presenters/clock_presenter.dart';
+import 'features/home/presentation/presenters/notice_presenter.dart';
 import 'features/login/data/models/auth_session.dart';
 import 'features/login/presentation/presenters/login_presenter.dart';
 import 'features/nueip/data/repositories/nueip_repository_impl.dart';
@@ -82,6 +83,7 @@ Future<void> _initDependencies() async {
   Circus
     ..hireLazily<HolidayPresenter>(() => HolidayPresenter())
     ..hireLazily<AttendancePresenter>(() => AttendancePresenter())
+    ..hireLazily<NoticePresenter>(() => NoticePresenter())
     ..hireLazily<LoginPresenter>(() => LoginPresenter())
     ..hireLazily<SettingPresenter>(() => SettingPresenter())
     ..hireLazily<LeaveRecordPresenter>(() => LeaveRecordPresenter())

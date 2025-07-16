@@ -62,6 +62,15 @@ class HomeScreen extends StatelessWidget {
           title: const Text('打卡鐘'),
           elevation: 1,
           centerTitle: true,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.notifications_outlined),
+              tooltip: '通知中心',
+              onPressed: () {
+                context.pushRoute(const NoticeRoute());
+              },
+            ),
+          ],
         ),
         body: Center(
           child: Padding(

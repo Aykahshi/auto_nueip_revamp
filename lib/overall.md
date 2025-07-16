@@ -96,9 +96,3 @@ mindmap
       icon
         flutter_launcher_icons
 ```
-
----
-
-## 進度說明
-
-- **特別提醒**：`home` 模組目前缺少公告區塊，`lib/features/home/data/models/announcement.dart` 尚未被實際串接或使用。

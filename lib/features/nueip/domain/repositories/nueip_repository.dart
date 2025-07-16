@@ -10,6 +10,7 @@ import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
 import '../../../form/data/models/work_hour.dart';
 import '../../../form/domain/entities/leave_rule.dart';
+import '../../../home/data/models/notice.dart';
 import '../../data/models/user_sn.dart';
 
 abstract class NueipRepository {
@@ -82,4 +83,6 @@ abstract class NueipRepository {
   TaskEither<Failure, List<WorkHour>> getWorkHour({
     required List<String> dates,
   });
+
+  TaskEither<Failure, List<Notice>> getNoticeList([int page = 1]);
 }

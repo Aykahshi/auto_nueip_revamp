@@ -16,6 +16,7 @@ import '../../../form/data/models/leave_record.dart';
 import '../../../form/data/models/leave_sign_data.dart';
 import '../../../form/data/models/work_hour.dart';
 import '../../../form/domain/entities/leave_rule.dart';
+import '../../../home/data/models/notice.dart';
 import '../models/user_sn.dart';
 
 final class NueipService {
@@ -566,6 +567,35 @@ final class NueipService {
         return workHoursList;
       },
       (e, _) => Failure(message: e.toString(), status: 'get_work_hours_failed'),
+    );
+  }
+
+  TaskEither<Failure, List<Notice>> getNoticeList([int page = 1]) {
+    return TaskEither.tryCatch(
+      () async {
+        final response = await _client.get(
+          APIs.NOTICE,
+          queryParameters: {
+            'sort': '-created_at',
+            'expand': '',
+            'keyword': '',
+            'page': page,
+            'per_page': 30,
+            'language': 'tc',
+          },
+        );
+
+        final json = (response.data as Map<String, dynamic>)['data'];
+
+        final noticeList =
+            (json as List<dynamic>)
+                .map((item) => Notice.fromJson(item as Map<String, dynamic>))
+                .toList();
+
+        return noticeList;
+      },
+      (e, _) =>
+          Failure(message: e.toString(), status: 'get_notice_list_failed'),
     );
   }
 }
