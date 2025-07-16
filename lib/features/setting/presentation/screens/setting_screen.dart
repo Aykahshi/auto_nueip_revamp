@@ -137,7 +137,7 @@ class SettingMainScreen extends StatelessWidget {
                     context,
                     title: '版本',
                     icon: Icons.android_outlined,
-                    subtitle: 'v1.1.1',
+                    subtitle: 'v1.1.2',
                     onTap: null,
                   ),
                 ])
