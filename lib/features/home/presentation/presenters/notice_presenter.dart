@@ -4,7 +4,7 @@ import '../../../nueip/domain/repositories/nueip_repository.dart';
 import '../../domain/entities/notice_state.dart';
 
 final class NoticePresenter extends Presenter<NoticeState> {
-  NoticePresenter()
+  NoticePresenter({super.keepAlive = true})
     : _repository = Circus.find<NueipRepository>(),
       super(NoticeState.initial());
 
