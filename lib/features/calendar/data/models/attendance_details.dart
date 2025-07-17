@@ -134,7 +134,7 @@ sealed class PunchRecord with _$PunchRecord {
   factory PunchRecord.fromJson(Map<String, dynamic> json) =>
       _$PunchRecordFromJson(json);
 
-  bool get isSolved => solvedStatus == 2;
+  bool get isSolved => solvedStatus == 0;
 }
 
 // --- Other Info ---

@@ -48,6 +48,7 @@ class SelectedDayDetailsCard extends StatelessWidget {
       statusIcon = CalendarUtils.getStatusTagIcon(statusTag);
     } else {
       statusTag = CalendarUtils.getAttendanceStatusTag(
+        attendanceRecord?.punch,
         attendanceRecord?.attendance,
         attendanceRecord?.timeoff,
         attendanceRecord?.overtime,

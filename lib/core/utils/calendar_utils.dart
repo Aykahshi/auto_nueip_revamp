@@ -65,6 +65,7 @@ sealed class CalendarUtils {
 
   /// Determines the primary status tag based on attendance and time off data.
   static String getAttendanceStatusTag(
+    PunchData? punch,
     Attendance? attendance,
     List<TimeOffRecord>? timeoff,
     List<OvertimeRecord>? overtime,
@@ -90,6 +91,11 @@ sealed class CalendarUtils {
       if (attendance.isLate && attendance.isLeaveEarly) return '遲到/早退';
       if (attendance.isLate) return '遲到';
       if (attendance.isLeaveEarly) return '早退';
+      if (punch != null &&
+          (punch.onPunch.firstOrNull?.isSolved == false ||
+              punch.offPunch.firstOrNull?.isSolved == false)) {
+        return '異常';
+      }
 
       // If attendance exists, isn't absent, isn't missing punch, and isn't late/early,
       // and we've passed the isMissPunch check, it implies punches are complete.
@@ -108,6 +114,7 @@ sealed class CalendarUtils {
       case '遲到':
       case '早退':
       case '遲到/早退':
+      case '異常':
       case '缺卡':
         return Colors.orange.shade700;
       case '曠職':
@@ -132,6 +139,7 @@ sealed class CalendarUtils {
       case '早退':
       case '遲到/早退':
         return Icons.watch_later_outlined;
+      case '異常':
       case '缺卡':
         return Icons.report_problem_outlined;
       case '曠職':

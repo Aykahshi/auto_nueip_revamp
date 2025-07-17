@@ -818,6 +818,7 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                     }
 
                     final statusTag = CalendarUtils.getAttendanceStatusTag(
+                      record.punch,
                       record.attendance,
                       record.timeoff,
                       record.overtime,
