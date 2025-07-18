@@ -1,7 +1,7 @@
 MAKEFLAGS += --no-print-directory
 SHELL := /bin/bash
 
-.PHONY: all pre clean clean_get get upgrade code code_watch
+.PHONY: all pre clean clean_get get build upgrade code code_watch
 
 ##
 
@@ -35,6 +35,11 @@ get: ## Get the dependencies.
 		@printf "📦 Getting flutter pub...\n"
 		@fvm flutter pub get || (printf "❌ Error in getting dependencies. Please check the dependencies and try again.\n"; exit 1)
 		@printf "✅ Dependencies fetched successfully!\n"
+
+build: ## Build the Android apk.
+		@printf "📦 Building the Android apk...\n"
+		@fvm flutter build apk --split-per-abi|| (printf "❌ Error in building the Android apk. Please check the dependencies and try again.\n"; exit 1)
+		@printf "✅ Android apk built successfully!\n"
 
 clean_get: ## Clean the environment and get the dependencies.
 		@make clean
