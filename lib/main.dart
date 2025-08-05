@@ -5,6 +5,7 @@ import 'core/config/storage_keys.dart';
 import 'core/network/api_client.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/global_presenter.dart';
 import 'core/utils/local_storage.dart';
 import 'core/utils/notification.dart';
 import 'core/utils/nueip_helper.dart';
@@ -47,6 +48,9 @@ Future<void> _initDependencies() async {
 
   // Add AuthSession Joker registration
   Circus.hire(Joker<AuthSession>(const AuthSession()), tag: 'auth');
+
+  // Add GlobalPresenter registration
+  Circus.hire(GlobalPresenter());
 
   // Add Company Address Joker registration
   final initialAddress = LocalStorage.get<String>(

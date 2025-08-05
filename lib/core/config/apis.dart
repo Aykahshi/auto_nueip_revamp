@@ -3,27 +3,23 @@
 import 'api_config.dart';
 
 sealed class APIs {
-  static const String INFO = 'https://portal-api.nueip.com/system/basic-info';
-  static const String LOGIN = '${ApiConfig.BASE_URL}/login/index/param';
-  static const String CLOCK = '${ApiConfig.BASE_URL}/time_clocks/ajax';
-  static const String TOKEN = '${ApiConfig.BASE_URL}/oauth2/token/api';
-  static const String RECORD =
-      '${ApiConfig.BASE_URL}/portal/Portal_punch_clock/ajax';
-  static const String ATTENDANCE =
-      '${ApiConfig.BASE_URL}/attendance_record/ajax';
-  static const String INBOX = '${ApiConfig.BASE_URL}/shared/getMessage';
-  static const String USER_SN =
-      '${ApiConfig.BASE_URL}/widget/deptChain/getUserDeptMap';
-  static const String EMPLOYEE_LIST =
-      '${ApiConfig.BASE_URL}/shared/org3layermenu_ajax';
+  static const String _BASE = ApiConfig.BASE_URL;
+  static const String _RD_BASE = 'https://rd2-api.nueip.com';
+  static const String _PORTAL_BASE = 'https://portal-api.nueip.com';
+  static const String INFO = '$_PORTAL_BASE/system/basic-info';
+  static const String LOGIN = '$_BASE/login/index/param';
+  static const String CLOCK = '$_BASE/time_clocks/ajax';
+  static const String PUNCH_DIALOG = '$_BASE/widget/punch_prompt_dialog/ajax';
+  static const String TOKEN = '$_BASE/oauth2/token/api';
+  static const String RECORD = '$_BASE/portal/Portal_punch_clock/ajax';
+  static const String ATTENDANCE = '$_BASE/attendance_record/ajax';
+  static const String USER_SN = '$_BASE/widget/deptChain/getUserDeptMap';
+  static const String EMPLOYEE_LIST = '$_BASE/shared/org3layermenu_ajax';
   static const String LEAVE_SYSTEM =
-      '${ApiConfig.BASE_URL}/leave_application/personal_leave_application_user';
+      '$_BASE/leave_application/personal_leave_application_user';
   static const String LEAVE_RULES = '$LEAVE_SYSTEM/getLeaveList';
-  static const String UNREAD =
-      'https://rd2-api.nueip.com/center/notice/get-unread';
-  static const String NOTICE = 'https://rd2-api.nueip.com/center/notice';
-  static const String SIGN_DATA =
-      '${ApiConfig.BASE_URL}/leader_audit_work_list/getSignData';
+  static const String NOTICE = '$_RD_BASE/center/notice';
+  static const String SIGN_DATA = '$_BASE/leader_audit_work_list/getSignData';
   static const String HOLIDAY =
       'https://cdn.jsdelivr.net/gh/ruyut/TaiwanCalendar/data/';
 }

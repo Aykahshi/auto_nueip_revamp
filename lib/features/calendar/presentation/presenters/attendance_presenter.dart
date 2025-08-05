@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../../../core/config/storage_keys.dart';
@@ -102,6 +103,14 @@ final class AttendancePresenter extends Presenter<AttendanceState> {
 
       trick(AttendanceState.success({}, _dailyAttendanceRecord));
     });
+  }
+
+  Future<void> refresh() async {
+    reset();
+
+    await getDailyAttendanceRecord(
+      date: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+    );
   }
 
   void reset() {

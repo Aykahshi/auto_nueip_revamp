@@ -29,6 +29,7 @@ dependencies:
   # UI
   gap: ^3.0.1
   google_fonts: ^6.2.1
+  toastification: ^3.0.3
   flutter_animate: ^4.5.2
   dropdown_button2: ^2.3.9
   salomon_bottom_bar: ^3.3.2
@@ -51,6 +52,7 @@ dependencies:
   path_provider: ^2.1.5
   geofencing_api: ^2.0.0
   json_annotation: ^4.9.0
+  connectivity_plus: ^6.1.4
   permission_handler: ^12.0.0+1
   freezed_annotation: ^3.0.0
   shared_preferences: ^2.5.3

@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.aykahshi.auto_nueip"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 35
     ndkVersion = "27.2.12479018"
 
     compileOptions {

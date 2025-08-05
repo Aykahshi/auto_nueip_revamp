@@ -11,6 +11,7 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/widgets/refresh_button.dart';
 import '../../../calendar/presentation/widgets/filter_area.dart';
 import '../../data/models/leave_record.dart'; // Import LeaveRecord model
 import '../../domain/entities/form_history_query.dart';
@@ -150,40 +151,7 @@ class FormHistoryScreen extends StatelessWidget {
             ),
             centerTitle: true,
             elevation: 1,
-            // actions: [
-            //   IconButton(
-            //     icon: Icon(
-            //       historyState.historyType == FormHistoryType.leave
-            //           ? Icons.receipt_long_outlined
-            //           : Icons.edit_calendar_outlined,
-            //     ),
-            //     tooltip:
-            //         historyState.historyType == FormHistoryType.leave
-            //             ? '切換至請款紀錄'
-            //             : '切換至請假紀錄',
-            //     onPressed: () {
-            //       final nextType =
-            //           historyState.historyType == FormHistoryType.leave
-            //               ? FormHistoryType.expense
-            //               : FormHistoryType.leave;
-
-            //       // 使用 DateRangePresenter 清除日期範圍
-            //       _dateRangePresenter.clearDateRange();
-
-            //       // Update Joker state: change type and clear applied dates
-            //       _historyJoker.trickWith(
-            //         (state) => state.copyWith(
-            //           historyType: nextType,
-            //           startDate: null,
-            //           endDate: null,
-            //         ),
-            //       );
-
-            //       // Reset presenter when switching tabs
-            //       _leaveRecordPresenter.reset();
-            //     },
-            //   ),
-            // ],
+            actions: [const RefreshButton(type: 'leave')],
           ),
           body: Column(
             children: [

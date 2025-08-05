@@ -9,6 +9,7 @@ import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification.dart';
+import '../../../../core/widgets/refresh_button.dart';
 import '../presenters/setting_presenter.dart';
 
 @RoutePage()
@@ -31,7 +32,12 @@ class SettingMainScreen extends StatelessWidget {
     final themeJoker = Circus.find<Joker<AppThemeMode>>('themeMode');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('設定'), centerTitle: true, elevation: 1),
+      appBar: AppBar(
+        title: const Text('設定'),
+        centerTitle: true,
+        elevation: 1,
+        actions: [const RefreshButton(type: 'setting')],
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: context.w(16)),
         child: Column(

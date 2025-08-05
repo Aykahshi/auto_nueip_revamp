@@ -10,6 +10,7 @@ import 'package:joker_state/joker_state.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/notification.dart';
+import '../../../../core/widgets/refresh_button.dart';
 import '../../../calendar/data/models/daily_clock_detail.dart';
 import '../../domain/entities/clock_action_enum.dart';
 import '../../domain/entities/clock_state.dart';
@@ -70,6 +71,7 @@ class HomeScreen extends StatelessWidget {
                 context.pushRoute(const NoticeRoute());
               },
             ),
+            const RefreshButton(type: 'clock'),
           ],
         ),
         body: Center(

@@ -57,6 +57,10 @@ final class ClockPresenter extends Presenter<ClockState> {
     );
   }
 
+  Future<void> refresh() async {
+    await _init();
+  }
+
   Future<void> getClockTimes({
     required String accessToken,
     required String cookie,

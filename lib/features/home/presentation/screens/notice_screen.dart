@@ -21,6 +21,7 @@ class NoticeScreen extends StatelessWidget {
         title: const Text('通知中心'),
         centerTitle: true,
         elevation: 1,
+        leading: const AutoLeadingButton(),
       ),
       body: NotificationListener<ScrollNotification>(
         onNotification: (notification) {

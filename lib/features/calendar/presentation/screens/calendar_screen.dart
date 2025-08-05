@@ -17,6 +17,7 @@ import '../../../../core/extensions/list_holiday_extensions.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/utils/calendar_utils.dart';
 import '../../../../core/utils/local_storage.dart';
+import '../../../../core/widgets/refresh_button.dart';
 import '../../../holiday/data/models/holiday.dart';
 import '../../../holiday/domain/entities/holiday_state.dart';
 import '../../../holiday/presentation/presenters/holiday_presenter.dart';
@@ -158,6 +159,7 @@ class _CalendarScreenState extends State<CalendarScreen>
             title: const Text('出勤日曆'),
             elevation: 1,
             centerTitle: true,
+            actions: [const RefreshButton(type: 'attendance')],
             bottom: TabBar(
               controller: _tabController,
               labelColor:

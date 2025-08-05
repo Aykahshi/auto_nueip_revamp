@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:joker_state/joker_state.dart';
+import 'package:toastification/toastification.dart';
 
 import 'core/config/storage_keys.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/local_storage.dart';
+import 'core/widgets/global_wrapper.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -26,18 +28,20 @@ class App extends StatelessWidget {
 
     final router = Circus.find<AppRouter>();
 
-    return ScreenUtil(
-      options: const ScreenUtilOptions(
-        designSize: Size(393, 852),
-        paddingScaleStrategy: ScreenUtilScaleStrategy.both,
-      ),
-      child: themeJoker.perform(
-        builder: (context, currentThemeMode) {
-          return _AnimatedThemeApp(
-            themeMode: _getThemeMode(currentThemeMode),
-            router: router,
-          );
-        },
+    return ToastificationWrapper(
+      child: ScreenUtil(
+        options: const ScreenUtilOptions(
+          designSize: Size(393, 852),
+          paddingScaleStrategy: ScreenUtilScaleStrategy.both,
+        ),
+        child: themeJoker.perform(
+          builder: (context, currentThemeMode) {
+            return _AnimatedThemeApp(
+              themeMode: _getThemeMode(currentThemeMode),
+              router: router,
+            );
+          },
+        ),
       ),
     );
   }
@@ -130,6 +134,9 @@ class _AnimatedThemeAppState extends State<_AnimatedThemeApp>
               supportedLocales: const [Locale('zh', 'TW')],
               debugShowCheckedModeBanner: false,
               routerConfig: widget.router.config(),
+              builder: (context, child) {
+                return GlobalWrapper(child: child!);
+              },
             ),
           ),
         );

@@ -2,10 +2,13 @@ import 'package:cookie_jar/cookie_jar.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_cookie_manager/dio_cookie_manager.dart';
 import 'package:flutter/foundation.dart';
+import 'package:joker_state/joker_state.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import '../../features/login/data/models/auth_session.dart';
 import '../config/api_config.dart';
+import '../utils/auth_utils.dart';
+import 'auth_interceptor.dart';
 import 'content_type_transformer.dart';
 import 'login_interceptor.dart';
 
@@ -40,6 +43,16 @@ class ApiClient {
         ),
       );
     }
+
+    Circus.hire<Dio>(_dio);
+
+    _dio.interceptors.add(
+      AuthInterceptor(
+        onReauthenticate: () async {
+          await AuthUtils.checkAuthSession(force: true);
+        },
+      ),
+    );
   }
 
   void updateAuthSession(AuthSession session) {
