@@ -22,10 +22,10 @@ class GlobalPresenter extends Presenter<GlobalState> {
   void onReady() {
     super.onReady();
     _networkStatus = Connectivity().onConnectivityChanged.listen((result) {
-      if (result.isConnected && previousState is NetworkDisconnected) {
-        trick(const GlobalState.networkConnected());
-      } else {
+      if (!result.isConnected) {
         trick(const GlobalState.networkDisconnected());
+      } else if (result.isConnected && state is NetworkDisconnected) {
+        trick(const GlobalState.networkConnected());
       }
     });
   }

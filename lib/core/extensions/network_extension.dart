@@ -1,10 +1,8 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 extension NetworkExtension on List<ConnectivityResult> {
-  bool get isConnected => any(
-    (result) =>
-        result != ConnectivityResult.none &&
-        result != ConnectivityResult.bluetooth &&
-        result != ConnectivityResult.ethernet,
-  );
+  bool get isConnected =>
+      contains(ConnectivityResult.wifi) ||
+      contains(ConnectivityResult.ethernet) ||
+      contains(ConnectivityResult.mobile);
 }

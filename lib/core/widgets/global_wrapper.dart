@@ -46,7 +46,7 @@ class GlobalWrapper extends StatelessWidget {
           networkDisconnected: () {
             toast.show(
               context: context,
-              title: const Text('請檢查網路連線'),
+              title: const Text('網路連線中斷，請檢查網路環境'),
               type: ToastificationType.error,
               style: ToastificationStyle.flatColored,
               alignment: Alignment.bottomCenter,
