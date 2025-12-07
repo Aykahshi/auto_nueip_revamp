@@ -68,4 +68,7 @@ sealed class StorageKeys {
 
   /// Key for storing whether the user has triggered the secret feature.
   static const String secretFeatureTriggered = 'secret_feature_triggered';
+
+  /// Key for storing whether GPS clock-in is enabled.
+  static const String gpsClockInEnabled = 'gps_clock_in_enabled';
 }

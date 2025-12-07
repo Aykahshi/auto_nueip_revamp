@@ -14,6 +14,7 @@ sealed class SettingState with _$SettingState {
     @Default(false) final bool notificationsEnabled,
     @Default(false) final bool darkModeEnabled,
     @Default(false) final bool isLoading,
+    final String? appVersion,
     final Failure? error,
   }) = _SettingState;
 
@@ -22,6 +23,7 @@ sealed class SettingState with _$SettingState {
     notificationsEnabled: false,
     darkModeEnabled: false,
     isLoading: false,
+    appVersion: null,
     error: null,
   );
 }

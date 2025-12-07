@@ -9,7 +9,6 @@ import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/utils/notification.dart';
-import '../../../../core/widgets/refresh_button.dart';
 import '../presenters/setting_presenter.dart';
 
 @RoutePage()
@@ -32,127 +31,144 @@ class SettingMainScreen extends StatelessWidget {
     final themeJoker = Circus.find<Joker<AppThemeMode>>('themeMode');
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('設定'),
-        centerTitle: true,
-        elevation: 1,
-        actions: [const RefreshButton(type: 'setting')],
-      ),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(horizontal: context.w(16)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Gap(context.h(16)),
-            // Profile Section
-            _buildProfileSection(context, presenter)
-                .animate()
-                .fadeIn(duration: 600.ms)
-                .slideY(begin: 0.2, end: 0, duration: 400.ms),
+      appBar: AppBar(title: const Text('設定'), centerTitle: true, elevation: 1),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await presenter.refresh();
+        },
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: context.w(16)),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Gap(context.h(16)),
+              // Profile Section
+              _buildProfileSection(context, presenter)
+                  .animate()
+                  .fadeIn(duration: 600.ms)
+                  .slideY(begin: 0.2, end: 0, duration: 400.ms),
 
-            Gap(context.h(24)),
+              Gap(context.h(24)),
 
-            // Account Settings
-            _buildSettingsSection(context, '帳號設定', [
-                  _buildSettingTile(
-                    context,
-                    title: '編輯帳號資訊',
-                    icon: Icons.person_outline,
-                    onTap: () {
-                      // Navigate to account editing screen
-                      context.pushRoute(const ProfileEditingRoute()).then((_) {
-                        presenter.getUserInfo();
-                      });
-                    },
-                  ),
-                  _buildSettingTile(
-                    context,
-                    title: '清除帳號資料',
-                    icon: Icons.delete_outline,
-                    onTap: () {
-                      _showClearDataDialog(context, presenter);
-                    },
-                    isDestructive: true,
-                  ),
-                ])
-                .animate()
-                .fadeIn(duration: 700.ms)
-                .slideY(begin: 0.2, end: 0, duration: 500.ms),
+              // Account Settings
+              _buildSettingsSection(context, '帳號設定', [
+                    _buildSettingTile(
+                      context,
+                      title: '編輯帳號資訊',
+                      icon: Icons.person_outline,
+                      onTap: () {
+                        // Navigate to account editing screen
+                        context.pushRoute(const ProfileEditingRoute()).then((
+                          _,
+                        ) {
+                          presenter.getUserInfo();
+                        });
+                      },
+                    ),
+                    _buildSettingTile(
+                      context,
+                      title: '清除帳號資料',
+                      icon: Icons.delete_outline,
+                      onTap: () {
+                        _showClearDataDialog(context, presenter);
+                      },
+                      isDestructive: true,
+                    ),
+                  ])
+                  .animate()
+                  .fadeIn(duration: 700.ms)
+                  .slideY(begin: 0.2, end: 0, duration: 500.ms),
 
-            Gap(context.h(16)),
+              Gap(context.h(16)),
 
-            // App Settings
-            _buildSettingsSection(context, 'APP 設定', [
-                  // Dark mode switch
-                  _buildSwitchTile(
-                    context,
-                    title: '深色模式',
-                    icon: Icons.dark_mode_outlined,
-                    value: themeJoker.state == AppThemeMode.dark,
-                    onChanged: (value) {
-                      // Update setting state
-                      presenter.toggleDarkMode(value);
-                      // Update theme mode
-                      themeJoker.trick(
-                        value ? AppThemeMode.dark : AppThemeMode.light,
-                      );
-                    },
-                  ),
+              // App Settings
+              _buildSettingsSection(context, 'APP 設定', [
+                    // Dark mode switch
+                    _buildSwitchTile(
+                      context,
+                      title: '深色模式',
+                      icon: Icons.dark_mode_outlined,
+                      value: themeJoker.state == AppThemeMode.dark,
+                      onChanged: (value) {
+                        // Update setting state
+                        presenter.toggleDarkMode(value);
+                        // Update theme mode
+                        themeJoker.trick(
+                          value ? AppThemeMode.dark : AppThemeMode.light,
+                        );
+                      },
+                    ),
 
-                  // Notification switch
-                  presenter.perform(
-                    builder: (context, state) {
-                      return _buildSwitchTile(
-                        context,
-                        title: '開啟通知',
-                        icon: Icons.notifications_outlined,
-                        value: state.notificationsEnabled,
-                        onChanged: (value) async {
-                          if (value) {
-                            // Try to request notification permissions
-                            await _requestNotificationPermissions(
-                              context,
-                              presenter,
-                            );
-                          } else {
-                            // Directly disable notifications
-                            presenter.toggleNotifications(false);
-                          }
-                        },
-                      );
-                    },
-                  ),
-                ])
-                .animate()
-                .fadeIn(duration: 800.ms)
-                .slideY(begin: 0.2, end: 0, duration: 600.ms),
+                    // Notification switch
+                    presenter.perform(
+                      builder: (context, state) {
+                        return _buildSwitchTile(
+                          context,
+                          title: '開啟通知',
+                          icon: Icons.notifications_outlined,
+                          value: state.notificationsEnabled,
+                          onChanged: (value) async {
+                            if (value) {
+                              // Try to request notification permissions
+                              final hasPermission = await presenter
+                                  .checkNotificationPermission();
+                              if (hasPermission) {
+                                // Permission already granted, just enable
+                                presenter.toggleNotifications(true);
+                              } else {
+                                // Need to request permissions
+                                if (context.mounted) {
+                                  await _requestNotificationPermissions(
+                                    context,
+                                    presenter,
+                                  );
+                                }
+                              }
+                            } else {
+                              // Directly disable notifications
+                              presenter.toggleNotifications(false);
+                            }
+                          },
+                        );
+                      },
+                    ),
+                  ])
+                  .animate()
+                  .fadeIn(duration: 800.ms)
+                  .slideY(begin: 0.2, end: 0, duration: 600.ms),
 
-            Gap(context.h(16)),
+              Gap(context.h(16)),
 
-            // About Section
-            _buildSettingsSection(context, '關於', [
-                  _buildSettingTile(
-                    context,
-                    title: '開發者資訊',
-                    icon: Icons.info_outline,
-                    onTap: () {
-                      context.pushRoute(const DeveloperInfoRoute());
-                    },
-                  ),
-                  _buildSettingTile(
-                    context,
-                    title: '版本',
-                    icon: Icons.android_outlined,
-                    subtitle: 'v1.1.3',
-                    onTap: null,
-                  ),
-                ])
-                .animate()
-                .fadeIn(duration: 900.ms)
-                .slideY(begin: 0.2, end: 0, duration: 700.ms),
+              // About Section
+              _buildSettingsSection(context, '關於', [
+                    _buildSettingTile(
+                      context,
+                      title: '開發者資訊',
+                      icon: Icons.info_outline,
+                      onTap: () {
+                        context.pushRoute(const DeveloperInfoRoute());
+                      },
+                    ),
+                    presenter.perform(
+                      builder: (context, state) {
+                        return _buildSettingTile(
+                          context,
+                          title: '版本',
+                          icon: Icons.android_outlined,
+                          subtitle: state.appVersion,
+                          onTap: null,
+                        );
+                      },
+                    ),
+                  ])
+                  .animate()
+                  .fadeIn(duration: 900.ms)
+                  .slideY(begin: 0.2, end: 0, duration: 700.ms),
 
-            Gap(context.h(40)),
-          ],
+              Gap(context.h(40)),
+            ],
+          ),
         ),
       ),
     );
@@ -256,23 +272,49 @@ Future<void> _requestNotificationPermissions(
   // Initialize notification system and request permissions
   await NotificationUtils.init();
 
-  // Try to send a test notification to check if permissions have been granted
-  try {
-    await NotificationUtils.showSimpleNotification(1000, '測試通知', '您已成功啟用通知功能！');
-    // If successful, update setting state
-    presenter.toggleNotifications(true);
+  // Check if permissions were granted after init
+  final hasPermission = await presenter.checkNotificationPermission();
 
-    // Show success message
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('通知功能已啟用', style: TextStyle(fontSize: context.sp(14))),
-        ),
+  if (hasPermission) {
+    // Try to send a test notification
+    try {
+      await NotificationUtils.showSimpleNotification(
+        1000,
+        '測試通知',
+        '您已成功啟用通知功能！',
       );
+      // If successful, update setting state
+      presenter.toggleNotifications(true);
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '通知功能已啟用',
+              style: TextStyle(fontSize: context.sp(14)),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      // If unable to send notification, keep it disabled
+      debugPrint('Failed to send test notification: $e');
+      presenter.toggleNotifications(false);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '通知功能暫時無法使用',
+              style: TextStyle(fontSize: context.sp(14)),
+            ),
+          ),
+        );
+      }
     }
-  } catch (e) {
-    // If unable to send notification, permission denied
-    debugPrint('Notification permission request failed: $e');
+  } else {
+    // Permission not granted
     presenter.toggleNotifications(false);
 
     // Show error message
@@ -335,10 +377,9 @@ Widget _buildSettingTile(
           title,
           style: TextStyle(color: color, fontSize: context.sp(16)),
         ),
-        subtitle:
-            subtitle != null
-                ? Text(subtitle, style: TextStyle(fontSize: context.sp(14)))
-                : null,
+        subtitle: subtitle != null
+            ? Text(subtitle, style: TextStyle(fontSize: context.sp(14)))
+            : null,
         trailing: onTap != null ? const Icon(Icons.chevron_right) : null,
         onTap: onTap,
         shape: RoundedRectangleBorder(

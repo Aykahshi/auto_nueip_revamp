@@ -1,6 +1,3 @@
-import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
 import 'package:html/dom.dart';
 import 'package:html/parser.dart';
 
@@ -18,34 +15,17 @@ extension ExtractTokenFromHtml on String {
   }
 }
 
-extension ExtractTextFromHtml on String {
-  void parseInboxMsg(String jsonResponse) {
-    final notifications = jsonDecode(jsonResponse) as List<dynamic>;
+extension ExtractOptionsFromHtml on String {
+  List<String?> parseOptions() {
+    final Document document = parse(this);
+    final options = document.querySelectorAll('option');
 
-    for (var notification in notifications) {
-      String messageWithHtml = notification['message'];
+    final result =
+        options
+            .where((opt) => opt.attributes['value'] != "")
+            .map((opt) => opt.text.trim())
+            .toList();
 
-      String plainText = extractText(messageWithHtml);
-
-      debugPrint('Source: $messageWithHtml');
-      debugPrint('Extracted: $plainText');
-      debugPrint('-------------------');
-    }
-  }
-
-  String extractText(String htmlString) {
-    final document = parse(htmlString);
-
-    final String plainText = document.body?.text ?? '';
-
-    return _decodeUnicodeEscapes(plainText);
-  }
-
-  String _decodeUnicodeEscapes(String text) {
-    try {
-      return json.decode('"${text.replaceAll('"', '\\"')}"');
-    } catch (e) {
-      return text;
-    }
+    return result;
   }
 }

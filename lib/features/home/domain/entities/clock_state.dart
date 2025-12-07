@@ -13,6 +13,9 @@ sealed class ClockState with _$ClockState {
     @Default(ClockTimeStatus.idle) ClockTimeStatus timeStatus,
     @Default(null) ClockAction? activeAction,
     @Default(null) DailyClockDetail? details,
+    @Default(false) bool isGpsClockInEnabled,
+    @Default(false) bool isGpsLoading,
+    @Default(null) String? currentAddress,
     Failure? failure,
   }) = _ClockState;
 }

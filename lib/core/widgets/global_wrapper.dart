@@ -22,16 +22,6 @@ class GlobalWrapper extends StatelessWidget {
 
         state.when(
           idle: () {},
-          refreshed: () {
-            toast.show(
-              context: context,
-              title: const Text('資料刷新完成'),
-              type: ToastificationType.success,
-              style: ToastificationStyle.flatColored,
-              alignment: Alignment.bottomCenter,
-              autoCloseDuration: const Duration(seconds: 2),
-            );
-          },
           networkConnected: () {
             toast.show(
               context: context,

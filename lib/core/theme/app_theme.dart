@@ -51,7 +51,7 @@ class AppTheme {
     ),
     scaffoldBackgroundColor: _backgroundLight,
     appBarTheme: const AppBarTheme(
-      color: _primaryLight,
+      backgroundColor: _primaryLight,
       foregroundColor: _textOnPrimaryLight,
       elevation: 1.0,
       titleTextStyle: TextStyle(
@@ -131,7 +131,7 @@ class AppTheme {
     ),
     scaffoldBackgroundColor: _backgroundDark,
     appBarTheme: const AppBarTheme(
-      color: _surfaceDark,
+      backgroundColor: _surfaceDark,
       foregroundColor: _textOnDark,
       elevation: 1.0,
       titleTextStyle: TextStyle(

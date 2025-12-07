@@ -11,7 +11,6 @@ import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import '../../../../core/extensions/context_extension.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/widgets/refresh_button.dart';
 import '../../../calendar/presentation/widgets/filter_area.dart';
 import '../../data/models/leave_record.dart'; // Import LeaveRecord model
 import '../../domain/entities/form_history_query.dart';
@@ -151,7 +150,6 @@ class FormHistoryScreen extends StatelessWidget {
             ),
             centerTitle: true,
             elevation: 1,
-            actions: [const RefreshButton(type: 'leave')],
           ),
           body: Column(
             children: [
@@ -228,9 +226,12 @@ class FormHistoryScreen extends StatelessWidget {
                                   leaveRecordPresenter: leaveRecordPresenter,
                                 );
                               } else if (leaveState is LeaveRecordSuccess) {
-                                return _buildLeaveHistoryList(
+                                return _buildLeaveHistoryListWithRefresh(
                                   context,
                                   leaveState.records,
+                                  historyJoker,
+                                  dateRangePresenter,
+                                  leaveRecordPresenter,
                                 );
                               } else {
                                 // Initial state
@@ -276,10 +277,13 @@ class FormHistoryScreen extends StatelessWidget {
     );
   }
 
-  // Updated to use LeaveRecordListTile
-  Widget _buildLeaveHistoryList(
+  // Updated to use LeaveRecordListTile with pull-to-refresh
+  Widget _buildLeaveHistoryListWithRefresh(
     BuildContext context,
     List<LeaveRecord> records,
+    Joker historyJoker,
+    DateRangePresenter dateRangePresenter,
+    LeaveRecordPresenter leaveRecordPresenter,
   ) {
     final filteredData = records.where((r) => !r.isCanceled).toList();
 
@@ -290,43 +294,54 @@ class FormHistoryScreen extends StatelessWidget {
         key: const ValueKey('leave_empty'),
       );
     }
-    // Wrap with AnimationLimiter for staggered animations (optional but nice)
-    return AnimationLimiter(
-      child: ListView.builder(
-        key: const ValueKey('leave_list'),
-        padding: EdgeInsets.symmetric(
-          vertical: context.h(8),
-        ), // Adjusted padding
-        itemCount: filteredData.length,
-        itemBuilder: (context, index) {
-          final request = filteredData[index];
-          // Use AnimationConfiguration for staggered effect
-          return AnimationConfiguration.staggeredList(
-            position: index,
-            duration: const Duration(milliseconds: 375),
-            child: SlideAnimation(
-              verticalOffset: 50.0,
-              child: FadeInAnimation(
-                child: LeaveRecordListTile(
-                  key: ValueKey(
-                    'leave_${request.startTime}_${request.ruleName}',
+
+    return RefreshIndicator(
+      onRefresh: () async {
+        // 刷新當前查詢的請假紀錄
+        final dateState = dateRangePresenter.state;
+        if (dateState.tempStartDate != null && dateState.tempEndDate != null) {
+          await leaveRecordPresenter.fetchLeaveRecords(
+            startDate: dateState.tempStartDate,
+            endDate: dateState.tempEndDate,
+          );
+        }
+      },
+      child: AnimationLimiter(
+        child: ListView.builder(
+          key: const ValueKey('leave_list'),
+          padding: EdgeInsets.symmetric(
+            vertical: context.h(8),
+          ),
+          physics: const AlwaysScrollableScrollPhysics(),
+          itemCount: filteredData.length,
+          itemBuilder: (context, index) {
+            final request = filteredData[index];
+            return AnimationConfiguration.staggeredList(
+              position: index,
+              duration: const Duration(milliseconds: 375),
+              child: SlideAnimation(
+                verticalOffset: 50.0,
+                child: FadeInAnimation(
+                  child: LeaveRecordListTile(
+                    key: ValueKey(
+                      'leave_${request.startTime}_${request.ruleName}',
+                    ),
+                    record: request,
+                    onTap: () {
+                      context.pushRoute(
+                        FormDetailRoute(
+                          formId: request.qryNo,
+                          leaveRecord: request,
+                          formType: FormHistoryType.leave,
+                        ),
+                      );
+                    },
                   ),
-                  record: request,
-                  onTap: () {
-                    // Navigate to FormDetailScreen with LeaveRecord object and qryNo as formId
-                    context.pushRoute(
-                      FormDetailRoute(
-                        formId: request.qryNo, // Pass qryNo as formId
-                        leaveRecord: request,
-                        formType: FormHistoryType.leave,
-                      ),
-                    );
-                  },
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

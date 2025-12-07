@@ -11,6 +11,7 @@ extension CookieParser on List<Cookie> {
           return '${cookie['name']}=${cookie['value']}';
         })
         .join('; ');
+
     return cookieHeader;
   }
 }

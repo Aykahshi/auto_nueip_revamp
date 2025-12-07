@@ -17,7 +17,6 @@ import '../../../../core/extensions/list_holiday_extensions.dart';
 import '../../../../core/extensions/theme_extensions.dart';
 import '../../../../core/utils/calendar_utils.dart';
 import '../../../../core/utils/local_storage.dart';
-import '../../../../core/widgets/refresh_button.dart';
 import '../../../holiday/data/models/holiday.dart';
 import '../../../holiday/domain/entities/holiday_state.dart';
 import '../../../holiday/presentation/presenters/holiday_presenter.dart';
@@ -59,14 +58,13 @@ class _CalendarScreenState extends State<CalendarScreen>
       );
 
       if (cachedHolidayStrings.isNotEmpty) {
-        final List<Holiday> cachedHolidays =
-            cachedHolidayStrings
-                .map(
-                  (jsonString) => Holiday.fromJson(
-                    jsonDecode(jsonString) as Map<String, dynamic>,
-                  ),
-                )
-                .toList();
+        final List<Holiday> cachedHolidays = cachedHolidayStrings
+            .map(
+              (jsonString) => Holiday.fromJson(
+                jsonDecode(jsonString) as Map<String, dynamic>,
+              ),
+            )
+            .toList();
 
         if (cachedHolidays.coversRequiredYears()) {
           debugPrint('Using valid cached holiday data.');
@@ -117,40 +115,34 @@ class _CalendarScreenState extends State<CalendarScreen>
         }
 
         if (currentHolidays.isNotEmpty) {
-          holidayDateTimes =
-              currentHolidays
-                  .map((h) {
-                    try {
-                      // Assumes date is "YYYYMMDD"
-                      if (h.date.length >= 8) {
-                        final year = int.parse(h.date.substring(0, 4));
-                        final month = int.parse(h.date.substring(4, 6));
-                        final day = int.parse(h.date.substring(6, 8));
-                        if (month >= 1 &&
-                            month <= 12 &&
-                            day >= 1 &&
-                            day <= 31) {
-                          return DateTime(year, month, day);
-                        } else {
-                          debugPrint(
-                            'Invalid month/day in date string: ${h.date}',
-                          );
-                          return null;
-                        }
-                      } else {
-                        debugPrint('Invalid date string length: ${h.date}');
-                        return null;
-                      }
-                    } catch (e) {
-                      debugPrint(
-                        'Error parsing holiday date for calendar: ${h.date}',
-                      );
-                      return null; // Skip invalid dates
+          holidayDateTimes = currentHolidays
+              .map((h) {
+                try {
+                  // Assumes date is "YYYYMMDD"
+                  if (h.date.length >= 8) {
+                    final year = int.parse(h.date.substring(0, 4));
+                    final month = int.parse(h.date.substring(4, 6));
+                    final day = int.parse(h.date.substring(6, 8));
+                    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+                      return DateTime(year, month, day);
+                    } else {
+                      debugPrint('Invalid month/day in date string: ${h.date}');
+                      return null;
                     }
-                  })
-                  .where((e) => e != null)
-                  .cast<DateTime>()
-                  .toSet();
+                  } else {
+                    debugPrint('Invalid date string length: ${h.date}');
+                    return null;
+                  }
+                } catch (e) {
+                  debugPrint(
+                    'Error parsing holiday date for calendar: ${h.date}',
+                  );
+                  return null; // Skip invalid dates
+                }
+              })
+              .where((e) => e != null)
+              .cast<DateTime>()
+              .toSet();
         }
 
         // --- Scaffold and TabBarView structure ---
@@ -159,13 +151,12 @@ class _CalendarScreenState extends State<CalendarScreen>
             title: const Text('出勤日曆'),
             elevation: 1,
             centerTitle: true,
-            actions: [const RefreshButton(type: 'attendance')],
+            actions: [],
             bottom: TabBar(
               controller: _tabController,
-              labelColor:
-                  !context.isDarkMode
-                      ? context.colorScheme.surface
-                      : context.colorScheme.onSurfaceVariant,
+              labelColor: !context.isDarkMode
+                  ? context.colorScheme.surface
+                  : context.colorScheme.onSurfaceVariant,
               unselectedLabelColor: context.colorScheme.onSurfaceVariant,
               indicatorColor: context.colorScheme.primary,
               indicatorWeight: context.h(3.0),
@@ -176,7 +167,10 @@ class _CalendarScreenState extends State<CalendarScreen>
               unselectedLabelStyle: context.textTheme.titleSmall?.copyWith(
                 fontSize: context.sp(14),
               ),
-              tabs: const [Tab(text: '單日檢視'), Tab(text: '區間查詢')],
+              tabs: const [
+                Tab(text: '單日檢視'),
+                Tab(text: '區間查詢'),
+              ],
             ),
           ),
           body: TabBarView(
@@ -374,71 +368,77 @@ class _SingleDayViewTabState extends State<_SingleDayViewTab>
       );
     }
 
-    // Wrap the main Column with SingleChildScrollView
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          _selectedDateJoker.perform(
-            builder: (context, currentSelectedDate) {
-              return CalendarViewWidget(
-                key: const ValueKey('calendar_view'),
-                initialDate: currentSelectedDate,
-                holidays: widget.holidayDateTimes,
-                onSelectionChanged: _onCalendarDateSelected,
-                controller: _calendarController,
-                selectedDate: currentSelectedDate,
-              );
-            },
-          ),
-          const Gap(8.0),
-          Padding(
-            padding: EdgeInsets.fromLTRB(
-              context.w(8),
-              0,
-              context.w(8),
-              context.h(8),
-            ),
-            // Combine selected date and attendance state
-            // No need to listen to _selectedDateJoker again here, already passed
-            child: widget.attendancePresenter.focusOn<AttendanceState>(
-              selector: (state) => state,
-              builder: (context, attendanceState) {
-                // Use the date from the Joker directly, as it's the source of truth
-                final selectedDate = _selectedDateJoker.state;
-                bool isLoadingDetails = attendanceState is AttendanceLoading;
-                AttendanceRecord? attendanceRecord;
-                if (attendanceState is AttendanceSuccess) {
-                  attendanceRecord = attendanceState.dailyAttendanceRecord;
-                }
-                return SelectedDayDetailsCard(
-                  key: ValueKey(selectedDate),
-                  selectedDate: selectedDate,
-                  attendanceRecord: attendanceRecord,
-                  holidayDescription: _getHolidayDescription(selectedDate),
-                  isLoading: isLoadingDetails,
-                  isKnownHoliday: widget.holidayDateTimes.contains(
-                    selectedDate,
-                  ),
+    // Wrap the main Column with RefreshIndicator and SingleChildScrollView
+    return RefreshIndicator(
+      onRefresh: () async {
+        // 刷新當前選中日期的出勤記錄
+        await _fetchSingleDayDetails(_selectedDateJoker.state);
+      },
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: Column(
+          children: [
+            _selectedDateJoker.perform(
+              builder: (context, currentSelectedDate) {
+                return CalendarViewWidget(
+                  key: const ValueKey('calendar_view'),
+                  initialDate: currentSelectedDate,
+                  holidays: widget.holidayDateTimes,
+                  onSelectionChanged: _onCalendarDateSelected,
+                  controller: _calendarController,
+                  selectedDate: currentSelectedDate,
                 );
               },
             ),
-          ),
-        ],
+            const Gap(8.0),
+            Padding(
+              padding: EdgeInsets.fromLTRB(
+                context.w(8),
+                0,
+                context.w(8),
+                context.h(8),
+              ),
+              // Combine selected date and attendance state
+              // No need to listen to _selectedDateJoker again here, already passed
+              child: widget.attendancePresenter.focusOn<AttendanceState>(
+                selector: (state) => state,
+                builder: (context, attendanceState) {
+                  // Use the date from the Joker directly, as it's the source of truth
+                  final selectedDate = _selectedDateJoker.state;
+                  bool isLoadingDetails = attendanceState is AttendanceLoading;
+                  AttendanceRecord? attendanceRecord;
+                  if (attendanceState is AttendanceSuccess) {
+                    attendanceRecord = attendanceState.dailyAttendanceRecord;
+                  }
+                  return SelectedDayDetailsCard(
+                    key: ValueKey(selectedDate),
+                    selectedDate: selectedDate,
+                    attendanceRecord: attendanceRecord,
+                    holidayDescription: _getHolidayDescription(selectedDate),
+                    isLoading: isLoadingDetails,
+                    isKnownHoliday: widget.holidayDateTimes.contains(
+                      selectedDate,
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
 // Define a record type for data passed to the tile
-typedef AttendanceTileData =
-    ({
-      AttendanceRecord record,
-      String statusTag,
-      Color statusColor,
-      IconData statusIcon,
-      String formattedDate, // This will now hold M/d or yyyy/M/d
-      bool showYear, // Flag to indicate if year should be shown
-    });
+typedef AttendanceTileData = ({
+  AttendanceRecord record,
+  String statusTag,
+  Color statusColor,
+  IconData statusIcon,
+  String formattedDate, // This will now hold M/d or yyyy/M/d
+  bool showYear, // Flag to indicate if year should be shown
+});
 
 // --- _RangeQueryTabView definition ---
 class _RangeQueryTabView extends StatefulWidget {
@@ -637,10 +637,10 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                             );
                             final newEndDate =
                                 currentSheetSelection!.endDate != null
-                                    ? DateUtils.dateOnly(
-                                      currentSheetSelection!.endDate!,
-                                    )
-                                    : newStartDate;
+                                ? DateUtils.dateOnly(
+                                    currentSheetSelection!.endDate!,
+                                  )
+                                : newStartDate;
 
                             _startDateJoker.trick(newStartDate);
                             _endDateJoker.trick(newEndDate);
@@ -780,69 +780,61 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                     (a.dateInfo?.date ?? '').compareTo(b.dateInfo?.date ?? ''),
               );
 
-              tileDataList =
-                  results.map((record) {
-                    DateTime? recordDate;
-                    bool isHoliday = false;
-                    String formattedDateStr = record.dateInfo?.date ?? '未知日期';
+              tileDataList = results.map((record) {
+                DateTime? recordDate;
+                bool isHoliday = false;
+                String formattedDateStr = record.dateInfo?.date ?? '未知日期';
 
+                try {
+                  final dateString = record.dateInfo?.date;
+                  if (dateString != null) {
+                    DateTime? date;
                     try {
-                      final dateString = record.dateInfo?.date;
-                      if (dateString != null) {
-                        DateTime? date;
-                        try {
-                          date = DateFormat(
-                            'yyyy-MM-dd',
-                          ).parseStrict(dateString);
-                        } catch (e) {
-                          debugPrint(
-                            'Failed to parse date: $dateString - Error: $e',
-                          );
-                        }
-
-                        if (date != null) {
-                          final formatString =
-                              shouldShowYear ? 'yyyy/M/d' : 'M/d';
-                          formattedDateStr = DateFormat(
-                            formatString,
-                          ).format(date);
-                          recordDate = date;
-                          isHoliday = widget.holidayDateTimes.contains(
-                            DateUtils.dateOnly(recordDate),
-                          );
-                        }
-                      }
+                      date = DateFormat('yyyy-MM-dd').parseStrict(dateString);
                     } catch (e) {
                       debugPrint(
-                        'Error processing date for list tile: ${record.dateInfo?.date} - $e',
+                        'Failed to parse date: $dateString - Error: $e',
                       );
-                      formattedDateStr = record.dateInfo?.date ?? '解析錯誤';
                     }
 
-                    final statusTag = CalendarUtils.getAttendanceStatusTag(
-                      record.punch,
-                      record.attendance,
-                      record.timeoff,
-                      record.overtime,
-                      isHoliday,
-                    );
-                    final statusColor = CalendarUtils.getStatusTagColor(
-                      statusTag,
-                      context.colorScheme,
-                    );
-                    final statusIcon = CalendarUtils.getStatusTagIcon(
-                      statusTag,
-                    );
+                    if (date != null) {
+                      final formatString = shouldShowYear ? 'yyyy/M/d' : 'M/d';
+                      formattedDateStr = DateFormat(formatString).format(date);
+                      recordDate = date;
+                      isHoliday = widget.holidayDateTimes.contains(
+                        DateUtils.dateOnly(recordDate),
+                      );
+                    }
+                  }
+                } catch (e) {
+                  debugPrint(
+                    'Error processing date for list tile: ${record.dateInfo?.date} - $e',
+                  );
+                  formattedDateStr = record.dateInfo?.date ?? '解析錯誤';
+                }
 
-                    return (
-                      record: record,
-                      statusTag: statusTag,
-                      statusColor: statusColor,
-                      statusIcon: statusIcon,
-                      formattedDate: formattedDateStr,
-                      showYear: shouldShowYear,
-                    );
-                  }).toList();
+                final statusTag = CalendarUtils.getAttendanceStatusTag(
+                  record.punch,
+                  record.attendance,
+                  record.timeoff,
+                  record.overtime,
+                  isHoliday,
+                );
+                final statusColor = CalendarUtils.getStatusTagColor(
+                  statusTag,
+                  context.colorScheme,
+                );
+                final statusIcon = CalendarUtils.getStatusTagIcon(statusTag);
+
+                return (
+                  record: record,
+                  statusTag: statusTag,
+                  statusColor: statusColor,
+                  statusIcon: statusIcon,
+                  formattedDate: formattedDateStr,
+                  showYear: shouldShowYear,
+                );
+              }).toList();
             }
 
             return Column(
@@ -861,10 +853,29 @@ class _RangeQueryTabViewState extends State<_RangeQueryTabView> {
                 ),
                 Gap(context.h(10)),
                 Expanded(
-                  child: QueryResultList(
-                    isLoading: isLoading,
-                    results: tileDataList,
-                  ),
+                  child: _lastQueryStartDate != null &&
+                          _lastQueryEndDate != null
+                      ? RefreshIndicator(
+                          onRefresh: () async {
+                            // 重新查詢當前選擇的日期範圍
+                            await widget.attendancePresenter.getAttendanceRecords(
+                              startDate: DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(_lastQueryStartDate!),
+                              endDate: DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(_lastQueryEndDate!),
+                            );
+                          },
+                          child: QueryResultList(
+                            isLoading: isLoading,
+                            results: tileDataList,
+                          ),
+                        )
+                      : QueryResultList(
+                          isLoading: isLoading,
+                          results: tileDataList,
+                        ),
                 ),
               ],
             );

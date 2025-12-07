@@ -15,7 +15,8 @@ sealed class AuthUtils {
 
     return companyCode.isNotEmpty &&
         employeeId.isNotEmpty &&
-        password.isNotEmpty;
+        password.isNotEmpty &&
+        isAuthSessionValid();
   }
 
   static Future<void> resetAuthSession() async {

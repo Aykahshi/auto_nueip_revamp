@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:joker_state/joker_state.dart';
 
 import '../../../../core/config/storage_keys.dart';
@@ -51,6 +52,14 @@ final class ClockPresenter extends Presenter<ClockState> {
     await AuthUtils.checkAuthSession();
     final session = AuthUtils.getAuthSession();
 
+    // Load GPS clock-in setting
+    final isGpsEnabled = LocalStorage.get<bool>(
+      StorageKeys.gpsClockInEnabled,
+      defaultValue: false,
+    );
+
+    trickWith((state) => state.copyWith(isGpsClockInEnabled: isGpsEnabled));
+
     await getClockTimes(
       accessToken: session.accessToken ?? '',
       cookie: session.cookie ?? '',
@@ -67,10 +76,9 @@ final class ClockPresenter extends Presenter<ClockState> {
   }) async {
     trickWith((state) => state.copyWith(timeStatus: ClockTimeStatus.loading));
 
-    final result =
-        await _repository
-            .getClockTime(accessToken: accessToken, cookie: cookie)
-            .run();
+    final result = await _repository
+        .getClockTime(accessToken: accessToken, cookie: cookie)
+        .run();
 
     result.fold(
       (failure) {
@@ -126,15 +134,39 @@ final class ClockPresenter extends Presenter<ClockState> {
 
   Future<void> performClockAction(ClockAction action) async {
     final session = AuthUtils.getAuthSession();
+    final state = value;
 
-    final double latitude = LocalStorage.get<double>(
-      StorageKeys.companyLatitude,
-      defaultValue: 0,
-    );
-    final double longitude = LocalStorage.get<double>(
-      StorageKeys.companyLongitude,
-      defaultValue: 0,
-    );
+    double latitude;
+    double longitude;
+
+    if (state.isGpsClockInEnabled) {
+      // Use GPS location
+      final position = await _getCurrentLocation();
+      if (position == null) {
+        trickWith(
+          (state) => state.copyWith(
+            status: ClockActionStatus.failure,
+            failure: const Failure(
+              message: "無法獲取 GPS 位置，請檢查位置權限設定",
+              status: 'gps_location_failed',
+            ),
+          ),
+        );
+        return;
+      }
+      latitude = position.latitude;
+      longitude = position.longitude;
+    } else {
+      // Use fixed company location
+      latitude = LocalStorage.get<double>(
+        StorageKeys.companyLatitude,
+        defaultValue: 0,
+      );
+      longitude = LocalStorage.get<double>(
+        StorageKeys.companyLongitude,
+        defaultValue: 0,
+      );
+    }
 
     await _clockAction(
       action: action,
@@ -164,16 +196,15 @@ final class ClockPresenter extends Presenter<ClockState> {
       ),
     );
 
-    final result =
-        await _repository
-            .clockAction(
-              method: action.value,
-              cookie: cookie,
-              csrfToken: csrfToken,
-              latitude: latitude,
-              longitude: longitude,
-            )
-            .run();
+    final result = await _repository
+        .clockAction(
+          method: action.value,
+          cookie: cookie,
+          csrfToken: csrfToken,
+          latitude: latitude,
+          longitude: longitude,
+        )
+        .run();
 
     result.fold(
       (failure) {
@@ -204,5 +235,72 @@ final class ClockPresenter extends Presenter<ClockState> {
         await getClockTimes(accessToken: accessToken, cookie: cookie);
       },
     );
+  }
+
+  Future<Position?> _getCurrentLocation() async {
+    try {
+      trickWith((state) => state.copyWith(isGpsLoading: true));
+
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        throw Exception('定位服務未啟用');
+      }
+
+      // Check location permissions
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('定位權限被拒絕');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception('定位權限被永久拒絕，請在設定中開啟');
+      }
+
+      // Get current position
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+        ),
+      );
+
+      // Get address from coordinates (optional)
+      try {
+        // You can add geocoding here to get the address
+        // For now, just use coordinates
+        trickWith(
+          (state) => state.copyWith(
+            isGpsLoading: false,
+            currentAddress:
+                '緯度: ${position.latitude.toStringAsFixed(6)}, 經度: ${position.longitude.toStringAsFixed(6)}',
+          ),
+        );
+      } catch (e) {
+        // Address lookup failed, but we still have coordinates
+        trickWith((state) => state.copyWith(isGpsLoading: false));
+      }
+
+      return position;
+    } catch (e) {
+      trickWith((state) => state.copyWith(isGpsLoading: false));
+      debugPrint('Error getting location: $e');
+      return null;
+    }
+  }
+
+  Future<void> toggleGpsClockIn(bool enabled) async {
+    await LocalStorage.set(StorageKeys.gpsClockInEnabled, enabled);
+    trickWith((state) => state.copyWith(isGpsClockInEnabled: enabled));
+
+    if (enabled) {
+      // Pre-load current location when enabling GPS
+      await _getCurrentLocation();
+    } else {
+      // Clear current address when disabling GPS
+      trickWith((state) => state.copyWith(currentAddress: null));
+    }
   }
 }
