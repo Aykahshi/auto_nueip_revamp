@@ -1,0 +1,79 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+    branches:
+      - main
+
+jobs:
+  build-and-release:
+    # Only run if tag is pushed to main branch
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      
+      - name: Setup FVM
+        uses: kuhnroyal/flutter-fvm-config-action@v3
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: .fvmrc
+          cache: true
+      
+      - name: Get dependencies
+        run: flutter pub get
+      
+      - name: Run code generation
+        run: dart run build_runner build --delete-conflicting-outputs
+      
+      - name: Analyze code
+        run: flutter analyze
+      
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+      
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+      - name: Get build timestamp
+        id: timestamp
+        run: echo "TIMESTAMP=$(date +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_OUTPUT
+      
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ steps.version.outputs.VERSION }}
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## Auto Nueip Release ${{ steps.version.outputs.VERSION }}
+            
+            **Build Date:** ${{ steps.timestamp.outputs.TIMESTAMP }}
+            
+            ### Installation
+            Download the appropriate APK file for your device:
+            - **arm64-v8a**: Modern 64-bit ARM devices (most common)
+            - **armeabi-v7a**: Older 32-bit ARM devices
+            - **x86_64**: Intel/AMD 64-bit devices (emulators)
+            
+            ### Changes
+            See commit history for detailed changes.
+          files: |
+            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
+            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
+            build/app/outputs/flutter-apk/app-x86_64-release.apk
+          draft: false
+          prerelease: false
