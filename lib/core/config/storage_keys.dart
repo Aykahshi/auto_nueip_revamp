@@ -71,4 +71,19 @@ sealed class StorageKeys {
 
   /// Key for storing whether GPS clock-in is enabled.
   static const String gpsClockInEnabled = 'gps_clock_in_enabled';
+
+  /// Key for storing whether clock reminder is enabled.
+  static const String clockReminderEnabled = 'clock_reminder_enabled';
+
+  /// Key for storing morning reminder time (hour).
+  static const String morningReminderHour = 'morning_reminder_hour';
+
+  /// Key for storing morning reminder time (minute).
+  static const String morningReminderMinute = 'morning_reminder_minute';
+
+  /// Key for storing evening reminder time (hour).
+  static const String eveningReminderHour = 'evening_reminder_hour';
+
+  /// Key for storing evening reminder time (minute).
+  static const String eveningReminderMinute = 'evening_reminder_minute';
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:joker_state/joker_state.dart';
+import 'package:timezone/data/latest_all.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
 
 import 'core/config/storage_keys.dart';
 import 'core/network/api_client.dart';
@@ -34,6 +36,10 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await LocalStorage.init();
+
+  // Initialize timezone database
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Asia/Taipei'));
 
   await _initDependencies();
 

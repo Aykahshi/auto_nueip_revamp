@@ -140,6 +140,97 @@ class SettingMainScreen extends StatelessWidget {
 
               Gap(context.h(16)),
 
+              // Clock Reminder Settings
+              presenter.perform(
+                builder: (context, state) {
+                  return _buildSettingsSection(context, '打卡提醒', [
+                        // Clock reminder switch
+                        _buildSwitchTile(
+                          context,
+                          title: '打卡提醒',
+                          icon: Icons.alarm,
+                          value: state.clockReminderEnabled,
+                          onChanged: state.notificationsEnabled
+                              ? (value) async {
+                                  await presenter.toggleClockReminder(value);
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          value ? '打卡提醒已啟用' : '打卡提醒已關閉',
+                                          style: TextStyle(
+                                            fontSize: context.sp(14),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              : null,
+                        ),
+
+                        // Morning reminder time
+                        _buildTimeTile(
+                          context,
+                          title: '上班提醒時間',
+                          icon: Icons.wb_sunny_outlined,
+                          time: state.morningReminderTime,
+                          enabled: state.clockReminderEnabled &&
+                              state.notificationsEnabled,
+                          onTap: () async {
+                            final time = await showTimePicker(
+                              context: context,
+                              initialTime: state.morningReminderTime,
+                              builder: (context, child) {
+                                return MediaQuery(
+                                  data: MediaQuery.of(context).copyWith(
+                                    alwaysUse24HourFormat: true,
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (time != null) {
+                              await presenter.setMorningReminderTime(time);
+                            }
+                          },
+                        ),
+
+                        // Evening reminder time
+                        _buildTimeTile(
+                          context,
+                          title: '下班提醒時間',
+                          icon: Icons.nightlight_outlined,
+                          time: state.eveningReminderTime,
+                          enabled: state.clockReminderEnabled &&
+                              state.notificationsEnabled,
+                          onTap: () async {
+                            final time = await showTimePicker(
+                              context: context,
+                              initialTime: state.eveningReminderTime,
+                              builder: (context, child) {
+                                return MediaQuery(
+                                  data: MediaQuery.of(context).copyWith(
+                                    alwaysUse24HourFormat: true,
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (time != null) {
+                              await presenter.setEveningReminderTime(time);
+                            }
+                          },
+                        ),
+                      ])
+                      .animate()
+                      .fadeIn(duration: 850.ms)
+                      .slideY(begin: 0.2, end: 0, duration: 650.ms);
+                },
+              ),
+
+              Gap(context.h(16)),
+
               // About Section
               _buildSettingsSection(context, '關於', [
                     _buildSettingTile(
@@ -397,12 +488,57 @@ Widget _buildSwitchTile(
   required String title,
   required IconData icon,
   required bool value,
-  required Function(bool) onChanged,
+  required Function(bool)? onChanged,
 }) {
   return ListTile(
         leading: Icon(icon),
         title: Text(title, style: TextStyle(fontSize: context.sp(16))),
         trailing: Switch(value: value, onChanged: onChanged),
+        enabled: onChanged != null,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(context.r(12)),
+        ),
+      )
+      .animate()
+      .fadeIn(duration: 300.ms)
+      .then()
+      .shimmer(delay: 200.ms, duration: 600.ms);
+}
+
+Widget _buildTimeTile(
+  BuildContext context, {
+  required String title,
+  required IconData icon,
+  required TimeOfDay time,
+  required bool enabled,
+  required VoidCallback onTap,
+}) {
+  final timeString =
+      '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+
+  return ListTile(
+        leading: Icon(icon, color: enabled ? null : context.colorScheme.outline),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontSize: context.sp(16),
+            color: enabled ? null : context.colorScheme.outline,
+          ),
+        ),
+        subtitle: Text(
+          timeString,
+          style: TextStyle(
+            fontSize: context.sp(14),
+            color: enabled ? context.colorScheme.primary : context.colorScheme.outline,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        trailing: Icon(
+          Icons.access_time,
+          color: enabled ? null : context.colorScheme.outline,
+        ),
+        enabled: enabled,
+        onTap: enabled ? onTap : null,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(context.r(12)),
         ),

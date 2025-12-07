@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:joker_state/joker_state.dart';
 
@@ -231,6 +232,9 @@ final class ClockPresenter extends Presenter<ClockState> {
           ),
         );
 
+        // Cancel today's reminder for the corresponding action
+        await _cancelTodaysReminder(action);
+
         // Pass the required tokens for the fetch call
         await getClockTimes(accessToken: accessToken, cookie: cookie);
       },
@@ -301,6 +305,22 @@ final class ClockPresenter extends Presenter<ClockState> {
     } else {
       // Clear current address when disabling GPS
       trickWith((state) => state.copyWith(currentAddress: null));
+    }
+  }
+
+  Future<void> _cancelTodaysReminder(ClockAction action) async {
+    final now = DateTime.now();
+    final weekday = now.weekday;
+
+    // Only cancel on weekdays
+    if (weekday >= DateTime.monday && weekday <= DateTime.friday) {
+      final plugin = FlutterLocalNotificationsPlugin();
+
+      if (action == ClockAction.IN) {
+        await plugin.cancel(1001 + weekday); // Cancel morning reminder
+      } else if (action == ClockAction.OUT) {
+        await plugin.cancel(1002 + weekday); // Cancel evening reminder
+      }
     }
   }
 }
