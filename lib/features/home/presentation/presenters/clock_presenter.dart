@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:joker_state/joker_state.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 import '../../../../core/config/storage_keys.dart';
 import '../../../../core/network/failure.dart';
@@ -315,11 +316,95 @@ final class ClockPresenter extends Presenter<ClockState> {
     // Only cancel on weekdays
     if (weekday >= DateTime.monday && weekday <= DateTime.friday) {
       final plugin = FlutterLocalNotificationsPlugin();
+      final notificationId = (action == ClockAction.IN ? 1001 : 1002) + weekday;
+
+      // Cancel the current schedule for this weekday
+      await plugin.cancel(notificationId);
+
+      // Check if reminders are enabled
+      final notificationsEnabled = LocalStorage.get<bool>(
+        StorageKeys.notificationsEnabled,
+        defaultValue: false,
+      );
+      final clockReminderEnabled = LocalStorage.get<bool>(
+        StorageKeys.clockReminderEnabled,
+        defaultValue: false,
+      );
+
+      if (!notificationsEnabled || !clockReminderEnabled) {
+        return;
+      }
+
+      // Reschedule for next week
+      int hour;
+      int minute;
+      String title;
+      String body;
 
       if (action == ClockAction.IN) {
-        await plugin.cancel(1001 + weekday); // Cancel morning reminder
-      } else if (action == ClockAction.OUT) {
-        await plugin.cancel(1002 + weekday); // Cancel evening reminder
+        hour = LocalStorage.get<int>(
+          StorageKeys.morningReminderHour,
+          defaultValue: 9,
+        );
+        minute = LocalStorage.get<int>(
+          StorageKeys.morningReminderMinute,
+          defaultValue: 0,
+        );
+        title = '上班打卡提醒';
+        body = '別忘了打卡上班喔！';
+      } else {
+        hour = LocalStorage.get<int>(
+          StorageKeys.eveningReminderHour,
+          defaultValue: 18,
+        );
+        minute = LocalStorage.get<int>(
+          StorageKeys.eveningReminderMinute,
+          defaultValue: 0,
+        );
+        title = '下班打卡提醒';
+        body = '記得打卡下班喔！';
+      }
+
+      // Calculate next week's date for the same weekday
+      final scheduledDate = DateTime(
+        now.year,
+        now.month,
+        now.day,
+        hour,
+        minute,
+      ).add(const Duration(days: 7));
+
+      const androidDetails = AndroidNotificationDetails(
+        'clock_reminder',
+        '打卡提醒',
+        channelDescription: '工作日打卡提醒通知',
+        importance: Importance.high,
+        priority: Priority.high,
+      );
+
+      const iosDetails = DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+      );
+
+      const details = NotificationDetails(
+        android: androidDetails,
+        iOS: iosDetails,
+      );
+
+      try {
+        await plugin.zonedSchedule(
+          notificationId,
+          title,
+          body,
+          tz.TZDateTime.from(scheduledDate, tz.local),
+          details,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        );
+      } catch (e) {
+        debugPrint('Failed to reschedule reminder: $e');
       }
     }
   }
