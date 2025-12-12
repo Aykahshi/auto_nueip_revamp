@@ -39,7 +39,10 @@ jobs:
         run: flutter analyze
       
       - name: Build APK
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --target-platform android-arm64
+
+      - name: Rename APK
+        run: mv build/app/outputs/flutter-apk/app-release.apk build/app/outputs/flutter-apk/auto-nueip-release.apk
       
       - name: Get version from tag
         id: version
@@ -61,16 +64,12 @@ jobs:
             **Build Date:** ${{ steps.timestamp.outputs.TIMESTAMP }}
             
             ### Installation
-            Download the appropriate APK file for your device:
-            - **arm64-v8a**: Modern 64-bit ARM devices (most common)
-            - **armeabi-v7a**: Older 32-bit ARM devices
-            - **x86_64**: Intel/AMD 64-bit devices (emulators)
+            Download the APK file for your device:
+            - **auto-nueip-release.apk**: For Modern 64-bit ARM devices (arm64-v8a)
             
             ### Changes
             See commit history for detailed changes.
           files: |
-            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-            build/app/outputs/flutter-apk/app-x86_64-release.apk
+            build/app/outputs/flutter-apk/auto-nueip-release.apk
           draft: false
           prerelease: false
