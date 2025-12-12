@@ -76,8 +76,14 @@ final class SettingPresenter extends Presenter<SettingState> {
           defaultValue: false,
         ),
         clockReminderEnabled: clockReminderEnabled,
-        morningReminderTime: TimeOfDay(hour: morningHour, minute: morningMinute),
-        eveningReminderTime: TimeOfDay(hour: eveningHour, minute: eveningMinute),
+        morningReminderTime: TimeOfDay(
+          hour: morningHour,
+          minute: morningMinute,
+        ),
+        eveningReminderTime: TimeOfDay(
+          hour: eveningHour,
+          minute: eveningMinute,
+        ),
       ),
     );
 
@@ -138,7 +144,7 @@ final class SettingPresenter extends Presenter<SettingState> {
   void toggleNotifications(bool value) {
     trickWith((state) => state.copyWith(notificationsEnabled: value));
     LocalStorage.set(StorageKeys.notificationsEnabled, value);
-    
+
     // If notifications are disabled, also disable clock reminders
     if (!value && state.clockReminderEnabled) {
       cancelClockReminders();
@@ -204,12 +210,16 @@ final class SettingPresenter extends Presenter<SettingState> {
     final state = value;
 
     // Cancel existing reminders
-    await plugin.cancel(1001); // Morning reminder ID
-    await plugin.cancel(1002); // Evening reminder ID
+    await cancelClockReminders();
+
+    // Cleanup potential old colliding IDs (1001-1010 range)
+    for (int i = 1000; i <= 1010; i++) {
+      await plugin.cancel(i);
+    }
 
     // Schedule morning reminder
     await _scheduleWeekdayReminder(
-      id: 1001,
+      id: 10000,
       time: state.morningReminderTime,
       title: '上班打卡提醒',
       body: '別忘了打卡上班喔！',
@@ -217,7 +227,7 @@ final class SettingPresenter extends Presenter<SettingState> {
 
     // Schedule evening reminder
     await _scheduleWeekdayReminder(
-      id: 1002,
+      id: 20000,
       time: state.eveningReminderTime,
       title: '下班打卡提醒',
       body: '記得打卡下班喔！',
@@ -232,11 +242,11 @@ final class SettingPresenter extends Presenter<SettingState> {
   }) async {
     final plugin = FlutterLocalNotificationsPlugin();
     final now = DateTime.now();
-    
+
     // Schedule for each weekday (Monday to Friday)
     for (int weekday = DateTime.monday; weekday <= DateTime.friday; weekday++) {
       var scheduledDate = _nextInstanceOfTimeOnWeekday(time, weekday);
-      
+
       // If the time has passed today, schedule for next week
       if (scheduledDate.isBefore(now)) {
         scheduledDate = scheduledDate.add(const Duration(days: 7));
@@ -297,25 +307,22 @@ final class SettingPresenter extends Presenter<SettingState> {
 
   Future<void> cancelClockReminders() async {
     final plugin = FlutterLocalNotificationsPlugin();
-    
+
     // Cancel all weekday reminders for both morning and evening
     for (int weekday = DateTime.monday; weekday <= DateTime.friday; weekday++) {
-      await plugin.cancel(1001 + weekday); // Morning reminders
-      await plugin.cancel(1002 + weekday); // Evening reminders
+      await plugin.cancel(10000 + weekday); // Morning reminders
+      await plugin.cancel(20000 + weekday); // Evening reminders
     }
   }
 
   Future<bool> hasClockedInToday() async {
     try {
       final result = await _repository.getUserInfo().run();
-      return result.fold(
-        (_) => false,
-        (response) {
-          final jsonData = response.data as Map<String, dynamic>;
-          final clockInTime = jsonData['data']?['clockInTime'] as String?;
-          return clockInTime != null && clockInTime.isNotEmpty;
-        },
-      );
+      return result.fold((_) => false, (response) {
+        final jsonData = response.data as Map<String, dynamic>;
+        final clockInTime = jsonData['data']?['clockInTime'] as String?;
+        return clockInTime != null && clockInTime.isNotEmpty;
+      });
     } catch (e) {
       return false;
     }
@@ -324,14 +331,11 @@ final class SettingPresenter extends Presenter<SettingState> {
   Future<bool> hasClockedOutToday() async {
     try {
       final result = await _repository.getUserInfo().run();
-      return result.fold(
-        (_) => false,
-        (response) {
-          final jsonData = response.data as Map<String, dynamic>;
-          final clockOutTime = jsonData['data']?['clockOutTime'] as String?;
-          return clockOutTime != null && clockOutTime.isNotEmpty;
-        },
-      );
+      return result.fold((_) => false, (response) {
+        final jsonData = response.data as Map<String, dynamic>;
+        final clockOutTime = jsonData['data']?['clockOutTime'] as String?;
+        return clockOutTime != null && clockOutTime.isNotEmpty;
+      });
     } catch (e) {
       return false;
     }
@@ -346,11 +350,11 @@ final class SettingPresenter extends Presenter<SettingState> {
       final plugin = FlutterLocalNotificationsPlugin();
 
       if (await hasClockedInToday()) {
-        await plugin.cancel(1001 + weekday); // Cancel morning reminder
+        await plugin.cancel(10000 + weekday); // Cancel morning reminder
       }
 
       if (await hasClockedOutToday()) {
-        await plugin.cancel(1002 + weekday); // Cancel evening reminder
+        await plugin.cancel(20000 + weekday); // Cancel evening reminder
       }
     }
   }

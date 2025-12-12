@@ -316,7 +316,8 @@ final class ClockPresenter extends Presenter<ClockState> {
     // Only cancel on weekdays
     if (weekday >= DateTime.monday && weekday <= DateTime.friday) {
       final plugin = FlutterLocalNotificationsPlugin();
-      final notificationId = (action == ClockAction.IN ? 1001 : 1002) + weekday;
+      final notificationId =
+          (action == ClockAction.IN ? 10000 : 20000) + weekday;
 
       // Cancel the current schedule for this weekday
       await plugin.cancel(notificationId);
